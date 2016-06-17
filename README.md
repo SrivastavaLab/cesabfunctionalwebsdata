@@ -1,2 +1,2 @@
-# cease_functionalwebs_data
+# Data preparation for FUNCTIONALWEBS
 Data cleaning and organization for CESAB FUNCTIONALWEBS papers
