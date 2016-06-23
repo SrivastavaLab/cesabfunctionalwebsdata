@@ -14,4 +14,14 @@ bwg_auth()
 ## this is very slow! run at your own risk
 # source("R/01_accessing_data.R")
 
+source("R/02_summarizing_data.R")
 
+### ...
+
+source("R/99_merging.R")
+
+## preparing a release
+
+library(datastorr)
+
+github_release_info("SrivastavaLab/cesabfunctionalwebsdata", readRDS)

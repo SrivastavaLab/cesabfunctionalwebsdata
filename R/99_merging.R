@@ -19,5 +19,3 @@ all_data_list <- list(
   abundance  = abundance)
 
 saveRDS(all_data_list, "releases/all_data.rds")
-
-)
