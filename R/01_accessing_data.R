@@ -18,8 +18,10 @@ trts <- bwg_get("species", list(traits = "true"))
 # Datasets ----------------------------------------------------------------
 
 ## we need to filter out the test datasets
+dats <- dats %>%
+  filter(!grepl("^Test", name))
+
 dats %>%
-  filter(!grepl("^Test", name)) %>%
   ## write out datasets
   write_csv("data-raw/datasets.csv")
 
@@ -113,70 +115,11 @@ make_full_df <- function(abd_data_flat){
 abds <- dats %>%
   .[["dataset_id"]] %>%
   as.numeric %>%
+  set_names %>%
   map(~ list(dataset_id = .x)) %>%
-  .[1:5] %>%
   map(~ bwg_get("matrix", .))
 
 
-abds %>%
+all_abd <- abds %>%
   map(make_brom_a_df) %>%
   map(make_full_df)
-
-
-abundances$brm %>% unique
-
-## get those measurement values
-flat <- test2 %>%
-  at_depth(2,
-           ~ map_at(.x, "measurements",
-                    ~ map(.x, flatten)))
-
-
-flat %>%
-  at_depth(4, map, length) %>%
-  at_depth(3, map, "value")
-
-                          ~ map_at(.x, "measurement", flatten))))
-
-
-
-                               map_at,
-                               "bromeliads",
-                               .~ data_frame(ids = names(.x),
-                                                  abd = as.numeric(.x)))))
-                               ~ map_at(.x, "bromeliads",
-                               ~ data_frame(ids = names(.x),
-                                            abd = as.numeric(.x))))))
-
-
-
-# test_mat %>%
-#   at_depth(2, class) %>% every(is_list)
-
-test_mat %>%
-  at_depth(4, map, as.list) %>%
-  at_depth(4, map_at, "bromeliads", class)
-  at_depth(4, map_at, "bromeliads", ~ "foo")
-
-test_mat %>%
-  at_depth(2, map_at, "bwg_name", as.list)
-
-test_mat %>%
-  at_depth(4, map_at, "bromeliads", ~ data_frame(ids = names(.x),
-                                                 abd = as.numeric(.x)))
-
-
-ilya <- test_mat %>%
-  map_at("species", ~ set_names(.x, paste0("a", names(.x))))
-
-test <- ilya %>%
-  map_at("a3426", ~ "foo")
-
-  .[[1]]
-
-
-quoi <- test_mat %>%
-  map_at("`3426`", ~ "foo") %>% .[1:2]
-
-str(quoi)
-bwgtools::get_bwg_names()
