@@ -5,6 +5,7 @@ require(readr)
 require(stringr)
 require(tidyr)
 require(purrr)
+require(dplyr)
 
 dats <- bwg_get("datasets")
 visits <- bwg_get("visits")
@@ -23,12 +24,12 @@ dats <- dats %>%
 
 dats %>%
   ## write out datasets
-  write_csv("data-raw/datasets.csv")
+  write_csv("data-raw/01_datasets.csv")
 
 # Visits ------------------------------------------------------------------
 
 ## write visits
-write_csv(visits, "data-raw/visits.csv")
+write_csv(visits, "data-raw/01_visits.csv")
 
 # Bromelaids --------------------------------------------------------------
 
@@ -69,49 +70,10 @@ trts %>%
            map_if(is_null, ~"") %>%
            map_if(is_long, paste, collapse = ";")) %>%
   unnest(names) %>%
-  write_csv("data-raw/traits.csv")
+  write_csv("data-raw/01_traits.csv")
 
 
 # Abundances (matrix) -----------------------------------------------------
-
-make_brom_a_df <- function(abd_data){
-  # browser()
-  abd_data %>%
-    at_depth(2,
-             ~ map_at(.x, "measurements",
-                      ~ map(.x,
-                            ~ map_at(.x, "bromeliads",
-                                     ~ data_frame(brm = names(.x),
-                                                  abd = as.numeric(.x))))))
-}
-
-### should run to see where errors are
-
-## A function to convert the information about the abundance of a particular
-## insect of particular size into one dataframe.
-one_measurement <- function(measure_list){
-  measure_list_flat <- map_at(measure_list, "measurement", flatten_chr)
-
-  assertthat::assert_that(length(measure_list_flat$measurement) == 1)
-
-  measure_list_flat %>%
-    flatten %>%
-    invoke(data_frame, .)
-}
-
-
-make_full_df <- function(abd_data_flat){
-  abd_data_flat %>%
-    at_depth(2,
-             ~ map_at(.x, "measurements",
-                      ~ map(.x, one_measurement) %>%
-                        bind_rows)) %>%
-    at_depth(2, flatten) %>%
-    at_depth(2, ~ invoke(data_frame, .x)) %>%
-    at_depth(1, bind_rows, .id = "species_id") %>%
-    .[["species"]]
-}
-
 abds <- dats %>%
   .[["dataset_id"]] %>%
   as.numeric %>%
@@ -119,7 +81,6 @@ abds <- dats %>%
   map(~ list(dataset_id = .x)) %>%
   map(~ bwg_get("matrix", .))
 
-
-all_abd <- abds %>%
-  map(make_brom_a_df) %>%
-  map(make_full_df)
+abds %>%
+  bwgdata::tidy_dataset_list() %>%
+  write_csv("data-raw/01_abundance.csv")
