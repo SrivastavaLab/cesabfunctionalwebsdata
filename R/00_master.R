@@ -11,4 +11,7 @@ library(tidyr)
 
 bwg_auth()
 
-source("R/01_accessing_data.R")
+## this is very slow! run at your own risk
+# source("R/01_accessing_data.R")
+
+
