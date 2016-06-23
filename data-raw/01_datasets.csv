@@ -1,0 +1,38 @@
+dataset_id,name,country,location,lat,lng,year,group_id,user_id,owner_name,owner_email,owner2_name,owner2_email,bwg_release,public_release,faculty_name,faculty_email,num_species,num_visits,num_bromeliads
+6,Cardoso2008,Brazil,Cardoso,-25.0955,-47.9573,2008,NA,NA,Diane Srivastava,srivast@zoology.ubc.ca,Gustavo Romero,gqromero@gmail.com,2016-03-01,2018-01-01,"Diane Srivastava, Gustavo Romero","srivast@zoology.ubc.ca, gqromero@gmail.com",61,1,25
+51,Pitilla1997,Costa Rica,Pitilla,10.983,-85.433,1997,NA,NA,Diane Srivastava,srivast@zoology.ubc.ca,"NA","NA",2016-01-06,2018-06-01,"NA","NA",29,1,20
+56,Pitilla2000,Costa Rica,Pitilla,10.983,-85.433,2000,NA,NA,Diane Srivastava,srivast@zoology.ubc.ca,Michael Melnychuk,mmel@uw.edu,2016-01-06,2018-01-06,"NA","NA",32,2,20
+61,Pitilla2002,Costa Rica,Pitilla,10.983,-85.433,2002,NA,NA,Diane Srivastava,srivast@zoology.ubc.ca,"NA","NA",2016-01-06,2018-01-06,"NA","NA",32,1,18
+66,Pitilla2004,Costa Rica,Pitilla,10.983,-85.433,2004,NA,NA,Ben Gilbert,benjamin.gilbert@utoronto.ca,Brian Starzomski,starzom@uvic.ca,2016-04-14,2021-04-14,"NA","NA",47,2,111
+71,Pitilla2010,Costa Rica,Pitilla,10.983,-85.433,2010,NA,NA,Diane Srivastava,srivast@zoology.ubc.ca,"NA","NA",2016-04-17,2016-04-17,"NA","NA",21,1,18
+76,Guasca2001,Colombia,Guasca,4.767,-74.167,2001,NA,NA,Fabiola Ospina,fospinab@hotmail.com,"NA","NA",2016-04-21,2020-04-21,"NA","NA",18,1,36
+81,Sisga2000,Colombia,Sisga,5.017,-73.7,2000,NA,NA,Fabiola Ospina,fospinab@hotmail.com,"NA","NA",2016-04-21,2020-04-21,"NA","NA",24,1,37
+86,RioBlanco2012,Colombia,Reserva Rio Blanco,5.07686,-75.4588,2012,NA,NA,Fabiola Ospina,fospinab@hotmail.com,"NA","NA",2016-05-16,2020-05-07,"NA","NA",23,1,29
+91,RioBlanco2014,Colombia,Reserva Rio Blanco,5.017,-73.7,2014,NA,NA,Fabiola Ospina,spinab@hotmail.com,"NA","NA",NA,2020-05-07,"NA","NA",13,1,31
+96,DiscoveryBay1997,Jamaica,Discovery Bay,0,0,1997,NA,NA,Jurek Kolasa,"NA","NA","NA",NA,NA,"NA","NA",0,1,0
+101,Cusuco2006,Honduras,Cusuco National Park,15.542,-88.264,2006,NA,NA,Merlijn Jocque,merlijnjocque@gmail.com,"NA","NA",2016-01-04,2021-01-04,"NA","NA",39,1,103
+106,Cusuco2007,Honduras,Cusuco National Park,15.542,-88.264,2007,NA,NA,Merlijn Jocque,merlijnjocque@gmail.com,"NA","NA",2016-01-04,2021-01-04,"NA","NA",39,1,54
+111,Saba2009,Netherlands Antilles,Saba,17.638,-63.2347,2009,NA,NA,Barbara Richardson,barichardson@clara.co.uk,Michael Richardson,mjrichardson@clara.net,2016-05-02,2016-05-02,"NA","NA",30,4,40
+116,ElVerde2010,Puerto Rico,El Verde,18.321,-65.817,2010,NA,NA,Barbara Richardson,barichardson@clara.co.uk,Michael Richardson,mjrichardson@clara.net,2016-05-02,2016-05-02,"NA","NA",25,3,30
+121,ElVerde1993,Puerto Rico,El Verde,18.321,-65.817,1993,NA,NA,Barbara Richardson,barichardson@clara.co.uk,Michael Richardson,mjrichardson@clara.net,2016-05-02,2016-05-02,"NA","NA",33,3,60
+126,ElVerde1994,Puerto Rico,El Verde,18.321,-65.817,1994,NA,NA,Barbara Richardson,barichardson@clara.co.uk,Michael Richardson,mjrichardson@clara.net,2016-05-02,2016-05-02,"NA","NA",42,3,60
+131,ElVerde1997,Puerto Rico,El Verde,18.321,-65.817,1997,NA,NA,Barbara Richardson,barichardson@clara.co.uk,Michael Richardson,mjrichardson@clara.net,2016-05-02,2016-05-02,"NA","NA",30,2,20
+136,Dominica2002,Dominica,Dominica,15.375,-61.335,2002,NA,NA,Barbara Richardson,barichardson@clara.co.uk,Michael Richardson,mjrichardson@clara.net,2016-05-02,2016-05-02,"NA","NA",29,3,30
+141,Macae2008,Brazil,Macae,-22.383,-41.75,2008,NA,NA,Vinicius Fortes Farjalla,farjalla@biologia.ufrj.br,"NA","NA",2016-04-17,2021-04-17,"NA","NA",44,1,63
+146,Cardoso2011,Brazil,Cardoso,-25.072,-47.923,2011,NA,NA,Diane Srivastava,srivast@zoology.ubc.ca,Gustavo Romero,gqromero@gmail.com,2016-05-02,2026-05-02,"NA","NA",32,1,16
+151,Picinguaba2011,Brazil,Picinguaba,-23.339,-44.781,2011,NA,NA,Ana Z. Gonçalves,zangirolame@gmail.com,Gustavo Romero,gqromero@gmail.com,2016-05-02,2026-05-02,"NA","NA",30,1,20
+156,Jureia2013,Brazil,Jureia,-24.431,-47.109,2013,NA,NA,Ana Z. Gonçalves,zangirolame@gmail.com,Gustavo Romero,gqromero@gmail.com,2016-05-02,2026-05-02,"NA","NA",63,1,20
+161,SerraDoJapi2011,Brazil,Serra do Japi,-23.233,-46.967,2011,NA,NA,Gustavo Romero,gqromero@unicamp.br,Gustavo Cauê O. Piccoli,gustavocaue@gmail.com,2016-05-02,2026-05-02,"NA","NA",30,2,29
+166,LasGamas2010,Argentina,Las Gamas,-29.433,-60.467,2010,NA,NA,Guillermo Montero,gmontero@unr.edu.ar,Ignacio Barberis,ignaciobarberis@yahoo.com,2016-05-02,2026-05-02,"NA","NA",32,1,30
+171,LasGamas2012,Argentina,Las Gamas,-29.433,-60.467,2012,NA,NA,Guillermo Montero,gmontero@unr.edu.ar,Ignacio Barberis,ignaciobarberis@yahoo.com,2016-05-05,2026-05-05,"NA","NA",32,1,30
+176,IlhaCardoso2011,Brazil,Cardoso,-25.072,-47.923,2011,NA,NA,Andrew MacDonald,macdonald@zoology.ubc.ca,"NA","NA",2016-05-05,2016-05-05,"NA","NA",0,1,0
+181,LasGamas2013,Argentina,Las Gamas,-29.433,-60.467,2013,NA,NA,Guillermo Montero,gmontero@unr.edu.ar,Ignacio Barberis,ignaciobarberis@yahoo.com,2016-05-05,2026-05-05,"NA","NA",32,1,30
+186,PetitSaut2007,French Guiana,Petit Saut,5.062,-53.046,2007,NA,NA,Regis Cereghino,regis.cereghino@univ-tlse3.fr,Bruno Corbara,bruno.corbara@univ-bpclermont.fr,2016-04-18,2021-01-06,"NA","NA",38,2,106
+191,Kaw2008,French Guiana,Kaw,4.083,-52.683,2008,NA,NA,Regis Cereghino,regis.cereghino@univ-tlse3.fr,Bruno Corbara,bruno.corbara@univ-bpclermont.fr,2016-04-18,2021-01-06,"NA","NA",20,1,47
+196,PetitSaut2008,French Guiana,Petit Saut,5.062,-53.046,2008,NA,NA,Regis Cereghino,regis.cereghino@univ-tlse3.fr,Bruno Corbara,bruno.corbara@univ-bpclermont.fr,2016-04-18,2021-01-06,"NA","NA",21,1,63
+201,Nouragues2006,French Guiana,Nouragues,4.083,-52.683,2006,NA,NA,Regis Cereghino,regis.cereghino@univ-tlse3.fr,Bruno Corbara,bruno.corbara@univ-bpclermont.fr,2016-04-18,2021-01-06,"NA","NA",45,4,140
+206,Nouragues2009,French Guiana,Nouragues,4.083,-52.683,2009,NA,NA,Celine Leroy,celine.leroy@ird.fr,Regis Cereghino,regis.cereghino@univ-tlse3.fr,2016-04-18,2021-01-06,"NA","NA",14,1,31
+211,Sinnamary2011,French Guiana,Sinnamary,4.083,-52.683,2011,NA,NA,Olivier Dézerald,olivier.dezerald@gmail.com,Stanislas Talaga,stantalaga@free.fr,2016-04-18,2021-01-06,"NA","NA",23,1,39
+216,PetitSaut2014,French Guiana,Petit Saut,4.083,-52.683,2014,NA,NA,Olivier Dézerald,olivier.dezerald@gmail.com,Regis Cereghino,regis.cereghino@univ-tlse3.fr,2016-04-18,2021-01-06,"NA","NA",25,1,30
+221,ElVerde1996,Puerto Rico,El Verde,18.321,-65.817,1996,NA,NA,Barbara Richardson,barichardson@clara.co.uk,Michael Richardson,mjrichardson@clara.net,2016-05-12,2016-05-12,"NA","NA",34,3,50
+231,Sonadora2004,Puerto Rico,Sonadora,18.3229,65.8163,2004,NA,NA,Barbara Richardson,barichardson@clara.co.uk,Michael Richardson,mjrichardson@clara.net,2016-05-27,2016-05-27,"NA","NA",43,13,130
