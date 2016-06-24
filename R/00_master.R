@@ -24,4 +24,12 @@ source("R/99_merging.R")
 
 library(datastorr)
 
-github_release_info("SrivastavaLab/cesabfunctionalwebsdata", readRDS)
+our_info <- github_release_info("SrivastavaLab/cesabfunctionalwebsdata", readRDS, private = TRUE)
+
+## this line corrects a small error. It will hopefully become unnecessary very soon.
+github_release_create1 <- datastorr:::github_release_create_
+
+## creating a release
+github_release_create(our_info,
+                      description = "a second release of data from the bwg database.",
+                      filename = "releases/all_data.rds")
