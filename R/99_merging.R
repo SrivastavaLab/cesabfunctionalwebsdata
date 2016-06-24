@@ -4,7 +4,7 @@
 
 
 # read all data in --------------------------------------------------------
-
+require(readr)
 datasets <- read_csv("data-raw/01_datasets.csv")
 visits <-   read_csv("data-raw/01_visits.csv")
 traits <-   read_csv("data-raw/01_traits.csv")
