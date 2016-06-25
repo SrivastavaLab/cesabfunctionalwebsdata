@@ -11,8 +11,7 @@ dats <- bwg_get("datasets")
 visits <- bwg_get("visits")
 broms <- bwg_get("bromeliads")
 spp <- bwg_get("species")
-trts <- bwg_get("species", list(traits = "true"))
-trts_tach <- bwg_get("species", list(tachet = "true"))
+trts_all <- bwg_get("species", list(tachet = "true", traits = "true"))
 ## ABUNDANCE downloaded in abundance section below
 
 ## the goal now is to simply write these as proper CSVs
