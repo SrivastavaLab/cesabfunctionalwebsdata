@@ -1,28 +1,9 @@
 #The script will fill in missing values for max volume and total detritus in BWGdb data
 #D. Srivastava, F. Ospina Bautista, G. Romero, I. Barberis
 #================================
-library(devtools)
-install_github("richfitz/datastorr")
-install_github("SrivastavaLab/fwdata")
 
-library(dplyr)
-library(fwdata)
-fw_auth() #collectively angie and sarah 
-fw_versions() #what versions present on your machine
-fw_versions(local=FALSE)
 
-all_data <- fw_data("0.0.1") #datasets, visits, traits, bromeliads, abundance
 
-#cardoso2008 is visit_id=21, dataset_id="6", name is "Cardoso2008"
-
-all_bromeliads<-all_data$bromeliads
-all_visits<-all_data$visits
-
-all_data$visits
-
-all_bromeliads%>%filter(visit_id==21)
-
-all_bromeliads$detritus_mass_total
 
 #===restart
 
@@ -43,13 +24,18 @@ detritus_wide <- broms %>%
   mutate(min_max = paste0("detritus", min_max)) %>%
   spread(min_max, mass)
 
-names(detritus_wide)
-#need to estimate total bomass for all cardoso2008 bromeliads from detritus>150, 
-#first select just those bromeliads from detritus_wide
-#then figure out which column is detritus>150
-#then use it to estimate detrius total in wide format and join back to broms
+==above from script 02 : remove when finished====
 
-broms%>%
-#detritus_wide%>%select(bromeliad_id=)
-#tapply(mean, detritus_wide)
+detritus_wider<-broms%>%select(visit_id, bromeliad_id)%>%
+  group_by(bromeliad_id)%>%
+  summarize(visit=first(visit_id))%>%
+  left_join(detritus_wide)
+
+detrital_table<-detritus_wider%>%group_by(visit)%>%summarise_each(funs(mean))#useful table to see what detritus each visit
+
+detritus_wider$detritus0_150[detritus_wider$visit==21]<-exp(0.68961*log(detritus_wider$detritus150_20000[detritus_wider$visit==21])-0.11363)#cardoso2008
+#cardoso2008 is visit_id=21, dataset_id="6", name is "Cardoso2008"  
+
+
+
 
