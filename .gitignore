@@ -26,4 +26,3 @@ vignettes/*.pdf
 .Rproj.user
 releases
 data-raw/
-data-intermediate/
