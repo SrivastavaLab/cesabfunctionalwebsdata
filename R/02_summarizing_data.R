@@ -23,11 +23,23 @@ visits<- read_csv("data-raw/01_visits.csv")
 names(visits)
 visitnames<-select(visits,visit_id,dataset_id,dataset_name)
 
+datasets<- read_csv("data-raw/01_datasets.csv")
+names(datasets)
+
+vol_table<-broms%>%group_by(visit_id)%>%summarise(max_water=mean(max_water,na.rm=TRUE), species=first(species),extended_diameter=mean(extended_diameter,na.rm=TRUE), diameter=mean(diameter, na.rm=TRUE),
+                                                  longest_leaf=mean(longest_leaf, na.rm=TRUE), num_leaf=mean(num_leaf, na.rm=TRUE), leaf_width=mean(leaf_width, na.rm=TRUE), plant_height_cm=mean(plant_height_cm, na.rm=TRUE))%>%
+  left_join(visitnames)
+
 ##
 diam_brom <- broms %>%
   select(-min, -max, -mass) %>%
   distinct %>%
   select(diameter, bromeliad_id)
+
+fpom_brom <- broms %>%
+  select(-min, -max, -mass) %>%
+  distinct %>%
+  select(fpom_ml, bromeliad_id)
 
 ## here we make the different detritus categories into a wide format, one column
 ## for every unique pair of detritus ranges (min max)
@@ -44,7 +56,8 @@ detritus_wider <- broms %>%
   summarize(visit_id = first(visit_id)) %>%
   left_join(detritus_wide)%>%
   left_join(visitnames)%>%
-  left_join(diam_brom)
+  left_join(diam_brom)%>%
+  left_join(fpom_brom)
 
 detrital_table <- detritus_wider %>%
   select(-bromeliad_id) %>%
@@ -72,13 +85,46 @@ detritus_wider<-detritus_wider %>%
   mutate(detritus0_1500 = ifelse(dataset_id == 111, fine_saba2009(detritus1500_20000), NA))
 
 ## Although Puerto Rico 2010 dataset=116 based only on relaxed diameter the adj r sq is 0.79
+#eqn from all 1990s El verde plants (n=189, rsq = 0.78) interestingly v. similar eqn from pitilla 2002 secondary
+
+elverde90s<-detritus_wider%>%filter(dataset_id==131| dataset_id==126|dataset_id==121|dataset_id==221)
+elverde90s$detritus0_NA<-(elverde90s$detritus10_1500+elverde90s$detritus1500_20000+elverde90s$detritus20000_NA)
+summary(glm(log(detritus0_NA)~log(diameter), data=elverde90s))
+plot(log(elverde90s$detritus0_NA)~log(elverde90s$diameter))
 
 total_elverde2010 <- function(dia){
-  exp(-6.24+ 2.18* log(dia))
+  exp(-6.223+ 2.179* log(dia))
 }
 
 detritus_wider<-detritus_wider %>%
   mutate(detritus0_NA = ifelse(dataset_id == 116, total_elverde2010(diameter), NA))
+
+#Dominica dataset=136, visit = 191, 196, 201 is just fine
+
+#Macae detritus could not be estimated with rsq > 0.5
+
+#argentina Las gamas datasets 166, 171, 181
+
+fine_lasgamas<- function(med){
+  ((0.9857 *med) + 1.496)
+}
+
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_150 = ifelse(dataset_id%in%c(166,171,181), fine_lasgamas(detritus150_850), detritus0_150))
+
+#French Guiana
+all_frenchguiana<- function(FPOM){
+  (73.668*(FPOM - 298.09)/1000 + exp(0.8933* (73.668*FPOM - 298.09)/1000)) + 0.8056) 
+}
+
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_150 = ifelse(dataset_id%in%c(166,171,181), fine_lasgamas(detritus150_850), detritus0_150))
+
+
+names(detritus_wider)
+#(73.668FPOM - 298.09)/1000 + EXP(0.8933* (73.668FPOM - 298.09)/1000)) + 0.8056) 
+
+#FPOM transforms from milliliters to grams
 
 
 ##easier!
