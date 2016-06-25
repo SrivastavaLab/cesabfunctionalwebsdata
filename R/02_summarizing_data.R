@@ -19,6 +19,16 @@ problems(broms)
 broms$ph
 ## yes --- they look just fine
 
+visits<- read_csv("data-raw/01_visits.csv")
+names(visits)
+visitnames<-select(visits,visit_id,dataset_id,dataset_name)
+
+##
+diam_brom <- broms %>%
+  select(-min, -max, -mass) %>%
+  distinct %>%
+  select(diameter, bromeliad_id)
+
 ## here we make the different detritus categories into a wide format, one column
 ## for every unique pair of detritus ranges (min max)
 detritus_wide <- broms %>%
@@ -31,43 +41,49 @@ detritus_wide <- broms %>%
 detritus_wider <- broms %>%
   select(visit_id, bromeliad_id) %>%
   group_by(bromeliad_id) %>%
-  summarize(visit = first(visit_id)) %>%
-  left_join(detritus_wide)
-
+  summarize(visit_id = first(visit_id)) %>%
+  left_join(detritus_wide)%>%
+  left_join(visitnames)%>%
+  left_join(diam_brom)
 
 detrital_table <- detritus_wider %>%
   select(-bromeliad_id) %>%
-  group_by(visit) %>%
-  summarise_each(funs(mean(., na.rm = TRUE))) #useful table to see what detritus each visit
+  group_by(visit_id) %>%
+  summarise_each(funs(mean(., na.rm = TRUE)))#useful table to see what detritus each visit
 
 View(detrital_table)
 
 ## predicting the fine detritus from the rest of the data
 ## for cardoso 2008
-fine_predict <- function(coarse){
+fine_cardoso2008<- function(coarse){
   exp(0.68961 * log(coarse) - 0.11363)
 }
 
-detritus_wider %>%
-  mutate(detritus0_150_2 = ifelse(visit == 21, fine_predict(detritus150_20000), detritus0_150)) %>%
-  select(detritus0_150, detritus0_150_2, detritus150_20000) %>%
-  View
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_150 = ifelse(visit_id == 21, fine_cardoso2008(detritus150_20000), detritus0_150))
+  
 
-## for cardoso 2008
-fine_predict <- function(coarse){
-  exp(0.68961 * log(coarse) - 0.11363)
+## for saba datasetid=111 visits 451 121 126 116 detritus150_20000 detritus20000_NA
+fine_saba2009 <- function(med){
+  exp(0.79031 * log(med) - 0.070033)
 }
 
-EXP (0.79031*ln(Detrital dry mass medium (g))-0.070033) + +"Detrital dry mass medium (g)"  +"Detrital dry mass coarse (g)" 
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_1500 = ifelse(dataset_id == 111, fine_saba2009(detritus1500_20000), NA))
 
-detritus_wider %>%
-  mutate(detritus0_150_2 = ifelse(visit == 21, fine_predict(detritus150_20000), detritus0_150)) %>%
-  select(detritus0_150, detritus0_150_2, detritus150_20000) %>%
-  View
+## Although Puerto Rico 2010 dataset=116 based only on relaxed diameter the adj r sq is 0.79
+
+total_elverde2010 <- function(dia){
+  exp(-6.24+ 2.18* log(dia))
+}
+
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_NA = ifelse(dataset_id == 116, total_elverde2010(diameter), NA))
 
 
+##easier!
 
-detritus_wider$detritus0_150[detritus_wider$visit==21]<-exp(0.68961*log(detritus_wider$detritus150_20000[detritus_wider$visit==21])-0.11363)#cardoso2008
+#detritus_wider$detritus0_150[detritus_wider$visit==21]<-exp(0.68961*log(detritus_wider$detritus150_20000[detritus_wider$visit==21])-0.11363)#cardoso2008
 #cardoso2008 is visit_id=21, dataset_id="6", name is "Cardoso2008"
 
 ### this script summarizes detritus amounts -- run it after you have imputed missing values
