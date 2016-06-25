@@ -58,11 +58,7 @@ broms %>%
 # Traits ------------------------------------------------------------------
 
 
-### similarly, these traits need only to have their "traits" column dropped
-
-names(trts) <- str_replace(names(trts), "traits\\.", "")
-
-### AND of course they also need their formal names. What if these were just slapped together for our purposes here?
+### names are a nested list. Convert them to a vector of length one.
 is_long <- function(x) length(x) > 1
 
 trts %>%
