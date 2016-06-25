@@ -61,7 +61,7 @@ broms %>%
 ### names are a nested list. Convert them to a vector of length one.
 is_long <- function(x) length(x) > 1
 
-trts %>%
+trts_all %>%
   mutate(names = names %>%
            map_if(is_null, ~"") %>%
            map_if(is_long, paste, collapse = ";")) %>%
