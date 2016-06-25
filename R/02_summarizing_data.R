@@ -1,8 +1,9 @@
 ## summarizing a few of the bigger datasets
+## Before summarizing, we modify the data with allometric equations.
 
 require(dplyr)
 require(readr)
-
+require(tidyr)
 
 # bromeliads --------------------------------------------------------------
 
@@ -11,18 +12,18 @@ broms <- read_csv("data-raw/01_broms.csv")
 ## the "problems" are probaby OK?
 problems(broms)
 broms$ph
+## yes --- they look just fine
 
-## there *are* duplicate rows, yes?
+detritus_wide <- broms %>%
+  select(bromeliad_id, min, max, mass) %>%
+  unite(min_max, min, max) %>%
+  mutate(min_max = paste0("detritus", min_max)) %>%
+  spread(min_max, mass)
 
-manys <- broms %>%
-  group_by(bromeliad_id) %>%
-  tally %>%
-  arrange(desc(n))
-## yes
-
+### this script summarizes detritus amounts -- run it after you have imputed missing values
 det <- broms %>%
   select(bromeliad_id, min, max, mass) %>%
-  # semi_join(manys %>% filter(n > 4)) ## just to check with the eye.
+  semi_join(manys %>% filter(n > 4)) ## just to check with the eye.
   group_by(bromeliad_id) %>%
   summarise(detritus_mass_total = sum(mass, na.rm = TRUE))
 
