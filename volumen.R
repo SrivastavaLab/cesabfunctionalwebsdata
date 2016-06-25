@@ -11,41 +11,26 @@ glimpse(summ_broms)
 
 maxvol=broms %>%select(bromeliad_id,visit_id,diameter,num_leaf) 
 View(maxvol)
-####French Guiana  equation of Regis
+####French Guiana equation of Regis
 #FrenchGuianaAechmea2007, Aechmea mertensii exp(0.611+1.09*log(fg$diameter))
-frenchGuiana<- function(a){exp(0.611+1.09*log(a))}
+volu<- function(a){exp(0.611+1.09*log(a))}
 summ_broms%>%
-  mutate(max_water= ifelse(visit_id == 286, frenchGuiana(diameter), max_water))%>%filter(visit_id==286)%>%View
-
+  mutate(max_water= ifelse(visit_id == 286, volu(diameter), max_water))%>%filter(visit_id==286)%>%View
 
 #FrenchGuianaAechmea2008,PetitSaut, Aechmea mertensii a=diameter, b= num_leaf exp(4.838+5.5888*log(fg$diameter)-1.1649*(log(fg$diameter))^2+5.7181*log(fg$num_leaf)-1.7982*(log(fg$num_leaf)^2))
-fg=filter(maxvol,visit_id=="301")
-
-Vmax= exp(0.0292 +0.339*log(fg$diameter) + 1.3563*log(fg$num_leaf))
-Vmax
-
-frenchGuiana<- function(a,b){exp(0.0292 +0.339*log(a) + 1.3563*log(b))}
+volu<- function(a,b){exp(0.0292 +0.339*log(a) + 1.3563*log(b))}
 summ_broms%>%
-  mutate(max_water= ifelse(visit_id == 301, frenchGuiana(diameter,num_leaf), max_water))%>%filter(visit_id==301)%>%View
+  mutate(max_water= ifelse(visit_id == 301, volu(diameter,num_leaf), max_water))%>%filter(visit_id==301)%>%View
 
-
-#FrenchGuianaAechmea2008,Kaw, Aechmea mertensii
-fg=filter(maxvol,visit_id=="296")
-
-Vmax= exp(0.0292 +0.339*log(fg$diameter) + 1.3563*log(fg$num_leaf))
-Vmax
-
-frenchGuiana<- function(a,b){exp(0.0292 +0.339*log(a) + 1.3563*log(b))}
+#FrenchGuianaAechmea2008,Kaw, Aechmea mertensii exp(0.0292 +0.339*log(fg$diameter) + 1.3563*log(fg$num_leaf))
+volu<- function(a,b){exp(0.0292 +0.339*log(a) + 1.3563*log(b))}
 summ_broms%>%
-  mutate(max_water= ifelse(visit_id == 296, frenchGuiana(diameter,num_leaf), max_water))%>%filter(visit_id==296)%>%View
+  mutate(max_water= ifelse(visit_id == 296, volu(diameter,num_leaf), max_water))%>%filter(visit_id==296)%>%View
 
-#Sitio 336, Aechmea aquilega 
-fg1=filter(maxvol,visit_id=="336")
-Vmax= exp(-0.4368 +0.735*log(fg1$diameter)+ 1.4260*log(fg1$num_leaf))
- 
-frenchGuiana<- function(a,b){exp(-0.4368 +0.735*log(a)+ 1.4260*log(b))}
+#Sitio 336, Aechmea aquilega Vmax= exp(-0.4368 +0.735*log(fg1$diameter)+ 1.4260*log(fg1$num_leaf))
+ volu<- function(a,b){exp(-0.4368 +0.735*log(a)+ 1.4260*log(b))}
 summ_broms%>%
-  mutate(max_water= ifelse(visit_id == 336, frenchGuiana(diameter,num_leaf), max_water))%>%filter(visit_id==336)%>%View
+  mutate(max_water= ifelse(visit_id == 336, volu(diameter,num_leaf), max_water))%>%filter(visit_id==336)%>%View
 
 #FrenchGuianaVriesea2007, Vriesea splendens No information of diameter and number of leaf
 
@@ -72,7 +57,7 @@ summ_broms%>%
   mutate(max_water= ifelse(visit_id == 106|visit_id==111|visit_id==91|visit_id==96, honduras(num_leaf,actual_water), max_water))%>%filter(visit_id == 106|visit_id==111|visit_id==91|visit_id==96)%>%View
 
 
-#We can use this equation for Colombia.Rioblanco 2012 (366)
+#We can use this equation for Colombia.Rioblanco 2012 (366) and El Verde 
 summary(lm(log(max_water)~log(num_leaf),data=guz_only))
 
 Col2012=filter(summ_broms,visit_id=="366")
@@ -80,22 +65,24 @@ Vol.max=exp(-2.3418 + 2.1025*log(Col2012$num_leaf))
 
 honduras<- function(a){exp(-2.3418 + 2.1025*log(a))}
 summ_broms%>%
-  mutate(max_water= ifelse(visit_id == 366, honduras(num_leaf), max_water))%>%filter(visit_id==366)%>%View
+  mutate(max_water= ifelse(visit_id%in%c(131,146,151,156,161,166,171,176,181,351,356,361,366), honduras(num_leaf), max_water))%>%filter(visit_id%in%c(131,146,151,156,161,166,171,176,181,351,356,361))%>%View
 
-
-
-# We can use this equation for Colombia. Rioblanco 2014(371)
+# We can use this equation for Colombia. Rioblanco 2014(371), ELVERDE
 plot(log(guz_only$leaf_width),log(guz_only$max_water))
 summary(lm(log(max_water)~log(num_leaf) + log(leaf_width) ,data=guz_only))
 
 Col2014=filter(summ_broms,visit_id=="371")
 Vol.max= exp(-4.18214 + 1.55894*log(Col2014$num_leaf) + 2.25906*log(Col2014$leaf_width))
 
+honduras<- function(a,b){exp(-4.18214 + 1.55894*log(a) + 2.25906*log(b))}
+summ_broms%>%
+  mutate(max_water= ifelse(visit_id==371, honduras(num_leaf,leaf_width), max_water))%>%filter(visit_id == 371)%>%View
 
 
 
+  
 
-
+(summ_broms[,c("max_water","visit_id")])
 
 
 
