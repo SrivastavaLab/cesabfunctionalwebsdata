@@ -25,30 +25,61 @@ bwg_join <- left_join(Alltraits, bwg_trait, by = "bwg_name") %>%
 
 # Merge by species + genus
 
+
 CP_gen_spe <- CPtrait %>%
-  unite(gen_spe, genus, species) %>%
-  select(gen_spe, starts_with("CP")) %>%
+  unite(gen_spe_fam_ord, ord, subord, subfamily, family, genus, species, realm) %>%
+  select(gen_spe_fam_ord, starts_with("CP")) %>%
   distinct() %>%
-  filter(!grepl("NA_NA", gen_spe))
+  filter(!grepl("NA_NA_NA_NA_NA_NA_NA", gen_spe_fam_ord))
 
 CP_gen_spe %>%
-  filter(is.na(gen_spe)) %>%
+  filter(is.na(gen_spe_fam_ord)) %>%
   verify(nrow(.) == 0)
 
+### Here we combine our trait data with the existing data. We insist that row
+### numbers not increase. Increase in row numbers indicates that CP_gen_spe
+### matches multiple rows in the dataset.
 gen_spe_join <- bwg_join %>%
-  unite(gen_spe, genus, species) %>%
-  left_join(CP_gen_spe, by = "gen_spe")
+  unite(gen_spe_fam_ord, ord, subord, subfamily, family, genus, species, realm) %>%
+  left_join(CP_gen_spe, by = "gen_spe_fam_ord") %>%
+  verify(nrow(.) == nrow(bwg_join))
 
-gen_spe_join %>% glimpse()
-bwg_join %>% glimpse()
-
-## there should be no double traits at this level
+## if the above test fails -- we have multiple matches -- we must also identify
+## which rows caused this problem. This next test will always fail if the above
+## test fails.
 CP_gen_spe %>%
-  group_by(gen_spe) %>%
+  group_by(gen_spe_fam_ord) %>%
   tally %>%
   filter(n > 1) %>%
   semi_join(CP_gen_spe, .) %>%
   verify(nrow(.) == 0)
+
+glimpse(gen_spe_join)
+
+## print the duplicates
+union_bwg_join <- bwg_join %>%
+  unite(gen_spe_fam_ord, ord, subord, subfamily, family, genus, species, realm)
+
+bad_names <- CP_gen_spe %>%
+  group_by(gen_spe_fam_ord) %>%
+  tally %>%
+  filter(n > 1) %>%
+  semi_join(CP_gen_spe, .) %>%
+  select(gen_spe_fam_ord)
+
+union_bwg_join %>%
+  group_by(gen_spe_fam_ord, CPI1, CPI2, CPI3) %>%
+  tally %>%
+  arrange(n) %>%
+  filter(gen_spe_fam_ord %in% bad_names$gen_spe_fam_ord) %>%
+  arrange(gen_spe_fam_ord)
+
+
+
+
+
+
+
 
 
 
