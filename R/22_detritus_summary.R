@@ -57,7 +57,47 @@ has_0_NA <- detritus_only %>%
   map_lgl(~ any(grepl("detritus0_NA", names(.x))))
 
 ## such datasets need only their final column
-detritus_complete <- detritus_only[has_0_NA] %>%
+detritus_complete <- detritus_only %>%
+  .[has_0_NA] %>%
   map(~ select(.x, bromeliad_id, detritus0_NA))
 
-## other datasets
+## other datasets ---------------
+
+### Some datasets do not have *any* detritus yet. Let us find these
+
+is_missing <- detritus_only %>%
+  map_lgl(~ ncol(.x) == 1)
+
+assertthat::assert_that(length(is_missing) == length(has_0_NA))
+
+detritus_missing <- detritus_only %>%
+  .[is_missing]
+
+## other datasets will require combination. The first step is to identify their
+## columns, and confirm that they are in sequential ranges
+
+## the first step is to get the names in question
+category_names <- detritus_only %>%
+  .[!has_0_NA & !is_missing] %>%
+  map(names) %>%
+  map(~ .x[!grepl("bromeliad_id", .x)]) %>%
+  map(~ gsub("detritus", "", .x))
+
+## remove na from min because NA is maximum by definition
+
+## this function will print "TRUE" if the categories defined by the vector are
+## continuous, e.g. c("1500_20000","20000_NA","0_1500" ) `
+is_continuous_categories <- function(cat_vector){
+  cat_range <- cat_vector %>%
+    str_split("_") %>%
+    transpose %>%
+    map(unlist) %>%
+    {c(invoke(setdiff, .), invoke(setdiff, rev(.)))}
+
+  identical(cat_range, c("0", "NA"))
+}
+
+c("1500_20000","20000_NA","0_1500" ) %>% str_split("_") %>% map(as.numeric) %>% map(min, na.rm = TRUE)
+
+c("1500_20000","20000_NA","0_1500" ) %>% str_split("_") %>% map(as.numeric) %>% map(max)
+
