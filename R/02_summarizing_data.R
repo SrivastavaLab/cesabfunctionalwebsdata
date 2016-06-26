@@ -150,15 +150,31 @@ detritus_wider<-detritus_wider %>%
 
 #French Guiana only 186 has fpom in ml, 211 has fpom cpom and deadleaves
 #first, Nourages 2009 accidentally has particle counts in detritus categories
+#this needs to be corrected in BWGdb but for now:
 
+detritus_wider<-detritus_wider %>%
+  mutate(detritus30_150 = ifelse(dataset_id==201,NA, detritus30_150))%>%
+  mutate(detritus0_30 = ifelse(dataset_id==201,NA, detritus0_30))%>%
+  mutate(detritus150_300 = ifelse(dataset_id==201,NA, detritus150_300))
+
+#next, need to reload fpom_ml, and then make it into detritus0_150,
+##NOTE: some brom missing fpom_ml even though Gustavo and Fabiola entered this for all 140??need to figure out why...
+fpom_convert<-function(FPOMml){
+  (0.0737*(FPOMml)-0.2981)
+}
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_150 = ifelse(dataset_id==201,fpom_convert(fpom_ml), detritus0_150))
+
+#now french guiana detritus from detritus
+#NOTE there is an input error: dead_leaves in Sinnamary was detritus>2cm x 2cm roughly, but in other sites #brown bromeliad leaves!
 
 sinn<-detritus_wider%>%filter(dataset_id==211)
 summary(glm(log(cpom_g)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.64
 plot(log(sinn$cpom_g)~log(sinn$fpom_g))
 summary(glm(log(dead_leaves)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.36
-plot(log(sinn$dead_leaves)~log(sinn$fpom_g))
+plot((sinn$dead_leaves)~(sinn$fpom_g))
 
-sinn$detover150<-sinn$fpom_g+sinn$cpom_g
+sinn$detover150<-sinn$fpom_g+sinn$cpom_g+sinn$dead_leaves
 summary(glm(log(fpom_g)~log(detover150), data=sinn))#sinnamary based eqn has rsq of 0.72
 plot(log(sinn$detover150)~log(sinn$fpom_g))
 
@@ -167,8 +183,8 @@ fpom_frenchguiana<- function(FPOMml){
   ifelse((0.0737*(FPOMml)-0.2981)>=0, (0.0737*(FPOMml)-0.2981), 0)
 }
 
-over150_frenchguiana<- function(a,b){
-  exp(0.8207*(a+b)-1.426)
+over150_frenchguiana<- function(a){
+  exp(0.8207*(a)-1.426)
 }
 
 detritus_wider<-detritus_wider%>%
@@ -192,9 +208,8 @@ detritus_wider<-detritus_wider %>%
   mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
 
 detritus_wider<-detritus_wider%>%
-  mutate(detritus150_NA = ifelse(dataset_id==201,
-                                 over150_frenchguiana(detritus0_30,detritus30_150),
-                                 detritus150_NA))
+  mutate(detritus150_NA = ifelse(dataset_id==201, over150_frenchguiana(detritus0_150), detritus150_NA))
+
 
 #pitilla costa rica 200 all present
 #pitilla costa rica 2002, 2010 are dataset61, 71
@@ -244,7 +259,7 @@ plot((pitilla2000s$detritus20000_NA)~(pitilla2000s$detritus0_20000))
 
 deadleavesalso_pitilla<- function(almost){
   exp(0.694 *log(almost) - 0.468)
-  }
+}
 
 detritus_wider<-detritus_wider%>%
   mutate(detritus10000_NA = ifelse(dataset_id%in%c(101,106), deadleavesalso_pitilla(detritus22_10000), NA))
@@ -253,11 +268,11 @@ x<-c(2,3,4,5,NA,7)
 y<-c(2,3,4,5,6,7)
 z<-c(NA, NA, NA)
 na.checker<-function(a){
-    ifelse((mean(a, na.rm=TRUE)*length(a)-sum(a, na.rm=TRUE))>0,
-           1,
-           ifelse(mean(a,na.rm=TRUE)>0,
-                  2,
-                  NA_real_))
+  ifelse((mean(a, na.rm=TRUE)*length(a)-sum(a, na.rm=TRUE))>0,
+         1,
+         ifelse(mean(a,na.rm=TRUE)>0,
+                2,
+                NA_real_))
 }
 
 na.checker(x)
