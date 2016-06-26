@@ -168,7 +168,12 @@ final_detritus <- detritus_only %>%
   map2(endpoints, cbind) %>%
   bind_rows(.id = 'visit_id')
 
-write_csv(final_detritus, "data-raw/22_detritus_summary.csv")
+final_detritus %>%
+  select(visit_id,
+         bromeliad_id,
+         detritus_sum = row_sum,
+         detritus_range = `.y[[i]]`) %>%
+  write_csv("data-raw/22_detritus_summary.csv")
 
 
 
