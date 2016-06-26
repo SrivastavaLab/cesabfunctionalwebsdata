@@ -10,7 +10,8 @@ source("R/reading_functions.R")
 
 # bromeliads:  imporing with correct col types--------------------------------------------------------------
 
-broms <- read_csv_correct_cols("data-raw/01_broms.csv")
+broms <- read.csv("data-raw/01_broms.csv", stringsAsFactors = FALSE)
+
 visits <- read_csv("data-raw/01_visits.csv", col_types = "nncDnnnnnncnncc")
 datasets<- read_csv("data-raw/01_datasets.csv")
 
@@ -280,7 +281,7 @@ daff::render_diff(daff::diff_data(detritus_original, detritus_wider))
 
 # write data out ----------------------------------------------------------
 
-write_csv(detritus_wider, "data-raw/03_broms.csv")
+write_csv(detritus_wider, "data-raw/02_broms.csv")
 
 # ### this script summarizes detritus amounts -- run it after you have imputed missing values
 # det <- broms %>%
