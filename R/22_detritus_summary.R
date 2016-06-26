@@ -13,8 +13,7 @@ library(purrr)
 
 # read in data ------------------------------------------------------------
 
-broms_detritus <- read_csv("data-raw/03_broms.csv",
-                           col_types = cols(dead_leaves = "n"))
+broms_detritus <- read.csv("data-raw/02_broms.csv",stringsAsFactors = FALSE)
 
 glimpse(broms_detritus)
 
@@ -123,16 +122,22 @@ detect_discontinuous <- function(dfnames){
 }
 
 
-detritus_only %>%
-  map(names) %>%
-  map_lgl(detect_continuous)
 
-
-category_names <- detritus_only %>%
+is_discont <- detritus_only %>%
   map(names) %>%
   map(~ .x[!grepl("bromeliad_id", .x)]) %>%
   map(~ gsub("detritus", "", .x)) %>%
-  map_lgl(is_continuous_categories)
+  map_lgl(detect_discontinuous)
 
-#
 
+is_contin <- detritus_only %>%
+  map(names) %>%
+  map(~ .x[!grepl("bromeliad_id", .x)]) %>%
+  map(~ gsub("detritus", "", .x)) %>%
+  map_lgl(detect_continuous)
+
+detritus_only %>%
+  .[is_contin]
+
+detritus_only %>%
+  .[xor(is_contin, has_0_NA)]
