@@ -57,7 +57,7 @@ source("R/13_BFtrait.R")
 
 # 22. Summarizes detritus data
 #input: data-raw/02_broms.csv
-#returns:
+#returns: data-raw/22_detritus_summary.csv
 
 source("R/22_detritus_summary.R")
 
