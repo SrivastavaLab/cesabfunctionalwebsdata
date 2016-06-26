@@ -154,17 +154,22 @@ cbind(is_missing, is_discont, is_contin) %>% as.data.frame() %>%
 
 is_discont_ids <- is_discont %>% which(TRUE) %>% names(.)
 
-detritus_only %>%
-  .[is_discont_ids] %>%
-  map(names) %>%
-  map(~ .x[!grepl("bromeliad_id", .x)]) %>%
-  map(~ gsub("detritus", "", .x)) %>%
-  map(get_range)
+endpoints <- detritus_only %>%
+  map_if(!is_missing, names) %>%
+  map_if(!is_missing, ~ .x[!grepl("bromeliad_id", .x)]) %>%
+  map_if(!is_missing, ~ gsub("detritus", "", .x)) %>%
+  map_if(!is_missing, get_range) %>%
+  map_if(is_missing, ~ c("NA", "NA")) %>%
+  map(paste, collapse = "_")
+
+final_detritus <- detritus_only %>%
+  map(~ data.frame(row_sum = rowSums(dplyr::select(.x, -bromeliad_id)),
+                   bromeliad_id = dplyr::select(.x, bromeliad_id))) %>%
+  map2(endpoints, cbind) %>%
+  bind_rows(.id = 'visit_id')
+
+write_csv(final_detritus, "data-raw/22_detritus_summary.csv")
 
 
 
-detritus_only %>%
-  .[is_contin]
 
-detritus_only %>%
-  .[xor(is_contin, has_0_NA)]
