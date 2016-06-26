@@ -95,10 +95,17 @@ where_values <- function(x) which(!is.na(x))
 
 
 ## for cardoso 2008
+#first we realized that the larger detritus in cardoso has been input into the wrong column
+#remove the next few lines if this gets fixed on BWGdb
+detritus_wider <- detritus_wider %>%
+  mutate(detritus150_NA = ifelse(visit_id == 21, detritus150_20000, detritus150_NA))
+detritus_wider <- detritus_wider %>%
+  mutate(detritus150_20000 = ifelse(visit_id == 21, NA, detritus150_20000))
+
+
 fine_cardoso2008<- function(coarse){
   exp(0.68961 * log(coarse) - 0.11363)
 }
-
 
 detritus_wider <- detritus_wider %>%
   mutate(detritus0_150 = ifelse(visit_id == 21, fine_cardoso2008(detritus150_20000), detritus0_150))
@@ -226,6 +233,30 @@ deadleavesalso_pitilla<- function(almost){
 detritus_wider<-detritus_wider%>%
   mutate(detritus10000_NA = ifelse(dataset_id%in%c(101,106), deadleavesalso_pitilla(detritus22_10000), NA))
 
+x<-c(2,3,4,5,NA,7)
+y<-c(2,3,4,5,6,7)
+z<-c(NA, NA, NA)
+na.checker<-function(a){
+    ifelse((mean(a, na.rm=TRUE)*length(a)-sum(a, na.rm=TRUE))>0,
+           1,
+           ifelse(mean(a,na.rm=TRUE)>0,
+                  2,
+                  NA_real_))
+}
+
+na.checker(x)
+na.checker(y)
+na.checker(z)
+
+visitdatanames<- visits %>%
+  select(visit_id, dataset_name)
+
+detrital_tableNA <- detritus_wider %>%
+  select(-bromeliad_id, -dataset_name) %>%  #-bromeliad_id, -dataset_name
+  group_by(visit_id) %>%
+  #summarize(check = na.checker(detritus0_NA))%>%
+  summarise_each(funs(nas = "na.checker"))%>%
+  left_join(visitdatanames)%>%View
 
 # visualize with a daff ---------------------------------------------------
 
