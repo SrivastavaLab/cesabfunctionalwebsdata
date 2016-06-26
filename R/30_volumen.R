@@ -9,8 +9,10 @@ broms <- read_csv("data-raw/01_broms.csv")
 summ_broms<-read_csv("data-raw/02_broms.csv")
 glimpse(summ_broms)
 
-####French Guiana, We used the Regis's equation ####
-#FrenchGuianaAechmea2007, Aechmea mertensii,Equation= exp(0.611+1.09*log(diameter))
+## French Guiana, We used the Regis's equation ####
+## ~/Dropbox/communityanalysis/CESAB\ trait\ working\ group/Max_Volume_models/
+## FrenchGuianaAechmea2007, 
+## Equation= exp(0.611+1.09*log(diameter)) for Aechmea mertensii 
 volu<- function(a){exp(0.611+1.09*log(a))}
 summ_broms%>%
   mutate(max_water= ifelse(visit_id == 286, volu(diameter), max_water))%>%filter(visit_id==286)%>%View
@@ -55,6 +57,7 @@ plot(log(guz_only$num_leaf),log(guz_only$max_water))
 summary(lm(log(max_water)~log(num_leaf) + log(actual_water +1),data=guz_only ))
 
 # Equation for Honduras and Colombia2000 and 2001:Vmax=exp(0.78960 + 0.68576*log(Col$num_leaf) + 0.44664*log(Col$actual_water +1))
+#Tillandsia
 vol<- function(a,b){exp(0.78960 + 0.68576*log(a) + 0.44664*log(b+1))}
 summ_broms%>%
   mutate(max_water= ifelse(visit_id == 106|visit_id==111|visit_id==91|visit_id==96, vol(num_leaf,actual_water), max_water))%>%filter(visit_id == 106|visit_id==111|visit_id==91|visit_id==96)%>%View
@@ -63,6 +66,7 @@ summ_broms%>%
 summary(lm(log(max_water)~log(num_leaf),data=guz_only))
 
 # equation for Colombia.Rioblanco 2012 (366) and ElVerde Vol.max=exp(-2.3418 + 2.1025*log(Col2012$num_leaf))
+#Guzmania
 vol<- function(a){exp(-2.3418 + 2.1025*log(a))}
 summ_broms%>%
   mutate(max_water= ifelse(visit_id%in%c(131,146,151,156,161,166,171,176,181,351,356,361,366), vol(num_leaf), max_water))%>%filter(visit_id%in%c(131,146,151,156,161,166,171,176,181,351,356,361))%>%View
@@ -72,6 +76,7 @@ plot(log(guz_only$leaf_width),log(guz_only$max_water))
 summary(lm(log(max_water)~log(num_leaf) + log(leaf_width) ,data=guz_only))
 
 # Equation for Colombia. Rioblanco 2014(371) Vol.max= exp(-4.18214 + 1.55894*log(Col2014$num_leaf) + 2.25906*log(Col2014$leaf_width))
+#Guzmania
 vol<- function(a,b){exp(-4.18214 + 1.55894*log(a) + 2.25906*log(b))}
 summ_broms%>%
   mutate(max_water= ifelse(visit_id==371, vol(num_leaf,leaf_width), max_water))%>%filter(visit_id == 371)%>%View
@@ -80,9 +85,10 @@ summ_broms%>%
 summary(lm(log(max_water)~log(actual_water+1),data=guz_only))
 
 #Equation for Sonora, exp(2.412+ 0.619*log(actual_water+1))
+#Vriesea or Guzmania
 vol<- function(a){exp(2.412+ 0.619*log(a+1))}
 summ_broms%>%
   mutate(max_water= ifelse(visit_id%in%c(376,391,396,401,406,411,416,421,426,431,436,441,446), vol(actual_water), max_water))%>%filter(visit_id%in%c(376,391,396,401,406,411,416,421,426,431,436,441,446))%>%View
 
-write_csv(, "data-raw/02_broms.csv")
+#write_csv(, "data-raw/02_broms.csv")
 
