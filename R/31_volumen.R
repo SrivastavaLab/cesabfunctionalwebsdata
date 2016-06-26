@@ -34,19 +34,13 @@ volNouragues2009<- function(a,b){exp(-0.4368 +0.735*log(a)+ 1.4260*log(b))}
 summ_broms <- summ_broms%>%
   mutate(max_water= ifelse(visit_id == 336|visit_id==331, volNouragues2009(diameter,num_leaf), max_water))
 
-###**** Missing info
+
 #FrenchGuianaVriesea2007, Vriesea splendens No information of diameter and number of leaf, information about actual water
 #select data set only Vriesea splendens and create an equation
-####vri_only = filter(summ_broms, species=="Vriesea splendens"& visit_id==341)
-####summary(lm(max_water~actual_water,data=vri_only))
-
-# Equation
-####vol<- function(a,b){}
-####summ_broms%>%
-  ####mutate(max_water= ifelse(visit_id==, vol(), max_water)) %>%
-##   filter(visit_id == )
-###**** Missing info
-
+# Equation vmax = 1.4144*actual vol + 39.343
+volFrench2007Vrisea<- function(a){1.4144*a + 39.343}
+summ_broms <-summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 341 & species=="Vriesea splendens", volFrench2007Vrisea(actual_water), max_water))
 
 #### For the other sites ####
 
