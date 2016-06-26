@@ -1,9 +1,33 @@
-### teste
-trait <- read.csv("data-raw/01_traits.csv")
-str(trait)
-nrow(trait)
 
-### colnames(name of the file)= c("names col", )
+######## Script to insert the new traits modalities created by Paula M. de Omena ##############
+######## Our goal here is to insert new trait modalities that can be related to PREDATION DEFENSE
+######## Feel free to improove the script, and disagree with the code I designated for the traits (values 0, 1, 2, 3)
+
+
+#### Paula`s version of the script ready! #####
+
+#### We still need to include the trait modalities: Body form and cohort production interval
+
+rm(list=ls())
+ls()
+######### Original Trait Matrix ###########
+library(dplyr)
+
+
+trait.1<-read.csv("data-raw/07_traits.csv", h=T)
+head(trait.1)
+colnames(trait.1)
+str(trait.1)
+#nrow = 866
+ncol(trait.1)
+nrow(trait.1)
+
+trait.1 <- trait.1 %>%
+  rename(MD1.1 = MD1, MD2.1 = MD2, MD3.1 = MD3, MD4.1 = MD4,
+         MD5.1 = MD5, MD6.1 = MD6, MD7.1 = MD7, MD8.1 = MD8)
+
+
+#ncol = 71
 
 ##### NEW TRAIT MODALITY --> MD = Morfological Defense
 
@@ -25,32 +49,37 @@ nrow(trait)
 
 ### MD8 (case/tube) (0 or 3)
 
-## the number of traits that we add should be equal to the length of existing data.
-n_spp <- nrow(trait)
+new_rows <- nrow(trait.1)
+
+#ncol = 71
 #### Here I create the new trait columns filled by "NA"
-MD1=rep(NA,n_spp)
-MD2=rep(NA,n_spp)
-MD3=rep(NA,n_spp)
-MD4=rep(NA,n_spp)
-MD5=rep(NA,n_spp)
-MD6=rep(NA,n_spp)
-MD7=rep(NA,n_spp)
-MD8=rep(NA,n_spp)
+MD1=rep(NA,866)
+MD2=rep(NA,866)
+MD3=rep(NA,866)
+MD4=rep(NA,866)
+MD5=rep(NA,866)
+MD6=rep(NA,866)
+MD7=rep(NA,866)
+MD8=rep(NA,866)
 
 new.trait<- cbind(MD1, MD2, MD3, MD4, MD5, MD6, MD7, MD8)
-
-trait.2<-cbind(trait, new.trait)
+trait.2$MD1
+trait.2<-cbind(trait.1, new.trait)
+is.data.frame(trait.2)
+colnames(trait.2)
+str(trait.2)
 head(trait.2)
 ncol(trait.2)
 nrow(trait.2)
 
 ##########################################################################
 
-##### subclass Acari #####
+                   ##### subclass Acari #####
 
-###########################################################################
-
+########################################################################
+colnames(trait.2)
 ### MD1 (none): (0)
+
 trait.2$MD1[trait.2$subclass=="Acari"]= 0
 
 ### MD2 (elongated tubercle) (0)
@@ -75,9 +104,10 @@ trait.2$MD7[trait.2$subclass=="Acari"]=0
 trait.2$MD8[trait.2$subclass=="Acari"]=0
 
 
+
 ##########################################################################
 
-##### aff Drosophilidae #####
+                     ##### aff Drosophilidae #####
 
 ###########################################################################
 
@@ -108,7 +138,7 @@ trait.2$MD8[trait.2$family=="aff. Drosophilidae"]=0
 
 ##########################################################################
 
-##### Anisopodidae ######
+                ##### Anisopodidae ######
 
 ###########################################################################
 
@@ -136,10 +166,11 @@ trait.2$MD7[trait.2$family=="Anisopodidae"]=0
 ### MD8 (case/tube)(0)
 trait.2$MD8[trait.2$family=="Anisopodidae"]=0
 
+write.csv(trait.2,"teste4.csv")
 
 ##########################################################################
 
-##### Aulacigastridae #####
+                 ##### Aulacigastridae #####
 
 ###########################################################################
 
@@ -173,7 +204,7 @@ trait.2$MD8[trait.2$family=="Aulacigastridae"]=0
 
 ##########################################################################
 
-##### Axymyiidae #####
+                      ##### Axymyiidae #####
 
 ###########################################################################
 
@@ -207,7 +238,7 @@ trait.2$MD8[trait.2$family=="Axymyiidae"]=0
 
 ##########################################################################
 
-##### Canacidae #####
+             ##### Canacidae #####
 
 
 ###########################################################################
@@ -244,7 +275,7 @@ trait.2$MD8[trait.2$family=="Canacidae"]=0
 
 ###########################################################################
 
-####### Cecidomyiidae ########
+                    ####### Cecidomyiidae ########
 
 ###########################################################################
 
@@ -275,7 +306,7 @@ trait.2$MD8[trait.2$family=="Cecidomyiidae"]= 0
 
 ###########################################################################
 
-####### Ceratopogonidae ########
+                  ####### Ceratopogonidae ########
 
 ###########################################################################
 ### genus Bezzia, Culicoides, Sphaeromias, Stilobezzia, Atrichopogon, Forcipomyia
@@ -482,7 +513,7 @@ trait.2$MD4[trait.2$subfamily=="Ceratopogoninae"]= 0
 
 #########################################################################################
 
-##### Family Chironomidae #####
+                        ##### Family Chironomidae #####
 
 #########################################################################################
 
@@ -545,7 +576,7 @@ trait.2$MD7[trait.2$family=="Chironomidae"]=0
 
 
 trait.2$MD8[trait.2$family=="Chironomidae"]=3 ### first I inserted 3 for all Chironomidae, then I substitute by
-### the correct value for each genus/subfamily
+                                              ### the correct value for each genus/subfamily
 
 
 trait.2$MD8[trait.2$genus=="Chironomus"]=3
@@ -560,12 +591,12 @@ trait.2$MD8[trait.2$subfamily=="Podonominae"]=1
 trait.2$MD8[trait.2$subfamily=="Tanypodinae"]=0
 
 trait.2$MD8[trait.2$key=="k192"]=0 ### I do not think that Diptera.447 (black head chironomid) should be a tube builter
-## we should confirm it it is Sciaridae or chironomid.
+                                    ## we should confirm it it is Sciaridae or chironomid.
 
 
 #########################################################################################
 
-####### Family Culicidae ########
+                       ####### Family Culicidae ########
 
 #########################################################################################
 
@@ -635,7 +666,7 @@ trait.2$MD3[trait.2$family=="Culicidae" & is.na(trait.2$genus=="NA")]=2
 
 ##########################################################################
 
-##### Family Psychodidae  #####
+         ##### Family Psychodidae  #####
 
 ###########################################################################
 
@@ -672,7 +703,7 @@ trait.2$MD8[trait.2$family=="Psychodidae"]=0
 
 ##########################################################################
 
-##### Ord - Odonata #####
+              ##### Ord - Odonata #####
 
 ###########################################################################
 
@@ -835,10 +866,10 @@ trait.2$MD1[trait.2$ord=="Coleoptera"]= 0
 
 ### MD2 (elongated tubercle) (0)
 trait.2$MD2[trait.2$ord=="Coleoptera"]= 0  ### This may change for aquatic Coleoptera, but I
-### inserted the correct value for each family/genus (code below).
+                                          ### inserted the correct value for each family/genus (code below).
 ### MD5 (dorsal plates) (0)
 trait.2$MD5[trait.2$ord=="Coleoptera"]= 0 ### This may change for aquatic Coleoptera, but I
-### inserted the correct value for each family/genus (code below).
+                                          ### inserted the correct value for each family/genus (code below).
 ### MD6 (sclerotized exoskeleton)(3)
 trait.2$MD6[trait.2$ord=="Coleoptera"]= 3 ### it will change for some aquatic forms
 
@@ -1036,7 +1067,7 @@ trait.2$MD6[trait.2$ord=="Coleoptera" & trait.2$realm =="aquatic"& is.na(trait.2
 
 ##########################################################################
 
-##### subphylum - Crustacea #####
+        ##### subphylum - Crustacea #####
 
 ###########################################################################
 ### Families: Chydoridae, Daphnidae, Cyclopidae, Canthocamptidae, Candonidae, Cyprididae, Limnocytheridae
@@ -1064,9 +1095,9 @@ trait.2$MD6[trait.2$class=="Ostracoda"]=0
 
 ### MD7 (Shell) (3)
 trait.2$MD7[trait.2$class=="Ostracoda"]=3 ###Ostracoda is the only group that will have a shell, and this
-###group did not have a shell. The "shell" is a projection of their exoskeleton.
-###So, instead of shell, Gustavo think that we should probably put 3 for sclerotized
-###exoskeleton and remove this trait.
+                                          ###group did not have a shell. The "shell" is a projection of their exoskeleton.
+                                          ###So, instead of shell, Gustavo think that we should probably put 3 for sclerotized
+                                          ###exoskeleton and remove this trait.
 
 ### MD8 (case/tube) (0)
 trait.2$MD8[trait.2$class=="Ostracoda"]=0
@@ -1133,7 +1164,7 @@ trait.2$MD8[trait.2$subclass=="Phyllopoda"]= 0
 
 ###########################################################
 
-##### Ordem Hemiptera  #####
+               ##### Ordem Hemiptera  #####
 
 #########################################################
 
@@ -1315,6 +1346,37 @@ trait.2$MD8[trait.2$family=="Tipulidae"]= 0
 
 ###########################################################
 
+##### Family Dixidae#####
+
+#########################################################
+
+### MD1 (none): (3)
+trait.2$MD1[trait.2$family=="Dixidae"]= 3
+
+### MD2 (elongated tubercle) (0)
+trait.2$MD2[trait.2$family=="Dixidae"]= 0
+
+### MD3 (hair) (0)
+trait.2$MD3[trait.2$family=="Dixidae"]= 0
+
+### MD4 (sclerotized spines) (0)
+trait.2$MD4[trait.2$family=="Dixidae"]= 0
+
+### MD5 (dorsal plates) (0)
+trait.2$MD5[trait.2$family=="Dixidae"]= 0
+
+### MD6 (sclerotized exoskeleton) (0)
+trait.2$MD6[trait.2$family=="Dixidae"]= 0
+
+### MD7 (Shell) (0)
+trait.2$MD7[trait.2$family=="Dixidae"]= 0
+
+### MD8 (case/tube) (0)
+trait.2$MD8[trait.2$family=="Dixidae"]= 0
+
+
+###########################################################
+
 ##### Family Muscidae #####
 
 #########################################################
@@ -1403,6 +1465,20 @@ trait.2$MD1[trait.2$subclass=="Oligochaeta" & is.na(trait.2$family)]= 0
 
 ### MD3 (hair) (1)
 trait.2$MD3[trait.2$subclass=="Oligochaeta" & is.na(trait.2$family)]= 1
+
+## family Lumbricidae
+### MD1 (none): (3)
+trait.2$MD1[trait.2$family=="Lumbricidae"]= 3
+
+### MD3 (hair) (1)
+trait.2$MD3[trait.2$family=="Lumbricidae"]= 0
+
+## family Acanthodrilidae
+### MD1 (none): (3)
+trait.2$MD1[trait.2$family=="Acanthodrilidae"]= 3
+
+### MD3 (hair) (1)
+trait.2$MD3[trait.2$family=="Acanthodrilidae"]= 0
 
 
 
@@ -1718,7 +1794,7 @@ trait.2$MD8[trait.2$family=="Sciaridae"]= 0
 
 ########################################################
 
-###### family Periscelididae ######
+     ###### family Periscelididae ######
 
 ########################################################
 
@@ -2003,7 +2079,7 @@ trait.2$MD8[trait.2$ord=="Diptera" & is.na(trait.2$subord)]=0
 
 ########################################################
 
-### Family Scatopsidae ######
+        ### Family Scatopsidae ######
 
 ########################################################
 
@@ -2129,5 +2205,11 @@ trait.2$MD7[trait.2$ord=="Megaloptera"]= 0
 trait.2$MD8[trait.2$ord=="Megaloptera"]= 0
 
 
-write.csv(trait.2, "trait_md.csv")
+trait.3 <- trait.2 %>%
+  select(-MD1.1, -MD2.1, -MD3.1, -MD4.1, -MD5.1, -MD6.1, -MD7.1, -MD8.1)
+
+stopifnot(nrow(trait.1) == nrow(trait.3))
+
+write.csv(trait.3, "data-intermediate/11MD_trait.csv", row.names = FALSE)
+
 

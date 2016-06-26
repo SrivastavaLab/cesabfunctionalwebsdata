@@ -10,12 +10,14 @@ source("R/reading_functions.R")
 
 # bromeliads:  imporing with correct col types--------------------------------------------------------------
 
-broms <- read.csv("data-raw/01_broms.csv", stringsAsFactors = FALSE)
-
+broms <- read_csv_correct_cols("data-raw/01_broms.csv")
 visits <- read_csv("data-raw/01_visits.csv", col_types = "nncDnnnnnncnncc")
 datasets<- read_csv("data-raw/01_datasets.csv")
 
-
+## the "problems" are probaby OK?
+problems(broms)
+broms$ph
+## yes --- they look just fine
 glimpse(visits)
 
 ## making some summary tables to help with visualizing missing data -----------------------------------------
@@ -74,8 +76,7 @@ detritus_wider <- broms %>%
   left_join(detritus_wide)%>%
   left_join(visitnames)%>%
   left_join(diam_brom)%>%
-  left_join(fpom_brom) #%>%
-  # verify(nrow(.) == nrow(broms))
+  left_join(fpom_brom)
 
 ## create for references
 detritus_original <- detritus_wider
@@ -192,10 +193,7 @@ detritus_wider<-detritus_wider %>%
   mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
 
 detritus_wider<-detritus_wider%>%
-  mutate(detritus150_NA = ifelse(dataset_id==201,
-                                 over150_frenchguiana(detritus0_30,detritus30_150),
-                                 detritus150_NA))
-
+  mutate(detritus150_NA = ifelse(dataset_id==201, over150_frenchguiana(detritus0_30,detritus30_150), detritus150_NA))%>%filter(dataset_id==201)
 #pitilla costa rica 200 all present
 #pitilla costa rica 2002, 2010 are dataset61, 71
 fine_pitilla<- function(med, coarse){
@@ -249,6 +247,30 @@ deadleavesalso_pitilla<- function(almost){
 detritus_wider<-detritus_wider%>%
   mutate(detritus10000_NA = ifelse(dataset_id%in%c(101,106), deadleavesalso_pitilla(detritus22_10000), NA))
 
+### Paula and Kurt
+
+### Cardoso 2011
+str(detritus_wider)
+
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_150 = ifelse(visit_id == 231, detritus150_NA, detritus0_150))
+detritus_wider <- detritus_wider %>%
+  mutate(detritus150_NA = ifelse(visit_id == 231, NA, detritus150_NA))
+
+## using model from fine_cardoso2008<- function(coarse){
+#  exp(0.68961 * log(coarse) - 0.11363)
+# }
+
+
+fine_cardoso2011<- function(coarse){
+  exp(0.68961 * log(coarse) - 0.11363)
+}
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_150 = ifelse(visit_id == 231, fine_cardoso2011(detritus150_NA), detritus0_150))%>%View
+
+
+
+
 x<-c(2,3,4,5,NA,7)
 y<-c(2,3,4,5,6,7)
 z<-c(NA, NA, NA)
@@ -282,7 +304,7 @@ daff::render_diff(daff::diff_data(detritus_original, detritus_wider))
 
 # write data out ----------------------------------------------------------
 
-write_csv(detritus_wider, "data-raw/02_broms.csv")
+write_csv(detritus_wider, "data-raw/03_broms.csv")
 
 # ### this script summarizes detritus amounts -- run it after you have imputed missing values
 # det <- broms %>%

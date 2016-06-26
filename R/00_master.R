@@ -12,9 +12,47 @@ library(tidyr)
 bwg_auth()
 
 ## this is very slow! run at your own risk
+
+# 01. Downloads the data from the BWG database
+#returns:data-raw/01_broms.csv, data-raw/01_abundance.csv, data-raw/01_datasets.csv
+# data-raw/01_traits.csv, data-raw/01_visits.csv
+
 # source("R/01_accessing_data.R")
 
+# 02. This script summarizes the data
+#input: data-raw/01_broms.csv, data-raw/01_traits.csv
+#returns: data-raw/02_broms.csv,  data-raw/02_abundance.csv
+
 source("R/02_summarizing_data.R")
+
+# 04. The script will fill in missing values for max volume and total detritus in BWGdb data
+#input: data-raw/01_broms.csv
+
+source("R/04_allometric_eq.R")
+
+# 07. This script combines trait data -- tachet vs other traitsl
+#input: data-raw/01_traits.csv
+#returns: data-raw/07_traits.csv
+
+source("R/07_traits.R")
+
+# 11. This script attaches the morphological defense traits
+#input: data-raw/07_traits.csv
+#returns: data-intermediate/11MD_trait.csv
+
+source("R/11_MDtrait.R")
+
+# 12. This script attaches the production traits
+#input: data-intermediate/11MD_trait.csv, data-intermediate/CPfamily-updated.csv, data-intermediate/CPgenus-updated.csv
+#returns: data-intermediate/12CP_trait.csv
+
+source("R/12_CPtrait.R")
+
+# 13. This script attaches the body form traits
+#input: data-intermediate/12CP_trait.csv, data-intermediate/BFfamily-updated.csv, data-intermediate/BFgenus-updated.csv
+#returns: data-raw/13_final_trait.csv
+
+
 
 ### ...
 
