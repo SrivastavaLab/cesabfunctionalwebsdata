@@ -37,6 +37,8 @@ numbers <- ifelse(nchar(numbers) == 1, yes = paste0("0", numbers), no = numbers)
 
 names(numbers) <- names(taxon_list)
 
+## arrange alphabetically within these.
+
 ### write tables out as csvs
 for (i in names(taxon_list)) {
   write_csv(taxon_list[[i]], path = paste0("data-intermediate/BF_traits/BF_", numbers[[i]],"_", i, ".csv"))
