@@ -150,6 +150,8 @@ detritus_wider<-detritus_wider %>%
   mutate(detritus0_150 = ifelse(dataset_id%in%c(166,171,181), fine_lasgamas(detritus150_850), detritus0_150))
 
 #French Guiana only 186 has fpom in ml, 211 has fpom cpom and deadleaves
+#first, Nourages 2009 accidentally has particle counts in detritus categories
+
 
 sinn<-detritus_wider%>%filter(dataset_id==211)
 summary(glm(log(cpom_g)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.64
@@ -157,8 +159,17 @@ plot(log(sinn$cpom_g)~log(sinn$fpom_g))
 summary(glm(log(dead_leaves)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.36
 plot(log(sinn$dead_leaves)~log(sinn$fpom_g))
 
+sinn$detover150<-sinn$fpom_g+sinn$cpom_g
+summary(glm(log(fpom_g)~log(detover150), data=sinn))#sinnamary based eqn has rsq of 0.72
+plot(log(sinn$detover150)~log(sinn$fpom_g))
+
+
 fpom_frenchguiana<- function(FPOMml){
   ifelse((0.0737*(FPOMml)-0.2981)>=0, (0.0737*(FPOMml)-0.2981), 0)
+}
+
+over150_frenchguiana<- function(a,b){
+  exp(0.8207*(a+b)-1.426)
 }
 
 detritus_wider<-detritus_wider%>%
@@ -181,6 +192,8 @@ detritus_wider<-detritus_wider %>%
   mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
   mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
 
+detritus_wider<-detritus_wider%>%
+  mutate(detritus150_NA = ifelse(dataset_id==201, over150_frenchguiana(detritus0_30,detritus30_150), detritus150_NA))%>%filter(dataset_id==201)
 #pitilla costa rica 200 all present
 #pitilla costa rica 2002, 2010 are dataset61, 71
 fine_pitilla<- function(med, coarse){
@@ -192,6 +205,7 @@ deadleaves_pitilla<- function(medcoarse){
 
 detritus_wider<-detritus_wider %>%
   mutate(detritus0_150 = ifelse(dataset_id == 61, fine_pitilla(detritus150_850, detritus850_20000), detritus0_150))
+
 detritus_wider<-detritus_wider %>%
   mutate(detritus20000_NA = ifelse(dataset_id == 71, deadleaves_pitilla(detritus150_20000), detritus20000_NA))%>%
   mutate(detritus0_150 = ifelse(dataset_id == 71, fine_pitilla(0,detritus150_20000), detritus0_150))
@@ -256,7 +270,7 @@ detrital_tableNA <- detritus_wider %>%
   group_by(visit_id) %>%
   #summarize(check = na.checker(detritus0_NA))%>%
   summarise_each(funs(nas = "na.checker"))%>%
-  left_join(visitdatanames)%>%View
+  left_join(visitdatanames)
 
 # visualize with a daff ---------------------------------------------------
 
