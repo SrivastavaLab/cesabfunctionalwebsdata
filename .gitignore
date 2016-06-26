@@ -26,6 +26,7 @@ vignettes/*.pdf
 .Rproj.user
 releases
 data-raw/
+data-intermediate/1*
 *.csv
 
 
