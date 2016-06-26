@@ -9,7 +9,7 @@ library(stringr)
 library(purrr)
 library(tidyr)
 
-bwg_auth()
+# bwg_auth()
 
 ## this is very slow! run at your own risk
 
@@ -49,9 +49,9 @@ source("R/11_MDtrait.R")
 
 source("R/12_CPtrait.R")
 
-# 13. This script attaches the body form traits
+# 13. This script attaches the body form traits, returns the T matrix
 #input: data-intermediate/12CP_trait.csv, data-intermediate/BFfamily-updated.csv, data-intermediate/BFgenus-updated.csv
-#returns: data-raw/13_final_trait.csv
+#returns: data-raw/13_T_matrix.csv
 
 source("R/13_BFtrait.R")
 
@@ -66,6 +66,18 @@ source("R/22_detritus_summary.R")
 #returns: data-raw/31_broms.csv
 
 source("R/31_volumen.R")
+
+# 41. Joins detritus and volume to create E matrix
+#input: data-raw/31_broms.csv, data-raw/22_detritus_summary.csv
+#returns: data-raw/41_E_matrix.csv
+
+source("R/41_E_matrix.R")
+
+# 51. Summarizes the abundance table to create the W matrix
+#input: data-raw/01_abundance.csv
+#returns: data-raw/51_W_matrix.csv
+
+source("R/51_abundance_W_matrix.R")
 
 # 99. This scripts merges the final data and prepares a new release of the dataset
 #input: data-raw/01_datasets.csv, read_csv("data-raw/01_visits.csv, read_csv("data-raw/01_traits.csv

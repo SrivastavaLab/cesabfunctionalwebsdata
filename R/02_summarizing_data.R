@@ -159,11 +159,10 @@ detritus_wider<-detritus_wider %>%
 
 #next, need to reload fpom_ml, and then make it into detritus0_150,
 ##NOTE: some brom missing fpom_ml even though Gustavo and Fabiola entered this for all 140??need to figure out why...
-fpom_convert<-function(FPOMml){
-  (0.0737*(FPOMml)-0.2981)
-}
-detritus_wider<-detritus_wider %>%
-  mutate(detritus0_150 = ifelse(dataset_id==201,fpom_convert(fpom_ml), detritus0_150))
+##NOTE: the FPOMml is wrng for Nourages, Regis will see if it can be corrected, for now keep functions below
+#fpom_convert<-function(FPOMml){(0.0737*(FPOMml)-0.2981)}
+#detritus_wider<-detritus_wider %>%
+# mutate(detritus0_150 = ifelse(dataset_id==201,fpom_convert(fpom_ml), detritus0_150))
 
 #now french guiana detritus from detritus
 #NOTE there is an input error: dead_leaves in Sinnamary was detritus>2cm x 2cm roughly, but in other sites #brown bromeliad leaves!
@@ -175,16 +174,15 @@ summary(glm(log(dead_leaves)~log(fpom_g), data=sinn))#sinnamary based eqn has rs
 plot((sinn$dead_leaves)~(sinn$fpom_g))
 
 sinn$detover150<-sinn$fpom_g+sinn$cpom_g+sinn$dead_leaves
-summary(glm(log(fpom_g)~log(detover150), data=sinn))#sinnamary based eqn has rsq of 0.72
+summary(glm(log(detover150)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.59
 plot(log(sinn$detover150)~log(sinn$fpom_g))
 
-
-fpom_frenchguiana<- function(FPOMml){
-  ifelse((0.0737*(FPOMml)-0.2981)>=0, (0.0737*(FPOMml)-0.2981), 0)
-}
+#fpom_frenchguiana<- function(FPOMml){
+#  ifelse((0.0737*(FPOMml/1000)-0.2981)>=0, (0.0737*(FPOMml/1000)-0.2981), 0)
+#}
 
 over150_frenchguiana<- function(a){
-  exp(0.8207*(a)-1.426)
+  exp(0.688*(a)+3.075)
 }
 
 detritus_wider<-detritus_wider%>%
@@ -207,25 +205,29 @@ detritus_wider<-detritus_wider %>%
   mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
   mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
 
-detritus_wider<-detritus_wider%>%
-  mutate(detritus150_NA = ifelse(dataset_id==201, over150_frenchguiana(detritus0_150), detritus150_NA))
-
+#detritus_wider<-detritus_wider%>%
+#  mutate(detritus150_NA = ifelse(dataset_id==201, over150_frenchguiana(detritus0_150), detritus150_NA))%>%filter(dataset_id==201)%>%View
 
 #pitilla costa rica 200 all present
-#pitilla costa rica 2002, 2010 are dataset61, 71
+#pitilla costa rica 2002, 2010 are dataset61, 71; pitilla1997 dataset id is 51
+
 fine_pitilla<- function(med, coarse){
   exp(0.79031 * log(med+coarse) - 0.07033)
 }#R2= 0.8965
-deadleaves_pitilla<- function(medcoarse){
-  exp(1.01680 * log(medcoarse) - 1.09992)
+deadleaves_pitilla<- function(med,coarse){
+  exp(1.01680 * log(med+coarse) - 1.09992)
 }#R2= 0.776
 
 detritus_wider<-detritus_wider %>%
-  mutate(detritus0_150 = ifelse(dataset_id == 61, fine_pitilla(detritus150_850, detritus850_20000), detritus0_150))
+  mutate(detritus0_150 = ifelse(dataset_id%>%c(51,61), fine_pitilla(detritus150_850, detritus850_20000), detritus0_150))
+detritus_wider<-detritus_wider %>%
+  mutate(detritus20000_NA = ifelse(dataset_id%>%c(51), deadleaves_pitilla(detritus150_850, detritus850_20000), detritus20000_NA))
+
 
 detritus_wider<-detritus_wider %>%
-  mutate(detritus20000_NA = ifelse(dataset_id == 71, deadleaves_pitilla(detritus150_20000), detritus20000_NA))%>%
-  mutate(detritus0_150 = ifelse(dataset_id == 71, fine_pitilla(0,detritus150_20000), detritus0_150))
+  mutate(detritus20000_NA = ifelse(dataset_id%in%c(71), deadleaves_pitilla(0,detritus150_20000), detritus20000_NA))%>%
+  mutate(detritus0_150 = ifelse(dataset_id%in%c(71), fine_pitilla(0,detritus150_20000), detritus0_150))%>%
+  filter(dataset_id%in%c(71,51))%>%View
 
 #pitilla 2004 dissection visit 66
 
@@ -298,18 +300,3 @@ daff::render_diff(daff::diff_data(detritus_original, detritus_wider))
 # write data out ----------------------------------------------------------
 
 write_csv(detritus_wider, "data-raw/02_broms.csv")
-
-# ### this script summarizes detritus amounts -- run it after you have imputed missing values
-# det <- broms %>%
-#   select(bromeliad_id, min, max, mass) %>%
-#   # semi_join(manys %>% filter(n > 4)) ## just to check with the eye.
-#   group_by(bromeliad_id) %>%
-#   summarise(detritus_mass_total = sum(mass, na.rm = TRUE))
-#
-# summ_brom <- broms %>%
-#   select(-min, -max, -mass) %>%
-#   distinct %>%
-#   left_join(det)
-#
-#
-# write_csv(summ_brom, "data-raw/02_broms.csv")
