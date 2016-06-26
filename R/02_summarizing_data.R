@@ -227,7 +227,15 @@ detritus_wider<-detritus_wider%>%
   mutate(detritus10000_NA = ifelse(dataset_id%in%c(101,106), deadleavesalso_pitilla(detritus22_10000), NA))
 
 
+# visualize with a daff ---------------------------------------------------
+
+
 daff::render_diff(daff::diff_data(detritus_original, detritus_wider))
+
+
+# write data out ----------------------------------------------------------
+
+write_csv(detritus_wider, "data-raw/03_broms.csv")
 
 # ### this script summarizes detritus amounts -- run it after you have imputed missing values
 # det <- broms %>%
