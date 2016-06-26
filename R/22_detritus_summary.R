@@ -17,6 +17,7 @@ broms_detritus <- read.csv("data-raw/02_broms.csv",stringsAsFactors = FALSE)
 
 glimpse(broms_detritus)
 
+## does it have columns called "detritus"
 
 # data confirmation -------------------------------------------------------
 
@@ -99,6 +100,16 @@ is_continuous_categories <- function(cat_vector){
   identical(cat_range, c("0", "NA"))
 }
 
+
+get_range <- function(cat_vector) {
+  cat_range <- cat_vector %>%
+    str_split("_") %>%
+    transpose %>%
+    map(unlist) %>%
+    {c(invoke(setdiff, .), invoke(setdiff, rev(.)))}
+  return(cat_range)
+}
+
 detect_continuous <- function(dfnames){
 
   if (length(dfnames) > 0){
@@ -135,6 +146,22 @@ is_contin <- detritus_only %>%
   map(~ .x[!grepl("bromeliad_id", .x)]) %>%
   map(~ gsub("detritus", "", .x)) %>%
   map_lgl(detect_continuous)
+
+
+cbind(is_missing, is_discont, is_contin) %>% as.data.frame() %>%
+  colSums() %>% sum()
+  ## should be equal to the lenght of what went in
+
+is_discont_ids <- is_discont %>% which(TRUE) %>% names(.)
+
+detritus_only %>%
+  .[is_discont_ids] %>%
+  map(names) %>%
+  map(~ .x[!grepl("bromeliad_id", .x)]) %>%
+  map(~ gsub("detritus", "", .x)) %>%
+  map(get_range)
+
+
 
 detritus_only %>%
   .[is_contin]
