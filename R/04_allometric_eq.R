@@ -14,7 +14,7 @@ library(stringr)
 
 #dianes local link: setwd("C:/Users/Diane/Dropbox/BWG BromeliadCommunityAnalysis/CESAB trait working group/cesabfunctionalwebsdata")
 broms <- read_csv("data-raw/01_broms.csv")
-is_number <- broms %>% sapply(function(x) any(str_detect(x, "[0123456789]"), na.rm = TRUE))
+is_number <- sapply(broms, function(x) any(str_detect(x, "[0123456789]"), na.rm = TRUE))
 correct_cols <- paste(c("c", "n")[is_number +1], collapse = "")
 broms<-read_csv("data-raw/01_broms.csv", col_types = correct_cols)
 str(broms)
@@ -40,7 +40,7 @@ detritus_wider<-broms%>%select(visit_id, bromeliad_id)%>%
 detrital_table<-detritus_wider%>%group_by(visit)%>%summarise_each(funs(mean))#useful table to see what detritus each visit
 
 detritus_wider$detritus0_150[detritus_wider$visit==21]<-exp(0.68961*log(detritus_wider$detritus150_20000[detritus_wider$visit==21])-0.11363)#cardoso2008
-#cardoso2008 is visit_id=21, dataset_id="6", name is "Cardoso2008"  
+#cardoso2008 is visit_id=21, dataset_id="6", name is "Cardoso2008"
 
 #vol
 datasets<- read_csv("data-raw/01_datasets.csv")
