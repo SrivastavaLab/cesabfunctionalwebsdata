@@ -123,6 +123,11 @@ detect_discontinuous <- function(dfnames){
 }
 
 
+detritus_only %>%
+  map(names) %>%
+  map_lgl(detect_continuous)
+
+
 category_names <- detritus_only %>%
   map(names) %>%
   map(~ .x[!grepl("bromeliad_id", .x)]) %>%
