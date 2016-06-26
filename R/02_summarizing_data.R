@@ -15,10 +15,7 @@ broms <- read.csv("data-raw/01_broms.csv", stringsAsFactors = FALSE)
 visits <- read_csv("data-raw/01_visits.csv", col_types = "nncDnnnnnncnncc")
 datasets<- read_csv("data-raw/01_datasets.csv")
 
-## the "problems" are probaby OK?
-problems(broms)
-broms$ph
-## yes --- they look just fine
+
 glimpse(visits)
 
 ## making some summary tables to help with visualizing missing data -----------------------------------------
@@ -77,7 +74,8 @@ detritus_wider <- broms %>%
   left_join(detritus_wide)%>%
   left_join(visitnames)%>%
   left_join(diam_brom)%>%
-  left_join(fpom_brom)
+  left_join(fpom_brom) #%>%
+  # verify(nrow(.) == nrow(broms))
 
 ## create for references
 detritus_original <- detritus_wider
@@ -194,7 +192,10 @@ detritus_wider<-detritus_wider %>%
   mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
 
 detritus_wider<-detritus_wider%>%
-  mutate(detritus150_NA = ifelse(dataset_id==201, over150_frenchguiana(detritus0_30,detritus30_150), detritus150_NA))%>%filter(dataset_id==201)
+  mutate(detritus150_NA = ifelse(dataset_id==201,
+                                 over150_frenchguiana(detritus0_30,detritus30_150),
+                                 detritus150_NA))
+
 #pitilla costa rica 200 all present
 #pitilla costa rica 2002, 2010 are dataset61, 71
 fine_pitilla<- function(med, coarse){
