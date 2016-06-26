@@ -247,6 +247,30 @@ deadleavesalso_pitilla<- function(almost){
 detritus_wider<-detritus_wider%>%
   mutate(detritus10000_NA = ifelse(dataset_id%in%c(101,106), deadleavesalso_pitilla(detritus22_10000), NA))
 
+### Paula and Kurt
+
+### Cardoso 2011
+str(detritus_wider)
+
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_150 = ifelse(visit_id == 231, detritus150_NA, detritus0_150))
+detritus_wider <- detritus_wider %>%
+  mutate(detritus150_NA = ifelse(visit_id == 231, NA, detritus150_NA))
+
+## using model from fine_cardoso2008<- function(coarse){
+#  exp(0.68961 * log(coarse) - 0.11363)
+# }
+
+
+fine_cardoso2011<- function(coarse){
+  exp(0.68961 * log(coarse) - 0.11363)
+}
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_150 = ifelse(visit_id == 231, fine_cardoso2011(detritus150_NA), detritus0_150))%>%View
+
+
+
+
 x<-c(2,3,4,5,NA,7)
 y<-c(2,3,4,5,6,7)
 z<-c(NA, NA, NA)
