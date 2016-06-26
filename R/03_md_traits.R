@@ -25,15 +25,17 @@ nrow(trait)
 
 ### MD8 (case/tube) (0 or 3)
 
+## the number of traits that we add should be equal to the length of existing data.
+n_spp <- nrow(trait)
 #### Here I create the new trait columns filled by "NA"
-MD1=rep(NA,866)
-MD2=rep(NA,866)
-MD3=rep(NA,866)
-MD4=rep(NA,866)
-MD5=rep(NA,866)
-MD6=rep(NA,866)
-MD7=rep(NA,866)
-MD8=rep(NA,866)
+MD1=rep(NA,n_spp)
+MD2=rep(NA,n_spp)
+MD3=rep(NA,n_spp)
+MD4=rep(NA,n_spp)
+MD5=rep(NA,n_spp)
+MD6=rep(NA,n_spp)
+MD7=rep(NA,n_spp)
+MD8=rep(NA,n_spp)
 
 new.trait<- cbind(MD1, MD2, MD3, MD4, MD5, MD6, MD7, MD8)
 
