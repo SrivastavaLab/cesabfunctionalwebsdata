@@ -68,6 +68,7 @@ detritus_complete <- detritus_only %>%
 is_missing <- detritus_only %>%
   map_lgl(~ ncol(.x) == 1)
 
+## logical vectors are based on the full dataset always, and should always be the same
 assertthat::assert_that(length(is_missing) == length(has_0_NA))
 
 detritus_missing <- detritus_only %>%
@@ -77,13 +78,15 @@ detritus_missing <- detritus_only %>%
 ## columns, and confirm that they are in sequential ranges
 
 ## the first step is to get the names in question
-category_names <- detritus_only %>%
-  .[!has_0_NA & !is_missing] %>%
-  map(names) %>%
-  map(~ .x[!grepl("bromeliad_id", .x)]) %>%
-  map(~ gsub("detritus", "", .x))
 
-## remove na from min because NA is maximum by definition
+## i want a logical vector that identifies where the detritus amounts require
+## combination. These are defined as bromeliads which do NOT have a single
+## column AND ALSO those which do not have 0_NA already
+
+is_possible_to_combine <- !has_0_NA & !is_missing
+
+## there are two kinds of datasets in this category: the first has continuous
+## categories, the second does not. let us find them each in turn.
 
 ## this function will print "TRUE" if the categories defined by the vector are
 ## continuous, e.g. c("1500_20000","20000_NA","0_1500" ) `
@@ -97,7 +100,34 @@ is_continuous_categories <- function(cat_vector){
   identical(cat_range, c("0", "NA"))
 }
 
-c("1500_20000","20000_NA","0_1500" ) %>% str_split("_") %>% map(as.numeric) %>% map(min, na.rm = TRUE)
+detect_continuous <- function(dfnames){
 
-c("1500_20000","20000_NA","0_1500" ) %>% str_split("_") %>% map(as.numeric) %>% map(max)
+  if (length(dfnames) > 0){
+    is_continuous_categories(dfnames)
+
+  } else {
+
+      FALSE
+  }
+}
+
+detect_discontinuous <- function(dfnames){
+
+  if (length(dfnames) > 0){
+    !is_continuous_categories(dfnames)
+
+  } else {
+
+    FALSE
+  }
+}
+
+
+category_names <- detritus_only %>%
+  map(names) %>%
+  map(~ .x[!grepl("bromeliad_id", .x)]) %>%
+  map(~ gsub("detritus", "", .x)) %>%
+  map_lgl(is_continuous_categories)
+
+#
 
