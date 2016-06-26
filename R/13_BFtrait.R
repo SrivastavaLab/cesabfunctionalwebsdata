@@ -43,4 +43,4 @@ by_family_merged$BF1 %>%
 
 stopifnot(nrow(by_family_merged) == nrow(Alltraits))
 
-write.csv(by_family_merged, "data-raw/13_final_trait.csv", row.names = FALSE)
+write.csv(by_family_merged, "data-raw/13_T_matrix.csv", row.names = FALSE)
