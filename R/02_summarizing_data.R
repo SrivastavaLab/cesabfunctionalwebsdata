@@ -5,23 +5,27 @@ require(dplyr)
 require(readr)
 require(tidyr)
 library(stringr)
+## convenience function for reading
+source("R/reading_functions.R")
 
 # bromeliads imporing with correct col types--------------------------------------------------------------
 
-broms <- read_csv("data-raw/01_broms.csv")
-is_number <- broms %>% sapply(function(x) any(str_detect(x, "[0123456789]"), na.rm = TRUE))
-correct_cols <- paste(c("c", "n")[is_number +1], collapse = "")
-broms<-read_csv("data-raw/01_broms.csv", col_types = correct_cols)
-str(broms)
+broms <- read_csv_correct_cols("data-raw/01_broms.csv")
 
 ## the "problems" are probaby OK?
 problems(broms)
 broms$ph
 ## yes --- they look just fine
 
-visits<- read_csv("data-raw/01_visits.csv")
-names(visits)
-visitnames<-select(visits,visit_id,dataset_id,dataset_name)
+##making some summary tables to help with visualizing missing data
+
+visits <- read_csv("data-raw/01_visits.csv", col_types = "nncDnnnnnncnncc")
+glimpse(visits)
+
+visitnames <- visits %>%
+  select(visit_id, dataset_id, dataset_name)
+datasetnames <- select(visitnames, dataset_id, dataset_name)%>%
+  group_by(dataset_id)%>%summarise(dataset_name=first(dataset_name))
 
 datasets<- read_csv("data-raw/01_datasets.csv")
 names(datasets)
@@ -30,7 +34,6 @@ vol_table<-broms%>%group_by(visit_id)%>%summarise(max_water=mean(max_water,na.rm
                                                   longest_leaf=mean(longest_leaf, na.rm=TRUE), num_leaf=mean(num_leaf, na.rm=TRUE), leaf_width=mean(leaf_width, na.rm=TRUE), plant_height_cm=mean(plant_height_cm, na.rm=TRUE))%>%
   left_join(visitnames)
 
-##
 diam_brom <- broms %>%
   select(-min, -max, -mass) %>%
   distinct %>%
@@ -39,7 +42,8 @@ diam_brom <- broms %>%
 fpom_brom <- broms %>%
   select(-min, -max, -mass) %>%
   distinct %>%
-  select(fpom_ml, bromeliad_id)
+  select(fpom_ml,fpom_g,cpom_g,dead_leaves, bromeliad_id)
+
 
 ## here we make the different detritus categories into a wide format, one column
 ## for every unique pair of detritus ranges (min max)
@@ -59,14 +63,15 @@ detritus_wider <- broms %>%
   left_join(diam_brom)%>%
   left_join(fpom_brom)
 
+#collapse to dataset level for easy checking
 detrital_table <- detritus_wider %>%
-  select(-bromeliad_id) %>%
+  select(-bromeliad_id, -dataset_name) %>%
   group_by(visit_id) %>%
-  summarise_each(funs(mean(., na.rm = TRUE)))#useful table to see what detritus each visit
+  summarise_each(funs(mean(., na.rm = TRUE)))%>%
+  left_join(datasetnames)
 
-View(detrital_table)
+### predicting the fine detritus from the rest of the data####################
 
-## predicting the fine detritus from the rest of the data
 ## for cardoso 2008
 fine_cardoso2008<- function(coarse){
   exp(0.68961 * log(coarse) - 0.11363)
@@ -74,7 +79,7 @@ fine_cardoso2008<- function(coarse){
 
 detritus_wider<-detritus_wider %>%
   mutate(detritus0_150 = ifelse(visit_id == 21, fine_cardoso2008(detritus150_20000), detritus0_150))
-  
+
 
 ## for saba datasetid=111 visits 451 121 126 116 detritus150_20000 detritus20000_NA
 fine_saba2009 <- function(med){
@@ -112,25 +117,90 @@ fine_lasgamas<- function(med){
 detritus_wider<-detritus_wider %>%
   mutate(detritus0_150 = ifelse(dataset_id%in%c(166,171,181), fine_lasgamas(detritus150_850), detritus0_150))
 
-#French Guiana
-all_frenchguiana<- function(FPOM){
-  (73.668*(FPOM - 298.09)/1000 + exp(0.8933* (73.668*FPOM - 298.09)/1000)) + 0.8056) 
+#French Guiana only 186 has fpom in ml, 211 has fpom cpom and deadleaves
+
+sinn<-detritus_wider%>%filter(dataset_id==211)
+summary(glm(log(cpom_g)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.64
+plot(log(sinn$cpom_g)~log(sinn$fpom_g))
+summary(glm(log(dead_leaves)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.36
+plot(log(sinn$dead_leaves)~log(sinn$fpom_g))
+
+fpom_frenchguiana<- function(FPOMml){
+  ifelse((0.0737*(FPOMml)-0.2981)>=0, (0.0737*(FPOMml)-0.2981), 0)
+}
+
+detritus_wider<-detritus_wider%>%
+  mutate(detritus0_150 = ifelse(dataset_id==186, fpom_frenchguiana(fpom_ml), detritus0_150))
+
+cpom_frenchguiana<- function(FPOMg){
+  exp(0.858*log(FPOMg)+1.872)
+}
+
+largedet_frenchguiana<- function(FPOMg){
+  exp(0.582*log(FPOMg)+2.5545)
 }
 
 detritus_wider<-detritus_wider %>%
-  mutate(detritus0_150 = ifelse(dataset_id%in%c(166,171,181), fine_lasgamas(detritus150_850), detritus0_150))
+  mutate(detritus150_20000 = ifelse(dataset_id==186, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
+  mutate(detritus20000_NA= ifelse(dataset_id==186, largedet_frenchguiana(detritus0_150), detritus20000_NA))
 
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_150 = ifelse(dataset_id==211, fpom_g, detritus0_150))%>%
+  mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
+  mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
 
-names(detritus_wider)
-#(73.668FPOM - 298.09)/1000 + EXP(0.8933* (73.668FPOM - 298.09)/1000)) + 0.8056) 
+#pitilla costa rica 200 all present
+#pitilla costa rica 2002, 2010 are dataset61, 71
+fine_pitilla<- function(med, coarse){
+  exp(0.79031 * log(med+coarse) - 0.07033)
+}#R2= 0.8965
+deadleaves_pitilla<- function(medcoarse){
+  exp(1.01680 * log(medcoarse) - 1.09992)
+}#R2= 0.776
 
-#FPOM transforms from milliliters to grams
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_150 = ifelse(dataset_id == 61, fine_pitilla(detritus150_850, detritus850_20000), detritus0_150))
+detritus_wider<-detritus_wider %>%
+  mutate(detritus20000_NA = ifelse(dataset_id == 71, deadleaves_pitilla(detritus150_20000), detritus20000_NA))%>%
+  mutate(detritus0_150 = ifelse(dataset_id == 71, fine_pitilla(0,detritus150_20000), detritus0_150))
 
+#pitilla 2004 dissection visit 66
 
-##easier!
+pitilla2000s<-detritus_wider%>%filter(dataset_id==56)
+pitilla2000s<-pitilla2000s%>%mutate(detritus0_NA = ifelse(visit_id==51, pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+pitilla2000s$detritus20000_NA+pitilla2000s$detritus850_20000,
+                                                          pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+pitilla2000s$detritus20000_NA+pitilla2000s$detritus1500_20000+pitilla2000s$detritus850_1500))
+summary(glm((detritus0_NA)~(diameter), family=gaussian, data=pitilla2000s)) #rsq=0.78
+plot((pitilla2000s$detritus0_NA)~(pitilla2000s$diameter))
 
-#detritus_wider$detritus0_150[detritus_wider$visit==21]<-exp(0.68961*log(detritus_wider$detritus150_20000[detritus_wider$visit==21])-0.11363)#cardoso2008
-#cardoso2008 is visit_id=21, dataset_id="6", name is "Cardoso2008"
+totaldet_pitilla<- function(dia){
+  (0.7798 * dia - 24.147)
+}
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_NA = ifelse(dataset_id == 66, totaldet_pitilla(diameter), detritus0_NA))
+
+#Columbia Sisga Guasca datasets 76, 81, base on pitilla
+pitilla2000s$detritus150_NA<-pitilla2000s$detritus0_NA-pitilla2000s$detritus0_150
+summary(glm((detritus0_150)~(detritus150_NA), family=gaussian, data=pitilla2000s))
+plot((pitilla2000s$detritus0_150)~(pitilla2000s$detritus150_NA))
+
+finealso_pitilla<- function(most){
+  (0.407 *most - 0.36633)} #rsq=0.95
+
+detritus_wider<-detritus_wider%>%
+  mutate(detritus0_150 = ifelse(dataset_id%in%c(76,81), finealso_pitilla(detritus150_NA), detritus0_150))
+
+#honduras dataset 101 106 has detritus 22- 10000, we could estimate 20000 and greater and ignore the amount missed?
+pitilla2000s$detritus0_20000<-pitilla2000s$detritus0_NA-pitilla2000s$detritus20000_NA
+summary(glm((detritus20000_NA)~log(detritus0_20000), family=poisson, data=pitilla2000s))#rsq=0.67
+plot((pitilla2000s$detritus20000_NA)~(pitilla2000s$detritus0_20000))
+
+deadleavesalso_pitilla<- function(almost){
+  exp(0.694 *log(almost) - 0.468)
+  }
+
+detritus_wider<-detritus_wider%>%
+  mutate(detritus10000_NA = ifelse(dataset_id%in%c(101,106), deadleavesalso_pitilla(detritus22_10000), NA))
+
 
 ### this script summarizes detritus amounts -- run it after you have imputed missing values
 det <- broms %>%
