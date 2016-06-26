@@ -32,8 +32,15 @@ taxon_list <- names(Alltraits)[3:14] %>%
   set_names() %>%
   map(unique_taxa)
 
-### HERE ANDREW
-for i
+numbers <- as.character(rev(seq_along(taxon_list)))
+numbers <- ifelse(nchar(numbers) == 1, yes = paste0("0", numbers), no = numbers)
+
+names(numbers) <- names(taxon_list)
+
+### write tables out as csvs
+for (i in names(taxon_list)) {
+  write_csv(taxon_list[[i]], path = paste0("data-intermediate/BF_traits/BF_", numbers[[i]],"_", i, ".csv"))
+}
 
 familyt <- Alltraits %>%
   select(family) %>%
