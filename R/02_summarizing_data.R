@@ -5,6 +5,7 @@ require(dplyr)
 require(readr)
 require(tidyr)
 library(stringr)
+library(assertr)
 ## convenience function for reading
 source("R/reading_functions.R")
 
@@ -13,7 +14,7 @@ source("R/reading_functions.R")
 broms <- read.csv("data-raw/01_broms.csv", stringsAsFactors = FALSE)
 
 visits <- read_csv("data-raw/01_visits.csv", col_types = "nncDnnnnnncnncc")
-datasets<- read_csv("data-raw/01_datasets.csv")
+datasets <- read_csv("data-raw/01_datasets.csv")
 
 
 glimpse(visits)
@@ -64,6 +65,16 @@ detritus_wide <- broms %>%
   unite(min_max, min, max) %>%
   mutate(min_max = paste0("detritus", min_max)) %>%
   spread(min_max, mass)
+
+no_detritus_brom <- broms %>%
+  select(-min, -max, -mass) %>%
+  distinct
+
+bromeliad_wide <- detritus_wide %>%
+  left_join(no_detritus_brom) %>%
+  verify(nrow(.) == nrow(no_detritus_brom))
+
+write_csv(bromeliad_wide, "data-raw/02_bromeliad_wide.csv")
 
 ## combine back with the visit ids
 detritus_wider <- broms %>%
@@ -302,67 +313,30 @@ fine_cardoso2011<- function(coarse){
 detritus_wider <- detritus_wider %>%
   mutate(detritus0_150 = ifelse(visit_id == 231, fine_cardoso2011(detritus150_NA), detritus0_150))
 
-### Picinguaba2011 - 0-125 missing
+### Picinguaba2011 - detritus125_NA is actually total detritus0_NA. It must be corrected in the database.
 
 P2011 <- detritus_wider %>%
   filter(visit_id==241)
 
-vis_46 <- detritus_wider %>%
-  filter(visit_id==46)
-
-plot(log(vis_46$detritus0_150),log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA))
-
-summary(lm(log(detritus0_150)~log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA),data=vis_46 ))
-
-fine_P2011<- function(coarse){
-  exp(0.70297 * log(coarse) -0.13327)
-}
-
-### assumption, we considered 150_850 + 850_1500 + 1550-20000 + 20000_NA equivalent to 125_NA; sample size = 11
-
+correctedP2011<-P2011$detritus125_NA
+correct125_NA<-rep(NA,20)
+length(correctedP2011)
 detritus_wider <- detritus_wider %>%
-  mutate(detritus0_150 = ifelse(visit_id == 241, fine_P2011(detritus125_NA), detritus0_150))
+  mutate(detritus0_NA = ifelse(visit_id == 241, correctedP2011, detritus0_NA)) %>%
+  mutate(detritus125_NA = ifelse(visit_id == 241, correct125_NA, detritus125_NA))
 
 
-### Jureia2013
+### Jureia2013 - detritus125_800 is total detritus0_NA. It must be corrected in the database.
 
 J2013 <- detritus_wider %>%
   filter(visit_id==246)
 
-vis_51 <- detritus_wider %>%
-  filter(visit_id==51)
-
-### fist equation to estimate detritus0_150
-
-plot(log(vis_51$detritus0_150),log(vis_51$detritus150_850))
-
-###  for Jureia2013 we need to estimate detritus0_150 and also detritus800_NA
-
-## detritus0_150
-summary(lm(log(detritus0_150)~log(vis_51$detritus150_850),data=vis_51))
-
-fine_J2013<- function(coarse){
-  exp(0.9452 * log(coarse) + 0.9400)
-}
+correctedJ2013<-J2013$detritus125_800
+correct125_800<-rep(NA,20)
 
 detritus_wider <- detritus_wider %>%
-  mutate(detritus0_150 = ifelse(visit_id == 246, fine_J2013(detritus125_800), detritus0_150))
-
-## detritus800_NA
-## assumption for detritus 800_NA,
-
-plot(log(vis_51$detritus850_20000),log(vis_51$detritus150_850))
-summary(lm(log(detritus850_20000)~log(vis_51$detritus150_850),data=vis_51))
-
-### assumptions, we assume that detritus125_800 (jureia) is equivalent to detritus150_850 (visit_id51)
-### the estimation for detritus2000_NA was calculated but the r^2 was 0.3
-
-fine_J2013.2<- function(coarse){
-  exp(1.03262 * log(coarse) + 0.90765)
-}
-
-detritus_wider <- detritus_wider %>%
-  mutate(detritus850_20000 = ifelse(visit_id == 246, fine_J2013.2(detritus125_800), detritus850_20000))
+  mutate(detritus0_NA = ifelse(visit_id == 246, correctedJ2013, detritus0_NA)) %>%
+  mutate(detritus125_800 = ifelse(visit_id == 246, correct125_800, detritus125_800))
 
 
 #### Serra do Japi
@@ -411,6 +385,7 @@ detrital_tableNA <- detritus_wider %>%
   summarise_each(funs(nas = "na.checker"))%>%
   left_join(visitdatanames)
 
+detrital_tableNA %>% View()
 # visualize with a daff ---------------------------------------------------
 
 
