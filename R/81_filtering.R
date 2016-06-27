@@ -9,23 +9,19 @@ Ematrix <- read.csv("data-raw/41_E_matrix.csv")
 
 # Filter out NAs
 
-filter_if_any_NA <- function(vector){
-  if(any(is.na(vector))){
-    TRUE
-  } else {FALSE}
+any_NA <- function(vector){
+  any(is.na(vector))
 }
 
-filter_if_all_NA <- function(vector){
-  if(all(is.na(vector))){
-    TRUE
-  } else {FALSE}
+all_NA <- function(vector){
+  all(is.na(vector))
 }
 
 
 ### Environmental filtering
 
 E_all_NA <- Ematrix %>%
-  apply(1, filter_if_all_NA) %>%
+  apply(1, all_NA) %>%
   cbind(Ematrix)
 
 names(E_all_NA) <- c('all_NA', 'visit_id', 'bromeliad_id', "detritus_sum", 'max_water')
