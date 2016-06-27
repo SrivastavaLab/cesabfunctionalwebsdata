@@ -279,6 +279,113 @@ deadleavesalso_pitilla<- function(almost){
 detritus_wider<-detritus_wider%>%
   mutate(detritus10000_NA = ifelse(dataset_id%in%c(101,106), deadleavesalso_pitilla(detritus22_10000), NA))
 
+
+### Cardoso 2011
+vis_46 <- detritus_wider %>%
+  filter(visit_id==46)
+
+cardoso2011<-detritus_wider %>%
+  filter(visit_id==231)
+
+plot(log(vis_46$detritus0_150),log(vis_46$detritus150_850+vis_46$detritus850_1500))
+
+# plot(log(cardoso2011$detritus0_150),log(cardoso2011$detritus150_NA))
+
+summary(lm(log(detritus0_150)~log(vis_46$detritus150_850+vis_46$detritus850_1500),data=vis_46 ))
+
+### assumption, we considered 150_850 + 850_1500 equivalent to 150_NA; sample size = 11
+
+fine_cardoso2011<- function(coarse){
+  exp(0.66648 * log(coarse) + 0.80186)
+}
+
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_150 = ifelse(visit_id == 231, fine_cardoso2011(detritus150_NA), detritus0_150))
+
+### Picinguaba2011 - 0-125 missing
+
+P2011 <- detritus_wider %>%
+  filter(visit_id==241)
+
+vis_46 <- detritus_wider %>%
+  filter(visit_id==46)
+
+plot(log(vis_46$detritus0_150),log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA))
+
+summary(lm(log(detritus0_150)~log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA),data=vis_46 ))
+
+fine_P2011<- function(coarse){
+  exp(0.70297 * log(coarse) -0.13327)
+}
+
+### assumption, we considered 150_850 + 850_1500 + 1550-20000 + 20000_NA equivalent to 125_NA; sample size = 11
+
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_150 = ifelse(visit_id == 241, fine_P2011(detritus125_NA), detritus0_150))
+
+
+### Jureia2013
+
+J2013 <- detritus_wider %>%
+  filter(visit_id==246)
+
+vis_51 <- detritus_wider %>%
+  filter(visit_id==51)
+
+### fist equation to estimate detritus0_150
+
+plot(log(vis_51$detritus0_150),log(vis_51$detritus150_850))
+
+###  for Jureia2013 we need to estimate detritus0_150 and also detritus800_NA
+
+## detritus0_150
+summary(lm(log(detritus0_150)~log(vis_51$detritus150_850),data=vis_51))
+
+fine_J2013<- function(coarse){
+  exp(0.9452 * log(coarse) + 0.9400)
+}
+
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_150 = ifelse(visit_id == 246, fine_J2013(detritus125_800), detritus0_150))
+
+## detritus800_NA
+## assumption for detritus 800_NA,
+
+plot(log(vis_51$detritus850_20000),log(vis_51$detritus150_850))
+summary(lm(log(detritus850_20000)~log(vis_51$detritus150_850),data=vis_51))
+
+### assumptions, we assume that detritus125_800 (jureia) is equivalent to detritus150_850 (visit_id51)
+### the estimation for detritus2000_NA was calculated but the r^2 was 0.3
+
+fine_J2013.2<- function(coarse){
+  exp(1.03262 * log(coarse) + 0.90765)
+}
+
+detritus_wider <- detritus_wider %>%
+  mutate(detritus850_20000 = ifelse(visit_id == 246, fine_J2013.2(detritus125_800), detritus850_20000))
+
+
+#### Serra do Japi
+### we have detritus125_NA, need detritus0_125
+
+Japi2013 <- detritus_wider %>%
+  filter(visit_id==251|visit_id==346)
+vis_46 <- detritus_wider %>%
+  filter(visit_id==46)
+
+plot(log(vis_46$detritus0_150),log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA))
+summary(lm(log(detritus0_150)~log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA),data=vis_46 ))
+
+fine_SJ2013<- function(coarse){
+  exp(0.70297 * log(coarse) -0.13327)
+}
+
+### assumption, we considered 150_850 + 850_1500 + 1550-20000 + 20000_NA equivalent to 125_NA; sample size = 11
+
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_150 = ifelse(visit_id == 251|visit_id==346, fine_SJ2013(detritus125_NA), detritus0_150))
+
+
 x<-c(2,3,4,5,NA,7)
 y<-c(2,3,4,5,6,7)
 z<-c(NA, NA, NA)
