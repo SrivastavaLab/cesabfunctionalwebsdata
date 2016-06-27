@@ -21,10 +21,18 @@ all_NA <- function(vector){
 ### Environmental filtering
 
 E_all_NA <- Ematrix %>%
-  apply(1, all_NA) %>%
-  cbind(Ematrix)
+  select(max_water, detritus_sum) %>%
+  apply(1, all_NA)
 
-names(E_all_NA) <- c('all_NA', 'visit_id', 'bromeliad_id', "detritus_sum", 'max_water')
+E_complete <- Ematrix %>%
+  .[!E_all_NA, ]
+
+## is detritus negative.
+
+sum(E_complete$detritus_sum < 0, na.rm = TRUE)
+
+
+names(E_all_NA) <-
 
 E_final <- E_all_NA %>%
   filter(!all_NA) %>%
