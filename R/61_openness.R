@@ -18,5 +18,7 @@ ignacioconvert<-function(a){
 
 bromeliad_wide <- bromeliad_wide %>%
   mutate(open.canopy = ifelse(visit_id %in%c(281,266,271),ignacioconvert(canopy.openess), open.canopy))%>%
-  filter(visit_id %in%c(281,266,271))%>%
-  select(canopy.openess,open.canopy)%>%View
+  mutate(open.canopy = ifelse(visit_id %in%c(331,311),1, ifelse(visit_id %in%c(326,316,306),0,open.canopy)))%>%
+  mutate(open.canopy = ifelse(visit_id %in%c(231),1, ifelse(visit_id %in%c(21),0,open.canopy)))
+
+write.csv(bromeliad_wide, "data-raw/61_bromeliad_wide.csv")
