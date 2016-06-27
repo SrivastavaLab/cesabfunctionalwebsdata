@@ -98,5 +98,8 @@ summ_broms <- summ_broms%>%
 
 stopifnot(dim(summ_broms0) == dim(summ_broms))
 
-write.csv(summ_broms, "data-raw/31_broms.csv", row.names = FALSE)
+volume_final <- summ_broms %>%
+  select(bromeliad_id, max_water)
+
+write.csv(volume_final, "data-raw/24_volume.csv", row.names = FALSE)
 
