@@ -168,6 +168,12 @@ final_detritus <- detritus_only %>%
   map2(endpoints, cbind) %>%
   bind_rows(.id = 'visit_id')
 
+
+
+# remove negative values --------------------------------------------------
+
+final_detritus$row_sum[final_detritus$row_sum < 0] <- NA
+
 final_detritus %>%
   select(visit_id,
          bromeliad_id,
