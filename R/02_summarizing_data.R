@@ -363,6 +363,7 @@ detritus_wider <- detritus_wider %>%
 x<-c(2,3,4,5,NA,7)
 y<-c(2,3,4,5,6,7)
 z<-c(NA, NA, NA)
+
 na.checker<-function(a){
   ifelse((mean(a, na.rm=TRUE)*length(a)-sum(a, na.rm=TRUE))>0,
          1,
@@ -370,6 +371,7 @@ na.checker<-function(a){
                 2,
                 NA_real_))
 }
+
 
 na.checker(x)
 na.checker(y)
@@ -382,15 +384,15 @@ detrital_tableNA <- detritus_wider %>%
   select(-bromeliad_id, -dataset_name) %>%  #-bromeliad_id, -dataset_name
   group_by(visit_id) %>%
   #summarize(check = na.checker(detritus0_NA))%>%
-  summarise_each(funs(nas = "na.checker"))%>%
+  summarise_each(funs(nas = "na.checker"(.)))%>%
   left_join(visitdatanames)
 
-detrital_tableNA %>% View()
+
+write.csv(detrital_tableNA, "data-intermediate/detrital_table_NA.csv")
 # visualize with a daff ---------------------------------------------------
 
 
 daff::render_diff(daff::diff_data(detritus_original, detritus_wider))
-
 
 # write data out ----------------------------------------------------------
 
