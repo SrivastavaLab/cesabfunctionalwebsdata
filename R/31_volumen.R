@@ -6,7 +6,15 @@ library(tidyr)
 
 # bromeliads --------------------------------------------------------------
 
-summ_broms0 <-read.csv("data-raw/02_broms.csv")
+summ_broms0 <- read.csv("data-raw/02_broms.csv")
+
+broms01 <- read.csv("data-raw/01_broms.csv")
+id_spp <- broms01 %>%
+  select(bromeliad_id, species, actual_water) %>%
+  distinct()
+
+summ_broms0 <- summ_broms0 %>%
+  left_join(id_spp)
 
 summ_broms <- summ_broms0
 
@@ -15,9 +23,8 @@ summ_broms <- summ_broms0
 ## FrenchGuianaAechmea2007,
 ## Equation= exp(0.611+1.09*log(diameter)) for Aechmea mertensii
 volFrench2007<- function(a){exp(0.611+1.09*log(a))}
-summ_broms <- summ_broms%>%
-  mutate(max_water= ifelse(visit_id == 286, volFrench2007(diameter), max_water))
-
+summ_broms <- summ_broms %>%
+  mutate(max_water= ifelse(visit_id == 286, volFrench2007(diameter), NA)) ## NA not max_water, this creates the column as all NA
 
 #FrenchGuianaAechmea2008,PetitSaut, Aechmea mertensii, Vmax=exp(4.838+5.5888*log(diameter)-1.1649*(log(fg$diameter))^2+5.7181*log(fg$num_leaf)-1.7982*(log(fg$num_leaf)^2))
 volFrench2008<- function(a,b){exp(0.0292 +0.339*log(a) + 1.3563*log(b))}
