@@ -27,3 +27,10 @@ vignettes/*.pdf
 releases
 data-raw/
 data-intermediate/1*
+
+
+*.html
+*.md
+figure/*
+
+
