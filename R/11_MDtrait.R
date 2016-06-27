@@ -8,8 +8,6 @@
 
 #### We still need to include the trait modalities: Body form and cohort production interval
 
-rm(list=ls())
-ls()
 ######### Original Trait Matrix ###########
 library(dplyr)
 
