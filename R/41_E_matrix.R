@@ -10,6 +10,6 @@ vol <- volume_final %>%
 det <- detritus_final %>%
   select(-detritus_range)
 
-emat <- left_join(det, vol) %>% glimpse()
+emat <- left_join(det, vol)
 
 write_csv(emat, "data-raw/41_E_matrix.csv")
