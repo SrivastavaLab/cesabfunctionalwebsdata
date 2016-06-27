@@ -79,6 +79,10 @@ source("R/41_E_matrix.R")
 
 source("R/51_abundance_W_matrix.R")
 
+# 81. Filtering
+# This script is in charge of editing out missing values.
+
+
 # 99. This scripts merges the final data and prepares a new release of the dataset
 #input: data-raw/01_datasets.csv, read_csv("data-raw/01_visits.csv, read_csv("data-raw/01_traits.csv
 #read_csv("data-raw/02_broms.csv, read_csv("data-raw/02_abundance.csv
@@ -88,14 +92,3 @@ source("R/99_merging.R")
 
 ## preparing a release
 
-library(datastorr)
-
-our_info <- github_release_info("SrivastavaLab/cesabfunctionalwebsdata", readRDS, private = TRUE)
-
-## this line corrects a small error. It will hopefully become unnecessary very soon.
-github_release_create1 <- datastorr:::github_release_create_
-
-## creating a release
-github_release_create(our_info,
-                      description = "a second release of data from the bwg database.",
-                      filename = "releases/all_data.rds")
