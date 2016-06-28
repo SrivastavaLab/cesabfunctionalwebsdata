@@ -34,4 +34,8 @@ data-intermediate/1*
 *.md
 figure/*
 
+data-intermediate/Detritus*
+data-intermediate/detrital*
+
+
 
