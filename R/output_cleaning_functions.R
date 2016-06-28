@@ -13,7 +13,7 @@ get_bromid_nonNA <- function(data_matrix, varname){
 # Filter out NAs
 
 any_NA_or_0 <- function(vector){
-  any(c(all(is.na(vector)), sum(vector, na.rm = TRUE) == 0))
+  any(c(all(is.na(vector)), identical(unique(as.character(vector), na.rm = TRUE), "0")))
 }
 
 all_NA <- function(vector){
@@ -46,8 +46,12 @@ drop_row_col <- function(data_matrix, response, FUN){
 
   ## remove the columns
   col_all_match_FUN <- matrix_complete_row %>%
-    .[,response] %>%
+    # .[,response] %>%
     apply(2, FUN)
+
+  ## do not filter only for response; keep bromeliad name
+  ## we assume that the first column is bromeliad names
+  ## hail to the patron saint of assumptions
 
   ## remove rows that match the funtion
   matrix_complete_row_col <- matrix_complete_row %>%
