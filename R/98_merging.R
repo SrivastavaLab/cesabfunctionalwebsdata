@@ -8,14 +8,16 @@ require(readr)
 datasets <- read_csv("data-raw/01_datasets.csv")
 visits <-   read_csv("data-raw/01_visits.csv")
 traits <-   read_csv("data-raw/07_traits.csv")
-bromeliads <- read_csv("data-raw/61_bromeliad_wide.csv")
+bromeliads <- read_csv("data-raw/29_full_bromeliad_wide.csv")
 abundance <- read_csv("data-raw/02_abundance.csv")
+wbe <- readRDS("data-raw/81_WBE.RDS")
 
 all_data_list <- list(
   datasets   = datasets,
   visits     = visits,
   traits     = traits,
   bromeliads = bromeliads,
-  abundance  = abundance)
+  abundance  = abundance,
+  WBE        = wbe)
 
-saveRDS(all_data_list, "releases/all_data.rds")
+saveRDS(all_data_list, "~/Desktop/all_data.rds")
