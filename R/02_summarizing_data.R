@@ -161,7 +161,7 @@ detritus_wider<-detritus_wider %>%
 
 #French Guiana only 186 (petit saut 2007) has fpom in ml, 211 (sinnamary 2011) has fpom cpom and deadleaves
 
-#this allometric equation is from data held offline by regis 
+#this allometric equation is from data held offline by regis
 fpom_convert_ml_into_g<-function(FPOMml){(0.0013*(FPOMml)^2+0.0243*(FPOMml)+0.0369)}
 fpom_convert_ml_into_g(7.6)
 
