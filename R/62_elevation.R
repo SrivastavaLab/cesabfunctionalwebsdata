@@ -29,17 +29,18 @@ bromeliad_wide <- bromeliad_wide %>%
   mutate(elevation_m = ifelse(visit_id %in%c(431),850, elevation_m))%>% #Sonadora 850 
   mutate(elevation_m = ifelse(visit_id %in%c(436),900, elevation_m))%>% #Sonadora 900
   mutate(elevation_m = ifelse(visit_id %in%c(441),950, elevation_m))  #Sonadora 950
- View(select(subset(bromeliad_wide, visit_id==441, elevation_m)))
- names(bromeliad_wide)
- bromeliad_wide %>%
-   select(bromeliad_id,visit_id, elevation_m)%>%
-   filter(visit_id == c(151,166,356,181,136)) %>%
-   View
+ #View(select(subset(bromeliad_wide, visit_id==441, elevation_m)))
+ #names(bromeliad_wide)
+ #bromeliad_wide %>%
+  # select(bromeliad_id,visit_id, elevation_m)%>%
+   #filter(visit_id == c(151,166,356,181,136)) %>%
+   #View
  
- bromeliad_wide %>%
-   select(bromeliad_id,visit_id) %>%
-   filter(visit_id == c(441,436,431)) %>%
-   View
+ #bromeliad_wide %>%
+  # select(bromeliad_id,visit_id) %>%
+   #filter(visit_id == c(441,436,431)) %>%
+   #View
  
-  mutate(open.canopy = ifelse(visit_id %in%c(331,311),1, ifelse(visit_id %in%c(326,316,306),0,open.canopy)))%>%
-  mutate(open.canopy = ifelse(visit_id %in%c(231),1, ifelse(visit_id %in%c(21),0,open.canopy)))
+ 
+ write.csv(bromeliad_wide, "data-raw/62_bromeliad_wide.csv")
+ 
