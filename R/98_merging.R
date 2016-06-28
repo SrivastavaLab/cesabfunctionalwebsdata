@@ -7,9 +7,9 @@
 require(readr)
 datasets <- read_csv("data-raw/01_datasets.csv")
 visits <-   read_csv("data-raw/01_visits.csv")
-traits <-   read_csv("data-raw/07_traits.csv")
+traits <-   read_csv("data-raw/13_T_matrix.csv")
 bromeliads <- read_csv("data-raw/29_full_bromeliad_wide.csv")
-abundance <- read_csv("data-raw/02_abundance.csv")
+abundance <- read_csv("data-raw/51_abundance.csv")
 wbe <- readRDS("data-raw/81_WBE.RDS")
 
 all_data_list <- list(
