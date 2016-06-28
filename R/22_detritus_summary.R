@@ -17,6 +17,7 @@ broms_detritus <- read.csv("data-raw/02_broms.csv",stringsAsFactors = FALSE)
 
 glimpse(broms_detritus)
 
+## does it have columns called "detritus"
 
 # data confirmation -------------------------------------------------------
 
@@ -99,6 +100,16 @@ is_continuous_categories <- function(cat_vector){
   identical(cat_range, c("0", "NA"))
 }
 
+
+get_range <- function(cat_vector) {
+  cat_range <- cat_vector %>%
+    str_split("_") %>%
+    transpose %>%
+    map(unlist) %>%
+    {c(invoke(setdiff, .), invoke(setdiff, rev(.)))}
+  return(cat_range)
+}
+
 detect_continuous <- function(dfnames){
 
   if (length(dfnames) > 0){
@@ -136,8 +147,40 @@ is_contin <- detritus_only %>%
   map(~ gsub("detritus", "", .x)) %>%
   map_lgl(detect_continuous)
 
-detritus_only %>%
-  .[is_contin]
 
-detritus_only %>%
-  .[xor(is_contin, has_0_NA)]
+cbind(is_missing, is_discont, is_contin) %>% as.data.frame() %>%
+  colSums() %>% sum()
+  ## should be equal to the lenght of what went in
+
+is_discont_ids <- is_discont %>% which(TRUE) %>% names(.)
+
+endpoints <- detritus_only %>%
+  map_if(!is_missing, names) %>%
+  map_if(!is_missing, ~ .x[!grepl("bromeliad_id", .x)]) %>%
+  map_if(!is_missing, ~ gsub("detritus", "", .x)) %>%
+  map_if(!is_missing, get_range) %>%
+  map_if(is_missing, ~ c("NA", "NA")) %>%
+  map(paste, collapse = "_")
+
+final_detritus <- detritus_only %>%
+  map(~ data.frame(row_sum = rowSums(dplyr::select(.x, -bromeliad_id)),
+                   bromeliad_id = dplyr::select(.x, bromeliad_id))) %>%
+  map2(endpoints, cbind) %>%
+  bind_rows(.id = 'visit_id')
+
+
+
+# remove negative values --------------------------------------------------
+
+final_detritus$row_sum[final_detritus$row_sum < 0] <- NA
+
+final_detritus %>%
+  select(visit_id,
+         bromeliad_id,
+         detritus_sum = row_sum,
+         detritus_range = `.y[[i]]`) %>%
+  write_csv("data-raw/22_detritus_summary.csv")
+
+
+
+

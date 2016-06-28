@@ -5,6 +5,7 @@ require(dplyr)
 require(readr)
 require(tidyr)
 library(stringr)
+library(assertr)
 ## convenience function for reading
 source("R/reading_functions.R")
 
@@ -13,7 +14,7 @@ source("R/reading_functions.R")
 broms <- read.csv("data-raw/01_broms.csv", stringsAsFactors = FALSE)
 
 visits <- read_csv("data-raw/01_visits.csv", col_types = "nncDnnnnnncnncc")
-datasets<- read_csv("data-raw/01_datasets.csv")
+datasets <- read_csv("data-raw/01_datasets.csv")
 
 
 glimpse(visits)
@@ -54,7 +55,7 @@ diam_brom <- broms %>%
 fpom_brom <- broms %>%
   select(-min, -max, -mass) %>%
   distinct %>%
-  select(bromeliad_id, fpom_ml, fpom_g, cpom_g, dead_leaves)
+  select(bromeliad_id, fpom_ml, fpom_mg, fpom_g, cpom_g, dead_leaves, num_leaf)
 
 
 ## here we make the different detritus categories into a wide format, one column
@@ -64,6 +65,16 @@ detritus_wide <- broms %>%
   unite(min_max, min, max) %>%
   mutate(min_max = paste0("detritus", min_max)) %>%
   spread(min_max, mass)
+
+no_detritus_brom <- broms %>%
+  select(-min, -max, -mass) %>%
+  distinct
+
+bromeliad_wide <- detritus_wide %>%
+  left_join(no_detritus_brom) %>%
+  verify(nrow(.) == nrow(no_detritus_brom))
+
+write_csv(bromeliad_wide, "data-raw/02_bromeliad_wide.csv")
 
 ## combine back with the visit ids
 detritus_wider <- broms %>%
@@ -150,27 +161,43 @@ detritus_wider<-detritus_wider %>%
 
 #French Guiana only 186 has fpom in ml, 211 has fpom cpom and deadleaves
 #first, Nourages 2009 accidentally has particle counts in detritus categories
+#this needs to be corrected in BWGdb but for now:
 
+detritus_wider<-detritus_wider %>%
+  mutate(detritus30_150 = ifelse(dataset_id==201,NA, detritus30_150))%>%
+  mutate(detritus0_30 = ifelse(dataset_id==201,NA, detritus0_30))%>%
+  mutate(detritus150_300 = ifelse(dataset_id==201,NA, detritus150_300))
+
+#next, need to reload fpom_ml, and then make it into detritus0_150,
+##NOTE: some brom missing fpom_ml even though Gustavo and Fabiola entered this for all 140??need to figure out why...
+##NOTE: the FPOMml is a subsample for Nourages, Regis will see if it can be corrected, for now keep functions below
+##NOTE: the FPOM for Petit Saut 2007 dataset 186 may also be a subsample..check!
+
+#fpom_convert<-function(FPOMml){(0.0737*(FPOMml)-0.2981)}
+#detritus_wider<-detritus_wider %>%
+# mutate(detritus0_150 = ifelse(dataset_id==201,fpom_convert(fpom_ml), detritus0_150))
+
+#now french guiana detritus from detritus
+#NOTE there is an input error: dead_leaves in Sinnamary was detritus>2cm x 2cm roughly, but in other sites #brown bromeliad leaves!
 
 sinn<-detritus_wider%>%filter(dataset_id==211)
 summary(glm(log(cpom_g)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.64
 plot(log(sinn$cpom_g)~log(sinn$fpom_g))
 summary(glm(log(dead_leaves)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.36
-plot(log(sinn$dead_leaves)~log(sinn$fpom_g))
+plot((sinn$dead_leaves)~(sinn$fpom_g))
 
-sinn$detover150<-sinn$fpom_g+sinn$cpom_g
-summary(glm(log(fpom_g)~log(detover150), data=sinn))#sinnamary based eqn has rsq of 0.72
+sinn$detover150<-sinn$fpom_g+sinn$cpom_g+sinn$dead_leaves
+summary(glm(log(detover150)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.59
 plot(log(sinn$detover150)~log(sinn$fpom_g))
-
 
 fpom_frenchguiana<- function(FPOMml){
   ifelse((0.0737*(FPOMml)-0.2981)>=0, (0.0737*(FPOMml)-0.2981), 0)
-}
+ }
 
-over150_frenchguiana<- function(a,b){
-  exp(0.8207*(a+b)-1.426)
+over150_frenchguiana<- function(a){
+  exp(0.688*(a)+3.075)
 }
-
+#check if this dataset 186 fpom ml is subsample, seems low...
 detritus_wider<-detritus_wider%>%
   mutate(detritus0_150 = ifelse(dataset_id==186, fpom_frenchguiana(fpom_ml), detritus0_150))
 
@@ -191,26 +218,34 @@ detritus_wider<-detritus_wider %>%
   mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
   mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
 
-detritus_wider<-detritus_wider%>%
-  mutate(detritus150_NA = ifelse(dataset_id==201,
-                                 over150_frenchguiana(detritus0_30,detritus30_150),
-                                 detritus150_NA))
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_150 = ifelse(dataset_id==216, (fpom_mg/1000), detritus0_150))%>%
+  mutate(detritus150_20000 = ifelse(dataset_id==216, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
+  mutate(detritus20000_NA= ifelse(dataset_id==216, largedet_frenchguiana(detritus0_150), detritus20000_NA))
+
+#detritus_wider<-detritus_wider%>%
+#  mutate(detritus150_NA = ifelse(dataset_id==201, over150_frenchguiana(detritus0_150), detritus150_NA))%>%filter(dataset_id==201)%>%View
 
 #pitilla costa rica 200 all present
-#pitilla costa rica 2002, 2010 are dataset61, 71
+#pitilla costa rica 2002, 2010 are dataset61, 71; pitilla1997 dataset id is 51
+
 fine_pitilla<- function(med, coarse){
   exp(0.79031 * log(med+coarse) - 0.07033)
 }#R2= 0.8965
-deadleaves_pitilla<- function(medcoarse){
-  exp(1.01680 * log(medcoarse) - 1.09992)
+deadleaves_pitilla<- function(med,coarse){
+  exp(1.01680 * log(med+coarse) - 1.09992)
 }#R2= 0.776
 
+detritus_wider<-detritus_wider%>%
+  mutate(detritus0_150 = ifelse(dataset_id%in%c(51,61), fine_pitilla(detritus150_850, detritus850_20000), detritus0_150))
 detritus_wider<-detritus_wider %>%
-  mutate(detritus0_150 = ifelse(dataset_id == 61, fine_pitilla(detritus150_850, detritus850_20000), detritus0_150))
+  mutate(detritus20000_NA = ifelse(dataset_id==51, deadleaves_pitilla(detritus150_850, detritus850_20000), detritus20000_NA))
+
 
 detritus_wider<-detritus_wider %>%
-  mutate(detritus20000_NA = ifelse(dataset_id == 71, deadleaves_pitilla(detritus150_20000), detritus20000_NA))%>%
-  mutate(detritus0_150 = ifelse(dataset_id == 71, fine_pitilla(0,detritus150_20000), detritus0_150))
+  mutate(detritus20000_NA = ifelse(dataset_id==71, deadleaves_pitilla(0,detritus150_20000), detritus20000_NA))%>%
+  mutate(detritus0_150 = ifelse(dataset_id==71, fine_pitilla(0,detritus150_20000), detritus0_150))
+
 
 #pitilla 2004 dissection visit 66
 
@@ -226,7 +261,7 @@ totaldet_pitilla<- function(dia){
 detritus_wider<-detritus_wider %>%
   mutate(detritus0_NA = ifelse(dataset_id == 66, totaldet_pitilla(diameter), detritus0_NA))
 
-#Columbia Sisga Guasca datasets 76, 81, base on pitilla
+#Columbia Sisga Guasca datasets 76, 81, and Rio Blanco 2014 (dataset 91) base on pitilla
 pitilla2000s$detritus150_NA<-pitilla2000s$detritus0_NA-pitilla2000s$detritus0_150
 summary(glm((detritus0_150)~(detritus150_NA), family=gaussian, data=pitilla2000s))
 plot((pitilla2000s$detritus0_150)~(pitilla2000s$detritus150_NA))
@@ -235,7 +270,13 @@ finealso_pitilla<- function(most){
   (0.407 *most - 0.36633)} #rsq=0.95
 
 detritus_wider<-detritus_wider%>%
-  mutate(detritus0_150 = ifelse(dataset_id%in%c(76,81), finealso_pitilla(detritus150_NA), detritus0_150))
+  mutate(detritus0_150 = ifelse(dataset_id%in%c(76,81, 91), finealso_pitilla(detritus150_NA), detritus0_150))
+
+#Colombia RioBlanco2012 dataset86 base it on the 2014 rio blanco data
+rioblanco<-detritus_wider%>%filter(dataset_id==91)
+summary(glm((detritus150_NA)~(num_leaf), family=gaussian, data=rioblanco))
+plot((rioblanco$detritus150_NA)~(rioblanco$num_leaf))
+#the best model here had an rsquared of 0.52 so we decided to exclude the rio blanco 2012 dataset (86)
 
 #honduras dataset 101 106 has detritus 22- 10000, we could estimate 20000 and greater and ignore the amount missed?
 pitilla2000s$detritus0_20000<-pitilla2000s$detritus0_NA-pitilla2000s$detritus20000_NA
@@ -244,21 +285,93 @@ plot((pitilla2000s$detritus20000_NA)~(pitilla2000s$detritus0_20000))
 
 deadleavesalso_pitilla<- function(almost){
   exp(0.694 *log(almost) - 0.468)
-  }
+}
 
 detritus_wider<-detritus_wider%>%
   mutate(detritus10000_NA = ifelse(dataset_id%in%c(101,106), deadleavesalso_pitilla(detritus22_10000), NA))
 
+
+### Cardoso 2011
+vis_46 <- detritus_wider %>%
+  filter(visit_id==46)
+
+cardoso2011<-detritus_wider %>%
+  filter(visit_id==231)
+
+plot(log(vis_46$detritus0_150),log(vis_46$detritus150_850+vis_46$detritus850_1500))
+
+# plot(log(cardoso2011$detritus0_150),log(cardoso2011$detritus150_NA))
+
+summary(lm(log(detritus0_150)~log(vis_46$detritus150_850+vis_46$detritus850_1500),data=vis_46 ))
+
+### assumption, we considered 150_850 + 850_1500 equivalent to 150_NA; sample size = 11
+
+fine_cardoso2011<- function(coarse){
+  exp(0.66648 * log(coarse) + 0.80186)
+}
+
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_150 = ifelse(visit_id == 231, fine_cardoso2011(detritus150_NA), detritus0_150))
+
+### Picinguaba2011 - detritus125_NA is actually total detritus0_NA. It must be corrected in the database.
+
+P2011 <- detritus_wider %>%
+  filter(visit_id==241)
+
+correctedP2011<-P2011$detritus125_NA
+correct125_NA<-rep(NA,20)
+length(correctedP2011)
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_NA = ifelse(visit_id == 241, correctedP2011, detritus0_NA)) %>%
+  mutate(detritus125_NA = ifelse(visit_id == 241, correct125_NA, detritus125_NA))
+
+
+### Jureia2013 - detritus125_800 is total detritus0_NA. It must be corrected in the database.
+
+J2013 <- detritus_wider %>%
+  filter(visit_id==246)
+
+correctedJ2013<-J2013$detritus125_800
+correct125_800<-rep(NA,20)
+
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_NA = ifelse(visit_id == 246, correctedJ2013, detritus0_NA)) %>%
+  mutate(detritus125_800 = ifelse(visit_id == 246, correct125_800, detritus125_800))
+
+
+#### Serra do Japi
+### we have detritus125_NA, need detritus0_125
+
+Japi2013 <- detritus_wider %>%
+  filter(visit_id==251|visit_id==346)
+vis_46 <- detritus_wider %>%
+  filter(visit_id==46)
+
+plot(log(vis_46$detritus0_150),log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA))
+summary(lm(log(detritus0_150)~log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA),data=vis_46 ))
+
+fine_SJ2013<- function(coarse){
+  exp(0.70297 * log(coarse) -0.13327)
+}
+
+### assumption, we considered 150_850 + 850_1500 + 1550-20000 + 20000_NA equivalent to 125_NA; sample size = 11
+
+detritus_wider <- detritus_wider %>%
+  mutate(detritus0_150 = ifelse(visit_id == 251|visit_id==346, fine_SJ2013(detritus125_NA), detritus0_150))
+
+
 x<-c(2,3,4,5,NA,7)
 y<-c(2,3,4,5,6,7)
 z<-c(NA, NA, NA)
+
 na.checker<-function(a){
-    ifelse((mean(a, na.rm=TRUE)*length(a)-sum(a, na.rm=TRUE))>0,
-           1,
-           ifelse(mean(a,na.rm=TRUE)>0,
-                  2,
-                  NA_real_))
+  ifelse((mean(a, na.rm=TRUE)*length(a)-sum(a, na.rm=TRUE))>0,
+         1,
+         ifelse(mean(a,na.rm=TRUE)>0,
+                2,
+                NA_real_))
 }
+
 
 na.checker(x)
 na.checker(y)
@@ -271,30 +384,16 @@ detrital_tableNA <- detritus_wider %>%
   select(-bromeliad_id, -dataset_name) %>%  #-bromeliad_id, -dataset_name
   group_by(visit_id) %>%
   #summarize(check = na.checker(detritus0_NA))%>%
-  summarise_each(funs(nas = "na.checker"))%>%
+  summarise_each(funs(nas = "na.checker"(.)))%>%
   left_join(visitdatanames)
 
+
+write.csv(detrital_tableNA, "data-intermediate/detrital_table_NA.csv")
 # visualize with a daff ---------------------------------------------------
 
 
 daff::render_diff(daff::diff_data(detritus_original, detritus_wider))
 
-
 # write data out ----------------------------------------------------------
 
 write_csv(detritus_wider, "data-raw/02_broms.csv")
-
-# ### this script summarizes detritus amounts -- run it after you have imputed missing values
-# det <- broms %>%
-#   select(bromeliad_id, min, max, mass) %>%
-#   # semi_join(manys %>% filter(n > 4)) ## just to check with the eye.
-#   group_by(bromeliad_id) %>%
-#   summarise(detritus_mass_total = sum(mass, na.rm = TRUE))
-#
-# summ_brom <- broms %>%
-#   select(-min, -max, -mass) %>%
-#   distinct %>%
-#   left_join(det)
-#
-#
-# write_csv(summ_brom, "data-raw/02_broms.csv")

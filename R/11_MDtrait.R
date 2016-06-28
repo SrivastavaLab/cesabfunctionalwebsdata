@@ -8,8 +8,6 @@
 
 #### We still need to include the trait modalities: Body form and cohort production interval
 
-rm(list=ls())
-ls()
 ######### Original Trait Matrix ###########
 library(dplyr)
 
@@ -63,7 +61,7 @@ MD7=rep(NA,866)
 MD8=rep(NA,866)
 
 new.trait<- cbind(MD1, MD2, MD3, MD4, MD5, MD6, MD7, MD8)
-trait.2$MD1
+# trait.2$MD1
 trait.2<-cbind(trait.1, new.trait)
 is.data.frame(trait.2)
 colnames(trait.2)
