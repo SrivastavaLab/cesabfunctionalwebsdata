@@ -159,25 +159,13 @@ fine_lasgamas<- function(med){
 detritus_wider<-detritus_wider %>%
   mutate(detritus0_150 = ifelse(dataset_id%in%c(166,171,181), fine_lasgamas(detritus150_850), detritus0_150))
 
-#French Guiana only 186 has fpom in ml, 211 has fpom cpom and deadleaves
-#first, Nourages 2009 accidentally has particle counts in detritus categories
-#this needs to be corrected in BWGdb but for now:
+#French Guiana only 186 (petit saut 2007) has fpom in ml, 211 (sinnamary 2011) has fpom cpom and deadleaves
 
-detritus_wider<-detritus_wider %>%
-  mutate(detritus30_150 = ifelse(dataset_id==201,NA, detritus30_150))%>%
-  mutate(detritus0_30 = ifelse(dataset_id==201,NA, detritus0_30))%>%
-  mutate(detritus150_300 = ifelse(dataset_id==201,NA, detritus150_300))
+#this allometric equation is from data held offline by regis 
+fpom_convert_ml_into_g<-function(FPOMml){(0.0013*(FPOMml)^2+0.0243*(FPOMml)+0.0369)}
+fpom_convert_ml_into_g(7.6)
 
-#next, need to reload fpom_ml, and then make it into detritus0_150,
-##NOTE: some brom missing fpom_ml even though Gustavo and Fabiola entered this for all 140??need to figure out why...
-##NOTE: the FPOMml is a subsample for Nourages, Regis will see if it can be corrected, for now keep functions below
-##NOTE: the FPOM for Petit Saut 2007 dataset 186 may also be a subsample..check!
-
-#fpom_convert<-function(FPOMml){(0.0737*(FPOMml)-0.2981)}
-#detritus_wider<-detritus_wider %>%
-# mutate(detritus0_150 = ifelse(dataset_id==201,fpom_convert(fpom_ml), detritus0_150))
-
-#now french guiana detritus from detritus
+#now french guiana Sinnamary (dataset 211) generate detritus from detritus allometric equations and fns
 #NOTE there is an input error: dead_leaves in Sinnamary was detritus>2cm x 2cm roughly, but in other sites #brown bromeliad leaves!
 
 sinn<-detritus_wider%>%filter(dataset_id==211)
@@ -185,21 +173,13 @@ summary(glm(log(cpom_g)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 
 plot(log(sinn$cpom_g)~log(sinn$fpom_g))
 summary(glm(log(dead_leaves)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.36
 plot((sinn$dead_leaves)~(sinn$fpom_g))
-
 sinn$detover150<-sinn$fpom_g+sinn$cpom_g+sinn$dead_leaves
 summary(glm(log(detover150)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.59
 plot(log(sinn$detover150)~log(sinn$fpom_g))
 
-fpom_frenchguiana<- function(FPOMml){
-  ifelse((0.0737*(FPOMml)-0.2981)>=0, (0.0737*(FPOMml)-0.2981), 0)
- }
-
 over150_frenchguiana<- function(a){
   exp(0.688*(a)+3.075)
 }
-#check if this dataset 186 fpom ml is subsample, seems low...
-detritus_wider<-detritus_wider%>%
-  mutate(detritus0_150 = ifelse(dataset_id==186, fpom_frenchguiana(fpom_ml), detritus0_150))
 
 cpom_frenchguiana<- function(FPOMg){
   exp(0.858*log(FPOMg)+1.872)
@@ -209,22 +189,42 @@ largedet_frenchguiana<- function(FPOMg){
   exp(0.582*log(FPOMg)+2.5545)
 }
 
-detritus_wider<-detritus_wider %>%
-  mutate(detritus150_20000 = ifelse(dataset_id==186, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
-  mutate(detritus20000_NA= ifelse(dataset_id==186, largedet_frenchguiana(detritus0_150), detritus20000_NA))
+#next move sinnamary detritus from "fpom/cpom/dead leaves into correct detrital categories:
+#NOTE: this should be corrected on BWGdb as well
 
 detritus_wider<-detritus_wider %>%
   mutate(detritus0_150 = ifelse(dataset_id==211, fpom_g, detritus0_150))%>%
   mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
   mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
 
+#next apply sinnamary-based allometric eqns to dataset 186 (petit saut 2007) where we do the rather dangerous thing
+#of converting fpom in ml to fpom in grams to predict detrital grams in another 2 categories
+#we do the same thing for petit saut 2014(dataset 216), but here we at least start with fpom in mg
+
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_150 = ifelse(dataset_id==186, fpom_convert_ml_into_g(fpom_ml), detritus0_150))%>%
+  mutate(detritus150_20000 = ifelse(dataset_id==186, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
+  mutate(detritus20000_NA= ifelse(dataset_id==186, largedet_frenchguiana(detritus0_150), detritus20000_NA))
+
 detritus_wider<-detritus_wider %>%
   mutate(detritus0_150 = ifelse(dataset_id==216, (fpom_mg/1000), detritus0_150))%>%
   mutate(detritus150_20000 = ifelse(dataset_id==216, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
   mutate(detritus20000_NA= ifelse(dataset_id==216, largedet_frenchguiana(detritus0_150), detritus20000_NA))
 
-#detritus_wider<-detritus_wider%>%
-#  mutate(detritus150_NA = ifelse(dataset_id==201, over150_frenchguiana(detritus0_150), detritus150_NA))%>%filter(dataset_id==201)%>%View
+#first, Nourages 2006 (dataset 201) accidentally has particle counts in detritus categories
+#this needs to be corrected in BWGdb but for now:
+#next, in dataset 201 need to convert fpom_ml to g then make it into detritus0_150,
+
+detritus_wider<-detritus_wider %>%
+  mutate(detritus30_150 = ifelse(dataset_id==201,NA, detritus30_150))%>%
+  mutate(detritus0_30 = ifelse(dataset_id==201,NA, detritus0_30))%>%
+  mutate(detritus150_300 = ifelse(dataset_id==201,NA, detritus150_300))
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_150 = ifelse(dataset_id==201,fpom_convert_ml_into_g(fpom_ml), detritus0_150))
+detritus_wider<-detritus_wider%>%
+ mutate(detritus150_NA = ifelse(dataset_id==201, over150_frenchguiana(detritus0_150), detritus150_NA))
+
+#DIANE TO DO: chek after dataset updated: detritus_wider%>%filter(dataset_id%in%c(201, 206, 211, 216, 186))%>%View
 
 #pitilla costa rica 200 all present
 #pitilla costa rica 2002, 2010 are dataset61, 71; pitilla1997 dataset id is 51
