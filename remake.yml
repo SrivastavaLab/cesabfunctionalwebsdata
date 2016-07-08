@@ -1,0 +1,47 @@
+## a remake file to automate the process of assembling the dataset
+
+## first, list all the packages required
+packages:
+  - dplyr
+  - tidyr
+  - purrr
+  - bwgdata
+
+
+targets:
+  downloads:
+    depends:
+      - dats
+      - visits
+      - broms
+      - spp
+      - trts
+
+  all:
+    depends:
+      - final
+#  downloads:
+#      -
+## or should i give the original downloads a "clean" step, so that I could just delete them all and remake it again?
+
+  ## obtain all the data
+
+  dats:
+    command: bwg_get(I("datasets"))
+
+  visits:
+    command: bwg_get(I("visits"))
+
+  broms:
+    command: bwg_get(I("bromeliads"))
+
+  spp:
+    command: bwg_get(I("species"))
+
+  trts:
+    command: bwg_get(I("species"), I(list(traits = "true")))
+
+
+# moving down
+  final:
+    command: I(1)
