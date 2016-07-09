@@ -7,6 +7,8 @@ packages:
   - purrr
   - bwgdata
 
+sources:
+  - Rfunctions
 
 targets:
   downloads:
@@ -38,8 +40,16 @@ targets:
   spp:
     command: bwg_get(I("species"))
 
-  trts:
-    command: bwg_get(I("species"), I(list(traits = "true")))
+  trts_all:
+    command: bwg_get("species", list(tachet = "true", traits = "true"))
+
+  dats_filtered:
+    command: filter_test(dats)
+
+  broms_rename_unnest:
+    command: no_attrib_unnest_det(broms)
+
+  combine_multi_names
 
 
 # moving down
