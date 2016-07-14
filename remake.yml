@@ -49,7 +49,8 @@ targets:
   broms_rename_unnest:
     command: no_attrib_unnest_det(broms)
 
-  combine_multi_names
+  trts_all_filtered:
+    command: combine_multi_names(trts_all)
 
 
 # moving down
