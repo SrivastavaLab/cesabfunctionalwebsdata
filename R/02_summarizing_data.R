@@ -16,9 +16,6 @@ broms <- read.csv("data-raw/01_broms.csv", stringsAsFactors = FALSE)
 visits <- read_csv("data-raw/01_visits.csv", col_types = "nncDnnnnnncnncc")
 datasets <- read_csv("data-raw/01_datasets.csv")
 
-
-glimpse(visits)
-
 ## making some summary tables to help with visualizing missing data -----------------------------------------
 
 
@@ -29,8 +26,6 @@ datasetnames <- visitnames %>%
   select(dataset_id, dataset_name) %>%
   distinct()
 
-
-names(datasets)
 
 ## generate bromeliad-level data for each visit and each species
 
@@ -76,6 +71,7 @@ bromeliad_wide <- detritus_wide %>%
 
 write_csv(bromeliad_wide, "data-raw/02_bromeliad_wide.csv")
 
+
 ## combine back with the visit ids
 detritus_wider <- broms %>%
   select(visit_id, bromeliad_id) %>%
@@ -111,7 +107,6 @@ detritus_wider <- detritus_wider %>%
   mutate(detritus150_NA = ifelse(visit_id == 21, detritus150_20000, detritus150_NA))
 detritus_wider <- detritus_wider %>%
   mutate(detritus150_20000 = ifelse(visit_id == 21, NA, detritus150_20000))
-
 
 fine_cardoso2008<- function(coarse){
   exp(0.68961 * log(coarse) - 0.11363)
@@ -359,7 +354,6 @@ fine_SJ2013<- function(coarse){
 detritus_wider <- detritus_wider %>%
   mutate(detritus0_150 = ifelse(visit_id == 251|visit_id==346, fine_SJ2013(detritus125_NA), detritus0_150))
 
-
 x<-c(2,3,4,5,NA,7)
 y<-c(2,3,4,5,6,7)
 z<-c(NA, NA, NA)
@@ -372,6 +366,7 @@ na.checker<-function(a){
                 NA_real_))
 }
 
+### Function identified missing data that was not necessarily correct.
 
 na.checker(x)
 na.checker(y)
@@ -388,7 +383,7 @@ detrital_tableNA <- detritus_wider %>%
   left_join(visitdatanames)
 
 
-write.csv(detrital_tableNA, "data-intermediate/detrital_table_NA.csv")
+#write.csv(detrital_tableNA, "data-intermediate/detrital_table_NA.csv")
 # visualize with a daff ---------------------------------------------------
 
 
