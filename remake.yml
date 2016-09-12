@@ -7,6 +7,8 @@ packages:
   - tidyr
   - purrr
   - bwgdata
+  - stringr
+  - assertr
 
 sources:
   - Rfunctions
@@ -57,6 +59,7 @@ targets:
   trts_all:
     command: bwg_get(I("species"), getargs)
 
+## restructuring datasets
 
   broms_rename_unnest:
     command: no_attrib_unnest_det(broms)
@@ -67,3 +70,29 @@ targets:
   abundance:
     command: tidy_dataset_list(abds)
     ## function is from bwgdata
+
+## summarizing datasets
+
+  visitnames:
+    command: make_visitnames(visits, dats_filtered)
+    ## dats_filtered is here to work in a semi-join.
+
+  datasetnames:
+    command: make_datasetnames(visitnames)
+
+  diam_brom:
+    command: make_diam_brom(broms_rename_unnest)
+
+  fpom_brom:
+    command: make_fpom_brom(broms_rename_unnest)
+
+  detritus_wide:
+    command: make_detritus_wide(broms_rename_unnest)
+
+  detritus_wider:
+    command: make_detritus_wider(broms, detritus_wide, visitnames, diam_brom, fpom_brom)
+
+  ## correcting erroneous measurements in Cardoso -- moving some values to the right
+
+  detritus_wider_cardoso_corrected:
+    command: correct_cardoso_detritus_wider(detritus_wider)
