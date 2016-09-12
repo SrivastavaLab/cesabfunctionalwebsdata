@@ -18,10 +18,12 @@ targets:
       - visits
       - broms
       - spp
+      - abundance
 
   all:
     depends:
       - trts_all_filtered
+      - abundance
 #  downloads:
 #      -
 ## or should i give the original downloads a "clean" step, so that I could just delete them all and remake it again?
@@ -40,14 +42,21 @@ targets:
   spp:
     command: bwg_get(I("species"))
 
+## remove useless test datasets.
+  dats_filtered:
+    command: filter_test(dats)
+
+## get every single abundance table (sensible datasets only)
+  abds:
+    command: get_all_abundances(dats_filtered)
+
+## specify trait arguments
   getargs:
     command: list(tachet = I("true"), traits = I("true"))
 
   trts_all:
     command: bwg_get(I("species"), getargs)
 
-  dats_filtered:
-    command: filter_test(dats)
 
   broms_rename_unnest:
     command: no_attrib_unnest_det(broms)
@@ -55,3 +64,6 @@ targets:
   trts_all_filtered:
     command: combine_multi_names(trts_all)
 
+  abundance:
+    command: tidy_dataset_list(abds)
+    ## function is from bwgdata
