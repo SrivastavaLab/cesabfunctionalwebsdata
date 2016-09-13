@@ -21,7 +21,7 @@ targets:
       - dats
       - visits
       - broms
-      - spp
+      - trts_all
       - abundance
 
   all:
@@ -43,9 +43,6 @@ targets:
 
   broms:
     command: bwg_get(I("bromeliads"))
-
-  spp:
-    command: bwg_get(I("species"))
 
 ## remove useless test datasets.
   dats_filtered:
