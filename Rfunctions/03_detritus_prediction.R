@@ -1,25 +1,39 @@
 
 ### predicting the fine detritus from the rest of the data####################
 
+## here is a collection of all the "hand drawn" functions we have, ie those
+## which we do not know where they came from
 
+## fine detritus in Cardoso
 fine_cardoso2008<- function(coarse){
+  ## predicts detritus0_150 from detritus150_20000
   exp(0.68961 * log(coarse) - 0.11363)
 }
-
-detritus_wider <- detritus_wider %>%
-  mutate(detritus0_150 = ifelse(visit_id == 21, fine_cardoso2008(detritus150_20000), detritus0_150))
-
 
 ## for saba datasetid=111 visits 451 121 126 116 detritus150_20000 detritus20000_NA
 fine_saba2009 <- function(med){
   exp(0.79031 * log(med) - 0.070033)
 }
 
-detritus_wider<-detritus_wider %>%
-  mutate(detritus0_1500 = ifelse(dataset_id == 111, fine_saba2009(detritus1500_20000), NA))
+## I want to see a dataframe of models. It should tell me which functions will
+## be used where. Here, we may use the same model for multiple datasets. We can
+## take advantage of data_frame's rules about vector recycling here -- just give
+## the vector of visits that will be filled, and say only once the name of the
+## function that does the work.
+model_list <- list(
+  data_frame(visit_id =    c(21),
+             model    = list(fine_cardoso2008)
+  ),
+  #saba
+  data_frame(visit_id =    c(451, 121, 126, 116), ##i.e. dataset_id = 111
+             model    = list(fine_saba2009))
+)
+## dataset_id or visit_id?
 
 ## Although Puerto Rico 2010 dataset=116 based only on relaxed diameter the adj r sq is 0.79
 #eqn from all 1990s El verde plants (n=189, rsq = 0.78) interestingly v. similar eqn from pitilla 2002 secondary
+
+detritus_wider %>% glimpse
 
 elverde90s <- detritus_wider %>%
   filter(dataset_id==131| dataset_id==126|dataset_id==121|dataset_id==221)
