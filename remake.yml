@@ -11,7 +11,9 @@ packages:
   - assertr
 
 sources:
-  - Rfunctions
+  #- Rfunctions
+  - Rfunctions/01_accessing_cleaning.R
+  - Rfunctions/02_summarizing.R
 
 targets:
   downloads:
@@ -26,6 +28,7 @@ targets:
     depends:
       - trts_all_filtered
       - abundance
+      - detritus_wider
 #  downloads:
 #      -
 ## or should i give the original downloads a "clean" step, so that I could just delete them all and remake it again?

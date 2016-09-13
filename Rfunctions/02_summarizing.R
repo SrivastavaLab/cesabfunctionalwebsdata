@@ -33,8 +33,9 @@ make_diam_brom <- function(.broms){
 ## for each bromeliad select the fine detrius
 make_fpom_brom <- function(.broms){
   .broms %>%
-    no_detritus_brom %>%
-    select(bromeliad_id, fpom_ml, fpom_mg, fpom_g, cpom_g, dead_leaves, num_leaf)
+    # no_detritus_brom %>%
+    ## UGH WHITESPACE IN A COLUMN NAME. use `trim()` from stringr to fix everywhere later
+    select(bromeliad_id, fpom_ml, fpom_mg, fpom_g, cpom_g = `cpom_g `, dead_leaves, num_leaf)
 }
 
 
@@ -63,15 +64,25 @@ make_detritus_wide <- function(.broms){
 
 make_detritus_wider <- function(.broms, .detritus_wide, .visitnames, .diam_brom, .fpom_brom) {
 
+  detritus_novisit <- .detritus_wide %>%
+    # it is (or it had better be!) impossible for a bromeliad to be in more than
+    # one visit. therefore this check should always pass
+    select(-visit_id) %>%
+    ## this should do nothing
+    distinct %>%
+    verify(nrow(.) == nrow(.detritus_wide))
+
+  fpom_distinct <- distinct(.fpom_brom)
+
   .broms %>%
     select(visit_id, bromeliad_id) %>%
     distinct %>%
     # group_by(bromeliad_id) %>%
     # summarize(visit_id = first(visit_id)) %>%
-    left_join(.detritus_wide) %>%
-    left_join(.visitnames) %>%
-    left_join(.diam_brom) %>%
-    left_join(.fpom_brom) %>%
+    left_join(detritus_novisit, by = c("bromeliad_id")) %>%
+    left_join(.visitnames, by = "visit_id") %>%
+    left_join(.diam_brom, by = c("bromeliad_id")) %>%
+    left_join(fpom_distinct, by = c("bromeliad_id")) %>%
     verify(nrow(.) == nrow(.broms))
 }
 
