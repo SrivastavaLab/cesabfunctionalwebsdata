@@ -9,6 +9,7 @@ packages:
   - bwgdata
   - stringr
   - assertr
+  - lubridate
 
 sources:
   #- Rfunctions
@@ -22,7 +23,7 @@ targets:
       - visits
       - broms
       - trts_all
-      - abundance
+      - abds
 
   all:
     depends:
@@ -71,26 +72,56 @@ targets:
     command: tidy_dataset_list(abds)
     ## function is from bwgdata
 
+## coercing values if necessary
+
+  abundance_values:
+    command: coerce_values_abundance(abundance)
+
+  trts_all_values:
+    command: coerce_values_trts_all_filtered(trts_all_filtered)
+
+  visits_values:
+    command: coerce_values_visits(visits)
+
+  visits_date:
+    command: coerce_visits_date(visits_values)
+
+  dats_values:
+    command: coerce_values_dats(dats_filtered)
+
+  dats_date:
+    command: coerce_dats_date(dats_values)
+
+  ## drop a bad column name
+  brom_clean_name:
+    command: drop_bad_name(broms_rename_unnest)
+
+  broms_values:
+    command: coerce_values_brom_r_u(brom_clean_name)
+
+  broms_date:
+    command: coerce_broms_date(broms_values)
+
 ## summarizing datasets
 
   visitnames:
-    command: make_visitnames(visits, dats_filtered)
+    command: make_visitnames(visits_date, dats_date)
     ## dats_filtered is here to work in a semi-join.
 
   datasetnames:
     command: make_datasetnames(visitnames)
 
   diam_brom:
-    command: make_diam_brom(broms_rename_unnest)
+    command: make_diam_brom(broms_date)
 
   fpom_brom:
-    command: make_fpom_brom(broms_rename_unnest)
+    command: make_fpom_brom(broms_date)
 
   detritus_wide:
-    command: make_detritus_wide(broms_rename_unnest)
+    command: make_detritus_wide(broms_date)
 
   detritus_wider:
-    command: make_detritus_wider(broms, detritus_wide, visitnames, diam_brom, fpom_brom)
+    command: make_detritus_wider(broms_date, detritus_wide, visitnames, diam_brom, fpom_brom)
 
   ## correcting erroneous measurements in Cardoso -- moving some values to the right
 
