@@ -26,15 +26,17 @@ no_detritus_brom <- function(x){
 ## For each bromeliad select the diameter
 make_diam_brom <- function(.broms){
   .broms %>%
-  no_detritus_brom %>%
-  select(bromeliad_id, diameter)
+    no_detritus_brom %>%
+    select(bromeliad_id, bromeliad_id, visit_id, actual_water, max_water,
+           longest_leaf, num_leaf, height, diameter, extended_diameter,
+           leaf_width, catchment_diameter, catchment_height_cm, catchment_diameter_cm,
+           tank_height_cm, plant_area, plant_area_m2)
 }
 
 ## for each bromeliad select the fine detrius
 make_fpom_brom <- function(.broms){
   .broms %>%
     # no_detritus_brom %>%
-    ## UGH WHITESPACE IN A COLUMN NAME. use `trim()` from stringr to fix everywhere later
     select(bromeliad_id, fpom_ml, fpom_mg, fpom_g, cpom_g, dead_leaves, num_leaf)
 }
 
@@ -81,7 +83,6 @@ make_detritus_wider <- function(.broms, .detritus_wide, .visitnames, .diam_brom,
   brom_just_ids %>%
     # group_by(bromeliad_id) %>%
     # summarize(visit_id = first(visit_id)) %>%
-    left_join(detritus_novisit, by = c("bromeliad_id")) %>%
     left_join(.visitnames, by = "visit_id") %>%
     left_join(.diam_brom, by = c("bromeliad_id")) %>%
     left_join(fpom_distinct, by = c("bromeliad_id")) %>%
