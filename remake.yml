@@ -45,9 +45,6 @@ targets:
   broms:
     command: bwg_get(I("bromeliads"))
 
-## remove useless test datasets.
-  dats_filtered:
-    command: filter_test(dats)
 
 ## get every single abundance table (sensible datasets only)
   abds:
@@ -72,16 +69,33 @@ targets:
     command: tidy_dataset_list(abds)
     ## function is from bwgdata
 
+
+## remove useless test datasets.
+  blacklist:
+    command: make_blacklist(visits, dats)
+
+  dats_filtered:
+    command: anti_join(dats, blacklist)
+
+  visits_filtered:
+    command: anti_join(visits, blacklist)
+
+  abundance_filtered:
+    command: anti_join(abundance, blacklist)
+
+  brom_rename_unnest_filtered:
+    command: anti_join(broms_rename_unnest, blacklist)
+
 ## coercing values if necessary
 
   abundance_values:
-    command: coerce_values_abundance(abundance)
+    command: coerce_values_abundance(abundance_filtered)
 
   trts_all_values:
     command: coerce_values_trts_all_filtered(trts_all_filtered)
 
   visits_values:
-    command: coerce_values_visits(visits)
+    command: coerce_values_visits(visits_filtered)
 
   visits_date:
     command: coerce_visits_date(visits_values)
@@ -94,7 +108,7 @@ targets:
 
   ## drop a bad column name
   brom_clean_name:
-    command: drop_bad_name(broms_rename_unnest)
+    command: drop_bad_name(brom_rename_unnest_filtered)
 
   broms_values:
     command: coerce_values_brom_r_u(brom_clean_name)
