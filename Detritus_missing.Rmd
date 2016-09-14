@@ -31,7 +31,7 @@ the_detritus_list <- detritus_wider %>%
   nest(-visit_id, -dataset_id, -dataset_name) %>% 
   mutate(data_det = map(data, ~ .x %>% 
                           select(starts_with("detritus"))),
-         data_present_values = map(data_det, ~ .x[which(!all(is.na(.x)))]))
+         data_present_values = map(data_det, ~ .x[which(colSums(is.na(.x)) < nrow(.x))]))
 
 no_detritus_at_all <- the_detritus_list %>% 
   filter(map_lgl(data_present_values, ~ ncol(.x) == 0))
@@ -43,4 +43,85 @@ at_least_some_detritus <- the_detritus_list %>%
 We have **`r nrow(no_detritus_at_all)` visits** which have no detritus. This represents **`r no_detritus_at_all$data_present_values %>% map_dbl(nrow) %>% sum` bromeliads** out of `r the_detritus_list$data_det %>% map_dbl(nrow) %>% sum` plants in total.
 
 The sites with no detritus data at all are
+
+```{r}
+no_detritus_at_all %>% 
+  select(visit_id, dataset_id, dataset_name) %>% 
+  arrange(dataset_name) %>% 
+  kable
+```
+
+_should maybe be just the dataset names_
+
+### Sites with at least some -- how much is missing?
+
+Let's start by looking at what detritus categories *do* exist for each ~~site~~ dataset (dataset only to keep the list short:
+
+```{r}
+detritus_categories <- at_least_some_detritus %>% 
+  mutate(category_names = data_present_values %>% map(colnames)) %>% 
+  unnest(category_names) %>% 
+  select(dataset_id, visit_id, dataset_name, category_names) %>% 
+  distinct() %>% 
+  arrange(dataset_name)
+
+detritus_categories %>% 
+  kable
+```
+
+
+
+```{r}
+detritus_ranges <- detritus_categories %>% 
+  separate(category_names, into = c("min", "max"), sep = "_", remove = FALSE) %>%
+  mutate(min = readr::parse_number(min),
+         max = readr::parse_number(max)) %>% 
+  rowwise %>% 
+  mutate(med = median(c(min, max))) %>% 
+  ungroup %>% 
+  mutate(med = ifelse(is.na(max), 99999, med)) %>% 
+  group_by(dataset_name) %>% 
+  arrange(dataset_name, med) %>% 
+  ungroup
+```
+
+
+```{r}
+
+count_sieves <- detritus_ranges %>% 
+  nest(-dataset_id, -dataset_name, -visit_id) %>% 
+  mutate(no_seives = map_dbl(data, nrow)) 
+
+one_sieve <- count_sieves%>% 
+  filter(no_seives == 1)
+
+
+more_sieves <- count_sieves %>% 
+  filter(no_seives > 2)
+```
+
+
+
+It seems to me that the major trouble here is that we don't have a simple way to see what _exactly_ is missing. There are three ways that we can be missing detritus : from the middle (that's impossible) from the start, and from the end
+
+#### The middle
+```{r}
+continuous_sieve <- more_sieves %>% 
+  mutate(data_sieve_seq = data %>% map( ~ .x %>% 
+                                          mutate(sieve_sing = dense_rank(med)))) %>% 
+  mutate(contin = data_sieve_seq %>% map(~ .x %>% 
+                                           ## the maximum of a sieve should be
+                                           ## the same as the last minimum
+                                           mutate(sames = max == lead(min))))
+
+
+continuous_sieve %>% 
+  mutate(no_missing_middle = contin %>% map_lgl(~ all(.x$sames[-nrow(.x)]))) %>% 
+  filter(!no_missing_middle)
+
+```
+
+## the start or the end?
+
+
 
