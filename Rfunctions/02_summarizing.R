@@ -25,19 +25,22 @@ no_detritus_brom <- function(x){
 
 ## For each bromeliad select the diameter
 make_diam_brom <- function(.broms){
-  .broms %>%
-    no_detritus_brom %>%
-    select(bromeliad_id, bromeliad_id, visit_id, actual_water, max_water,
-           longest_leaf, num_leaf, height, diameter, extended_diameter,
+  nodet <- .broms %>%
+    no_detritus_brom
+
+  nodet %>%
+    select(bromeliad_id, bromeliad_id, actual_water, max_water,
+           longest_leaf, num_leaf, dead_leaves, height, diameter, extended_diameter,
            leaf_width, catchment_diameter, catchment_height_cm, catchment_diameter_cm,
-           tank_height_cm, plant_area, plant_area_m2)
+           tank_height_cm, plant_area, plant_area_m2) %>%
+    verify(nrow(.) == nrow(nodet))
 }
 
 ## for each bromeliad select the fine detrius
 make_fpom_brom <- function(.broms){
   .broms %>%
     # no_detritus_brom %>%
-    select(bromeliad_id, fpom_ml, fpom_mg, fpom_g, cpom_g, dead_leaves, num_leaf)
+    select(bromeliad_id, fpom_ml, fpom_mg, fpom_g, cpom_g)
 }
 
 
@@ -66,10 +69,10 @@ make_detritus_wide <- function(.broms){
 
 make_detritus_wider <- function(.broms, .detritus_wide, .visitnames, .diam_brom, .fpom_brom) {
 
-  detritus_novisit <- .detritus_wide %>%
+  detritus_novisit_justdetritus <- .detritus_wide %>%
     # it is (or it had better be!) impossible for a bromeliad to be in more than
     # one visit. therefore this check should always pass
-    select(-visit_id) %>%
+    select(bromeliad_id, starts_with("det")) %>%
     ## this should do nothing
     distinct %>%
     verify(nrow(.) == nrow(.detritus_wide))
@@ -81,8 +84,6 @@ make_detritus_wider <- function(.broms, .detritus_wide, .visitnames, .diam_brom,
     distinct
 
   brom_just_ids %>%
-    # group_by(bromeliad_id) %>%
-    # summarize(visit_id = first(visit_id)) %>%
     left_join(.visitnames, by = "visit_id") %>%
     left_join(.diam_brom, by = c("bromeliad_id")) %>%
     left_join(fpom_distinct, by = c("bromeliad_id")) %>%
