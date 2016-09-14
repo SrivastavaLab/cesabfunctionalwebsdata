@@ -1,0 +1,46 @@
+---
+title: "Report on missing detritus"
+author: "Andrew"
+date: "14. 11. 2016"
+output: 
+  html_document:
+    toc: true
+---
+
+## Description of the problem
+
+The amount of detritus present in a bromeliad is probably important for the insect community which we find in that plant. Fortunately, members of the BWG frequently measured the amount of detritus that they found in their plants. Unfortunately, these measurements were inconsistent: taken with different sizes of sieves, sometimes sampling all possible detritus and sometimes leaving out the largest or smallest categories. 
+
+The good news is, that at least sometimes we can try to fill in what we are missing. The neutral news is that such interpolation/extrapolation/estimation always has error associated with it. This error will vary from dataset to dataset, depending on several factors:
+
+* the number of other variables measured
+* the modelling framework used
+* sample size
+* vagaries of any particular bromeliad and/or the leaves that fall into it.
+
+This report aims to summarize what we know and how we know it, regarding the interpolation of detritus traits. 
+
+## State of the Data
+
+Here is what we know so far:
+
+### Sites with no detritus
+
+```{r}
+the_detritus_list <- detritus_wider %>% 
+  nest(-visit_id, -dataset_id, -dataset_name) %>% 
+  mutate(data_det = map(data, ~ .x %>% 
+                          select(starts_with("detritus"))),
+         data_present_values = map(data_det, ~ .x[which(!all(is.na(.x)))]))
+
+no_detritus_at_all <- the_detritus_list %>% 
+  filter(map_lgl(data_present_values, ~ ncol(.x) == 0))
+
+at_least_some_detritus <- the_detritus_list %>% 
+  filter(map_lgl(data_present_values, ~ ncol(.x) > 0))
+```
+
+We have **`r nrow(no_detritus_at_all)` visits** which have no detritus. This represents **`r no_detritus_at_all$data_present_values %>% map_dbl(nrow) %>% sum` bromeliads** out of `r the_detritus_list$data_det %>% map_dbl(nrow) %>% sum` plants in total.
+
+The sites with no detritus data at all are
+
