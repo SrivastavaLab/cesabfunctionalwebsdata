@@ -84,6 +84,7 @@ make_detritus_wider <- function(.broms, .detritus_wide, .visitnames, .diam_brom,
     distinct
 
   brom_just_ids %>%
+    left_join(detritus_novisit_justdetritus) %>%
     left_join(.visitnames, by = "visit_id") %>%
     left_join(.diam_brom, by = c("bromeliad_id")) %>%
     left_join(fpom_distinct, by = c("bromeliad_id")) %>%
