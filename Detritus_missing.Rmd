@@ -35,45 +35,51 @@ the_detritus_list <- detritus_wider %>%
                           select(starts_with("detritus"))),
          data_present_values = map(data_det, ~ .x[which(colSums(is.na(.x)) < nrow(.x))]))
 
-no_detritus_at_all <- the_detritus_list %>% 
-  filter(map_lgl(data_present_values, ~ ncol(.x) == 0))
+is_there_detritus <- the_detritus_list %>% 
+  mutate(has_detritus = map_chr(data_present_values, ~ ifelse(ncol(.x) > 0, "at least some", "none")),
+         total_brom   = map_dbl(data_present_values, nrow)) 
 
-at_least_some_detritus <- the_detritus_list %>% 
-  filter(map_lgl(data_present_values, ~ ncol(.x) > 0))
+count_the_detritus <- is_there_detritus %>% 
+  group_by(has_detritus) %>% 
+  summarize(total_bromeliad = sum(total_brom),
+            total_site = n())
+
+count_the_detritus %>% 
+  gather(var, count, starts_with("total")) %>% 
+  ggplot(aes(x = has_detritus, y = count)) +
+  geom_bar(stat = "identity", fill = "lightgreen") + 
+  facet_wrap(~var, scales = "free_y", labeller = labeller(var = c(total_bromeliad = "Number of bromeliads",
+                                                                  total_site     = "Number of sites"))) + 
+  theme_minimal() +
+  xlab("Is there any detritus in the raw data?")
 ```
 
-We have **`r nrow(no_detritus_at_all)` visits** which have no detritus. This represents **`r no_detritus_at_all$data_present_values %>% map_dbl(nrow) %>% sum` bromeliads** out of `r the_detritus_list$data_det %>% map_dbl(nrow) %>% sum` plants in total.
 
-The sites with no detritus data at all are
+The sites with no detritus data at all are:
 
-```{r}
-no_detritus_at_all %>% 
-  select(visit_id, dataset_id, dataset_name) %>% 
-  arrange(dataset_name) %>% 
-  kable
+```{r results='asis'}
+is_there_detritus %>% 
+  filter(has_detritus == "none") %>% 
+  .[["dataset_name"]] %>% 
+  unique %>%
+  map_chr(~ paste0("* *", .x, "*\n")) %>% 
+  cat
 ```
 
 _should maybe be just the dataset names_
 
 ### Sites with at least some -- how much is missing?
 
-Let's start by looking at what detritus categories *do* exist for each ~~site~~ dataset (dataset only to keep the list short:
-
 ```{r}
-detritus_categories <- at_least_some_detritus %>% 
+detritus_categories <- is_there_detritus %>% 
+  filter(has_detritus == "at least some") %>% 
   mutate(category_names = data_present_values %>% map(colnames)) %>% 
   unnest(category_names) %>% 
   select(dataset_id, visit_id, dataset_name, category_names) %>% 
   distinct() %>% 
   arrange(dataset_name)
 
-detritus_categories %>% 
-  kable
-```
 
-
-
-```{r}
 detritus_ranges <- detritus_categories %>% 
   separate(category_names, into = c("min", "max"), sep = "_", remove = FALSE) %>%
   mutate(min = readr::parse_number(min),
@@ -94,18 +100,19 @@ count_sieves <- detritus_ranges %>%
   nest(-dataset_id, -dataset_name, -visit_id) %>% 
   mutate(no_seives = map_dbl(data, nrow)) 
 
-one_sieve <- count_sieves%>% 
-  filter(no_seives == 1)
 
-
-more_sieves <- count_sieves %>% 
-  filter(no_seives > 2)
 ```
 
 It seems to me that the major trouble here is that we don't have a simple way to see what _exactly_ is missing. There are three ways that we can be missing detritus : from the middle (that's impossible) from the start, and from the end
 
 #### The middle
 ```{r}
+one_sieve <- count_sieves%>% 
+  filter(no_seives == 1)
+
+more_sieves <- count_sieves %>% 
+  filter(no_seives > 2)
+
 continuous_sieve <- more_sieves %>% 
   mutate(data_sieve_seq = data %>% map( ~ .x %>% 
                                           mutate(sieve_sing = dense_rank(med)))) %>% 
@@ -132,7 +139,8 @@ detritus_ranges %>%
   arrange(dataset_name) %>% 
   ggplot(aes(x = visit_id, ymin = min, ymax = max, colour = category_names)) +
   scale_y_log10() +
-  geom_errorbar(width = 0.4) +
+  geom_hline(yintercept = 40000) +
+  geom_errorbar(width = 0.4, lwd = 1.2) +
   theme_minimal() +
   theme(legend.position = "bottom", axis.text.x = element_text(size = 6))
   # geom_text(aes(y = med, label = dataset_name), angle = 90)
