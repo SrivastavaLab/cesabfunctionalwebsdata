@@ -5,6 +5,7 @@ date: "14. 11. 2016"
 output: 
   html_document:
     toc: true
+    code_folding: hide
 ---
 
 ## Description of the problem
@@ -27,6 +28,7 @@ Here is what we know so far:
 ### Sites with no detritus
 
 ```{r}
+
 the_detritus_list <- detritus_wider %>% 
   nest(-visit_id, -dataset_id, -dataset_name) %>% 
   mutate(data_det = map(data, ~ .x %>% 
@@ -79,7 +81,7 @@ detritus_ranges <- detritus_categories %>%
   rowwise %>% 
   mutate(med = median(c(min, max))) %>% 
   ungroup %>% 
-  mutate(med = ifelse(is.na(max), 99999, med)) %>% 
+  mutate(med = ifelse(is.na(max), 25000, med)) %>% 
   group_by(dataset_name) %>% 
   arrange(dataset_name, med) %>% 
   ungroup
@@ -99,8 +101,6 @@ one_sieve <- count_sieves%>%
 more_sieves <- count_sieves %>% 
   filter(no_seives > 2)
 ```
-
-
 
 It seems to me that the major trouble here is that we don't have a simple way to see what _exactly_ is missing. There are three ways that we can be missing detritus : from the middle (that's impossible) from the start, and from the end
 
@@ -123,5 +123,19 @@ continuous_sieve %>%
 
 ## the start or the end?
 
+
+Let's see if we can visualize, for all sites with more than one sieve, the range of the data:
+
+```{r fig.width=9}
+detritus_ranges %>% 
+  replace_na(list(max = 40000)) %>%
+  arrange(dataset_name) %>% 
+  ggplot(aes(x = visit_id, ymin = min, ymax = max, colour = category_names)) +
+  scale_y_log10() +
+  geom_errorbar(width = 0.4) +
+  theme_minimal() +
+  theme(legend.position = "bottom", axis.text.x = element_text(size = 6))
+  # geom_text(aes(y = med, label = dataset_name), angle = 90)
+```
 
 

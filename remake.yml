@@ -12,6 +12,7 @@ packages:
   - lubridate
   - rmarkdown
   - knitr
+  - ggplot2
 
 sources:
   #- Rfunctions
