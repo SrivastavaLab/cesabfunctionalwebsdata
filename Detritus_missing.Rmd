@@ -19,13 +19,15 @@ The good news is, that at least sometimes we can try to fill in what we are miss
 * sample size
 * vagaries of any particular bromeliad and/or the leaves that fall into it.
 
-This report aims to summarize what we know and how we know it, regarding the interpolation of detritus traits. 
+This report aims to summarize what we know and how we know it, regarding the interpolation of detritus amounts. 
 
 ## State of the Data
 
-Here is what we know so far:
+Within a **visit**, the techniques used to collect measurements should all be the same. There are three ways a visit might have incomplete detritus information: 
 
 ### Sites with no detritus
+
+We know that at several sites, no detritus information at all was collected. How many such sites are there?
 
 ```{r}
 
@@ -54,8 +56,7 @@ count_the_detritus %>%
   xlab("Is there any detritus in the raw data?")
 ```
 
-
-The sites with no detritus data at all are:
+The datasets with no detritus data at all are:
 
 ```{r results='asis'}
 is_there_detritus %>% 
@@ -65,8 +66,6 @@ is_there_detritus %>%
   map_chr(~ paste0("* *", .x, "*\n")) %>% 
   cat
 ```
-
-_should maybe be just the dataset names_
 
 ### Sites with at least some -- how much is missing?
 
@@ -128,7 +127,7 @@ continuous_sieve %>%
 
 ```
 
-## the start or the end?
+### the start or the end?
 
 
 Let's see if we can visualize, for all sites with more than one sieve, the range of the data:
@@ -139,7 +138,7 @@ detritus_ranges %>%
   arrange(dataset_name) %>% 
   ggplot(aes(x = visit_id, ymin = min, ymax = max, colour = category_names)) +
   scale_y_log10() +
-  geom_hline(yintercept = 40000) +
+  geom_hline(yintercept = 40000, lwd = 0.8, colour = "lightgrey", lty = 2) +
   geom_errorbar(width = 0.4, lwd = 1.2) +
   theme_minimal() +
   theme(legend.position = "bottom", axis.text.x = element_text(size = 6))
