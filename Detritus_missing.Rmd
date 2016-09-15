@@ -54,6 +54,8 @@ count_the_detritus %>%
                                                                   total_site     = "Number of sites"))) + 
   theme_minimal() +
   xlab("Is there any detritus in the raw data?")
+
+
 ```
 
 The datasets with no detritus data at all are:
@@ -123,7 +125,8 @@ continuous_sieve <- more_sieves %>%
 
 continuous_sieve %>% 
   mutate(no_missing_middle = contin %>% map_lgl(~ all(.x$sames[-nrow(.x)]))) %>% 
-  filter(!no_missing_middle)
+  filter(!no_missing_middle) %>% 
+  kable
 
 ```
 
@@ -133,16 +136,37 @@ continuous_sieve %>%
 Let's see if we can visualize, for all sites with more than one sieve, the range of the data:
 
 ```{r fig.width=9}
-detritus_ranges %>% 
+detritus_ranges_raw <- detritus_ranges %>% 
   replace_na(list(max = 40000)) %>%
-  arrange(dataset_name) %>% 
-  ggplot(aes(x = visit_id, ymin = min, ymax = max, colour = category_names)) +
-  scale_y_continuous(trans = "log2") +
-  geom_hline(yintercept = 40000, lwd = 0.8, colour = "lightgrey", lty = 2) +
-  geom_errorbar(width = 0.4, lwd = 1.2) +
-  theme_minimal() +
-  theme(legend.position = "bottom", axis.text.x = element_text(size = 6))
+  arrange(dataset_name)
+
+det_sieve_names <- unique(detritus_ranges_raw$category_names)
+
+virid_palette <- viridis::magma(length(det_sieve_names), begin = 0.2) %>%
+  set_names(det_sieve_names)
+
+
+plot_all <- function(X = c("21", "231", "106", "111", "196", "201", "191", "146", "151", 
+                           "156", "161", "166", "171", "351", "356", "361", "176", "181", 
+                           "91", "246", "266", "271", "281", "311", "316", "306", "326", 
+                           "241", "41", "51", "46", "56", "86", "371", "451", "116", "121", 
+                           "126", "346", "251", "96")){
+  
+  detritus_ranges_raw %>% 
+    ggplot(aes(x = visit_id, ymin = min, ymax = max)) +
+    scale_y_continuous(trans = "log2") +
+    geom_hline(yintercept = 40000, lwd = 0.8, colour = "lightgrey") +
+    geom_blank() +
+    geom_errorbar(aes(colour = category_names), width = 0.4, lwd = 1.2,
+                  data = detritus_ranges_raw %>% 
+                    filter(visit_id %in% X)) +
+    scale_colour_manual(name = "category_names", values = virid_palette) +
+    # theme_dark() +
+    theme(legend.position = "bottom", axis.text.x = element_text(size = 6))
   # geom_text(aes(y = med, label = dataset_name), angle = 90)
+}
+
+plot_all()
 ```
 
 ## Filling in those missing values
@@ -154,10 +178,19 @@ From original document comments:
 > Although Puerto Rico 2010 dataset=116 based only on relaxed diameter the adj r sq is 0.79
 #eqn from all 1990s El verde plants (n=189, rsq = 0.78) interestingly v. similar eqn from pitilla 2002 secondary
 
+```{r}
+
+detritus_ranges_raw %>% 
+  filter(dataset_name %>% str_detect("El.*")) %>% 
+  .[["visit_id"]] %>% 
+  unique %>% 
+  plot_all
+```
+
 
 ```{r}
 
-elverde90s <- detritus_wider %>%
+elverde90s <- detritus_wider_cardoso_corrected %>%
   filter(dataset_id %in% c(131, 126, 121, 221))
 
 elverde90s %>% .[["visit_id"]] %>% unique
