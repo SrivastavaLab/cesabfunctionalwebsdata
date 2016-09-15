@@ -13,6 +13,7 @@ packages:
   - rmarkdown
   - knitr
   - ggplot2
+  - broom
 
 sources:
   #- Rfunctions

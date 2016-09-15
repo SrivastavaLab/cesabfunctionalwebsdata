@@ -31,7 +31,7 @@ We know that at several sites, no detritus information at all was collected. How
 
 ```{r}
 
-the_detritus_list <- detritus_wider %>% 
+the_detritus_list <- detritus_wider_cardoso_corrected %>% 
   nest(-visit_id, -dataset_id, -dataset_name) %>% 
   mutate(data_det = map(data, ~ .x %>% 
                           select(starts_with("detritus"))),
@@ -137,7 +137,7 @@ detritus_ranges %>%
   replace_na(list(max = 40000)) %>%
   arrange(dataset_name) %>% 
   ggplot(aes(x = visit_id, ymin = min, ymax = max, colour = category_names)) +
-  scale_y_log10() +
+  scale_y_continuous(trans = "log2") +
   geom_hline(yintercept = 40000, lwd = 0.8, colour = "lightgrey", lty = 2) +
   geom_errorbar(width = 0.4, lwd = 1.2) +
   theme_minimal() +
@@ -145,4 +145,54 @@ detritus_ranges %>%
   # geom_text(aes(y = med, label = dataset_name), angle = 90)
 ```
 
+## Filling in those missing values
+
+### Puerto Rico 2010
+
+From original document comments: 
+
+> Although Puerto Rico 2010 dataset=116 based only on relaxed diameter the adj r sq is 0.79
+#eqn from all 1990s El verde plants (n=189, rsq = 0.78) interestingly v. similar eqn from pitilla 2002 secondary
+
+
+```{r}
+
+elverde90s <- detritus_wider %>%
+  filter(dataset_id %in% c(131, 126, 121, 221))
+
+elverde90s %>% .[["visit_id"]] %>% unique
+
+
+
+elverde90s$detritus0_NA <- with(elverde90s, detritus10_1500 + detritus1500_20000 + detritus20000_NA)
+
+mod <- glm(log(detritus0_NA)~log(diameter), data=elverde90s)
+
+mod %>% tidy %>% kable
+
+mod %>% glance() %>% kable()
+
+```
+
+```{r}
+plot(elverde90s$detritus0_NA~elverde90s$diameter)
+
+total_elverde2010 <- function(dia){
+  exp(-6.223+ 2.179* log(dia))
+}
+curve(total_elverde2010(x), add = TRUE)
+
+
+plot(log(elverde90s$detritus0_NA) ~ log(elverde90s$diameter))
+
+total_elverde2010 <- function(dia){
+  -6.223+ 2.179*(dia)
+}
+
+curve(total_elverde2010(x), add = TRUE)
+
+detritus_wider<-detritus_wider %>%
+  mutate(detritus0_NA = ifelse(dataset_id == 116, total_elverde2010(diameter), NA))
+
+```
 
