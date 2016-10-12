@@ -340,7 +340,13 @@ kable_table(sinn_predict_dead)
 plot((sinn$dead_leaves)~(sinn$fpom_g))
 
 sinn$detover150<-sinn$fpom_g+sinn$cpom_g+sinn$dead_leaves
-summary(glm(log(detover150)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.59
+
+
+sinn_predict_big <- glm(log(detover150)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.59
+
+sinn_predict_big %>% 
+  kable_table()
+
 plot(log(sinn$detover150)~log(sinn$fpom_g))
 ```
 
@@ -359,8 +365,24 @@ largedet_frenchguiana<- function(FPOMg){
   exp(0.582*log(FPOMg)+2.5545)
 }
 
+#this allometric equation is from data held offline by regis
+fpom_convert_ml_into_g<-function(FPOMml){(0.0013*(FPOMml)^2+0.0243*(FPOMml)+0.0369)}
+fpom_convert_ml_into_g(7.6)
+
 
 ```
 
 
+```{r}
+
+detritus_wider_fg_fixed <- detritus_wider_fg %>%
+  mutate(detritus0_150 = ifelse(dataset_id==186, fpom_convert_ml_into_g(fpom_ml), detritus0_150))%>%
+  mutate(detritus150_20000 = ifelse(dataset_id==186, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
+  mutate(detritus20000_NA= ifelse(dataset_id==186, largedet_frenchguiana(detritus0_150), detritus20000_NA))
+
+detritus_wider_fg_filled <- detritus_wider_fg_fixed %>%
+  mutate(detritus0_150 = ifelse(dataset_id==216, (fpom_mg/1000), detritus0_150))%>%
+  mutate(detritus150_20000 = ifelse(dataset_id==216, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
+  mutate(detritus20000_NA= ifelse(dataset_id==216, largedet_frenchguiana(detritus0_150), detritus20000_NA))
+```
 
