@@ -5,7 +5,10 @@ date: "14. 11. 2016"
 output: 
   html_document:
     toc: true
+    toc_depth: 5
+    toc_float: true
     code_folding: hide
+    theme: paper
 ---
 
 ## Description of the problem
@@ -173,11 +176,15 @@ plot_all()
 
 ### Puerto Rico 2010
 
+#### Puerto Rico -- missing values
+
 From original document comments: 
 
 > Although Puerto Rico 2010 dataset=116 based only on relaxed diameter the adj r sq is 0.79
 #eqn from all 1990s El verde plants (n=189, rsq = 0.78) interestingly v. similar eqn from pitilla 2002 secondary
 
+
+Let us first see the data that we are trying to fill in:
 ```{r}
 
 detritus_ranges_raw %>% 
@@ -187,15 +194,14 @@ detritus_ranges_raw %>%
   plot_all
 ```
 
+#### Puerto Rico -- models
+
+Every "missing" vertical bar here represents a visit in which no detritus is available. We use a model of **total detritus** as a function of **diameter**
 
 ```{r}
 
 elverde90s <- detritus_wider_cardoso_corrected %>%
   filter(dataset_id %in% c(131, 126, 121, 221))
-
-elverde90s %>% .[["visit_id"]] %>% unique
-
-
 
 elverde90s$detritus0_NA <- with(elverde90s, detritus10_1500 + detritus1500_20000 + detritus20000_NA)
 
@@ -206,6 +212,8 @@ mod %>% tidy %>% kable
 mod %>% glance() %>% kable()
 
 ```
+
+We can see the model coefficients here. Below they are used in a function which fills in the missing detritus.
 
 ```{r}
 plot(elverde90s$detritus0_NA~elverde90s$diameter)
@@ -224,8 +232,135 @@ total_elverde2010 <- function(dia){
 
 curve(total_elverde2010(x), add = TRUE)
 
-detritus_wider<-detritus_wider %>%
+detritus_wider_elverde <- detritus_wider %>%
   mutate(detritus0_NA = ifelse(dataset_id == 116, total_elverde2010(diameter), NA))
 
 ```
+
+#### Las Gamas -- missing data
+
+```{r}
+detritus_wider_elverde %>% 
+  filter(dataset_id %in% c(166, 171, 181)) %>% 
+  .[["visit_id"]] %>% 
+  unique %>% 
+  plot_all
+```
+
+#### Las Gamas -- model
+
+We are missing the lowest size categories in Las Gamas. Filled in with this equation :
+
+```r
+fine_lasgamas<- function(med){
+  ((0.9857 *med) + 1.496)
+}
+```
+
+.. unfortunately right now I don't know where this comes from
+
+```{r}
+fine_lasgamas<- function(med){
+  ((0.9857 *med) + 1.496)
+}
+
+detritus_wider_lasgamas <- detritus_wider_elverde %>%
+  mutate(detritus0_150 = ifelse(dataset_id%in%c(166,171,181), fine_lasgamas(detritus150_850), detritus0_150))
+```
+
+#### Las Gamas -- filled in data
+
+```{r}
+detritus_wider_lasgamas %>% 
+  filter(dataset_id%in%c(166,171,181)) %>% 
+  ggplot(aes(x = detritus150_850, y = detritus0_150)) +
+  geom_point()
+
+```
+
+### French Guiana
+
+From the notes:
+
+> French Guiana only 186 (petit saut 2007) has fpom in ml, 211 (sinnamary 2011) has fpom cpom and deadleaves
+
+```r
+fpom_convert_ml_into_g<-function(FPOMml){(0.0013*(FPOMml)^2+0.0243*(FPOMml)+0.0369)}
+fpom_convert_ml_into_g(7.6)
+
+```
+
+**IMPORTANT** French Guiana contains some mislabelled columns. 
+
+```{r}
+#next move sinnamary detritus from "fpom/cpom/dead leaves into correct detrital categories:
+#NOTE: this should be corrected on BWGdb as well
+
+detritus_wider_fg <- detritus_wider_lasgamas %>%
+  mutate(detritus0_150 = ifelse(dataset_id==211, fpom_g, detritus0_150))%>%
+  mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
+  mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
+
+```
+
+
+```{r results="asis"}
+
+## function to show the summary of a model and its goodness of fit too
+kable_table <- function(mod){
+  output_list <- list("goodness of fit:" = glance, 
+       "parameters:" = tidy) %>% 
+    invoke_map(x = sinn_predict_coarse) %>% 
+    map(kable)
+  
+for (i in names(output_list)) {
+  cat(i)
+  
+  print(output_list[[i]])
+}
+}
+
+## filter sinnamary
+sinn <- detritus_wider%>%filter(dataset_id==211)
+
+sinn_predict_coarse <- glm(log(cpom_g) ~ log(fpom_g), data=sinn)
+
+kable_table(sinn_predict_coarse)
+
+plot(log(sinn$cpom_g)~log(sinn$fpom_g))
+```
+
+Predicting dead leaves from FPOM
+```{r}
+
+sinn_predict_dead <- glm(log(dead_leaves)~log(fpom_g), data=sinn)#sinnamary based eqn has rsq of 0.36
+
+kable_table(sinn_predict_dead)
+
+plot((sinn$dead_leaves)~(sinn$fpom_g))
+
+sinn$detover150<-sinn$fpom_g+sinn$cpom_g+sinn$dead_leaves
+summary(glm(log(detover150)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.59
+plot(log(sinn$detover150)~log(sinn$fpom_g))
+```
+
+Then, we define some functions based on this:
+
+```{r}
+over150_frenchguiana<- function(a){
+  exp(0.688*(a)+3.075)
+}
+
+cpom_frenchguiana<- function(FPOMg){
+  exp(0.858*log(FPOMg)+1.872)
+}
+
+largedet_frenchguiana<- function(FPOMg){
+  exp(0.582*log(FPOMg)+2.5545)
+}
+
+
+```
+
+
 
