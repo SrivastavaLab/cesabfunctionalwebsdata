@@ -16,5 +16,41 @@ read_fpom_fg <- function(path) {
                  `dry weight (g)` = col_double(),
                  `dry weight (mg)` = col_integer()
                )) %>%
-    select(-starts_with("X"))
+    select(-starts_with("X")) %>%
+    rename(fpom_ml = `FPOM (ml decanted)`,
+           fpom_g = `dry weight (g)`) %>%
+    filter(!is.na(fpom_ml))
 }
+
+#' Fit a model to predict the mass (in ***GRAMS*** is that correct) from the
+#' volumen data. Right now we are using the very same form of the model that was
+#' present in the original excel file from Regis et al. note that stat_smooth
+#' shows a linear relationship.
+fit_fpom_g_ml <- function(fpom_fg_data) {
+  lm(fpom_g ~ I(fpom_ml^2) + fpom_ml, data = fpom_fg_data)
+
+}
+
+
+#' convenience function. This takes a model object and returns a function, one
+#' that takes a vector of new x values and returns a list of predictions
+predict_function <- function(mod) {
+
+  respname <- mod$model %>%
+    attr("terms") %>%
+    formula() %>%
+    all.vars(.) %>%
+    .[2]
+
+  function(xs) {
+    force(respname)
+    force(mod)
+
+    xs %>%
+      list %>%
+      set_names(respname) %>%
+      predict(mod, se.fit = TRUE, .)
+  }
+}
+
+

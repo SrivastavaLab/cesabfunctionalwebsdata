@@ -154,9 +154,19 @@ targets:
   detritus_wider_cardoso_corrected:
     command: correct_cardoso_detritus_wider(detritus_wider)
 
-
+  ## correcting erroneous measurements in french Guiana -- mislabelled columns
   detritus_wider_correct_frenchguiana:
     command: correct_frenchguiana_detritus(detritus_wider_cardoso_corrected)
+
+  # inferring FPOM mass from FPOM volume
+
+  ## First step: create model
+
+  model_fpom_g_ml:
+    command: fit_fpom_g_ml(fpom_fg_data)
+
+  fpom_convert_ml_into_g:
+    command: predict_function(model_fpom_g_ml)
 
   Detritus_missing.html:
     command: render("Detritus_missing.Rmd")
