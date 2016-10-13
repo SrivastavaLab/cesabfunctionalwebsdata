@@ -14,11 +14,13 @@ packages:
   - knitr
   - ggplot2
   - broom
+  - readr
 
 sources:
   #- Rfunctions
   - Rfunctions/01_accessing_cleaning.R
   - Rfunctions/02_summarizing.R
+  - Rfunctions/03_detritus_interpolation.R
 
 targets:
   downloads:
@@ -73,6 +75,11 @@ targets:
   abundance:
     command: tidy_dataset_list(abds)
     ## function is from bwgdata
+
+### load in supplementary data
+
+  fpom_fg_data:
+    command: read_fpom_fg("data-raw/FPOMdecanted_dryweight.csv")
 
 
 ## remove useless test datasets.
