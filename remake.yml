@@ -147,7 +147,11 @@ targets:
   detritus_wider_cardoso_corrected:
     command: correct_cardoso_detritus_wider(detritus_wider)
 
+
+  detritus_wider_correct_frenchguiana:
+    command: correct_frenchguiana_detritus(detritus_wider_cardoso_corrected)
+
   Detritus_missing.html:
     command: render("Detritus_missing.Rmd")
     depends:
-      - detritus_wider_cardoso_corrected
+      - detritus_wider_correct_frenchguiana

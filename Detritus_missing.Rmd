@@ -34,7 +34,7 @@ We know that at several sites, no detritus information at all was collected. How
 
 ```{r}
 
-the_detritus_list <- detritus_wider_cardoso_corrected %>% 
+the_detritus_list <- detritus_wider_correct_frenchguiana %>% 
   nest(-visit_id, -dataset_id, -dataset_name) %>% 
   mutate(data_det = map(data, ~ .x %>% 
                           select(starts_with("detritus"))),

@@ -117,6 +117,13 @@ correct_cardoso_detritus_wider <- function(.detritus_wider){
 }
 
 
+correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
+  .detritus_wider_cardoso_corrected %>%
+    mutate(detritus0_150 = ifelse(dataset_id==211, fpom_g, detritus0_150))%>%
+    mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
+    mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
+}
+
 ## finally, coerce the data types to be correct -- usually either numeric or character
 
 # names(abundance)
