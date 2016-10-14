@@ -168,7 +168,7 @@ targets:
   ## then use both model and data to create the new variables
 
   detritus_wider_FG_g:
-    command: estimate_fpom_g_from_ml(detritus_wider_cardoso_corrected, model_fpom_g_ml)
+    command: estimate_fpom_g_from_ml(detritus_wider_correct_frenchguiana, model_fpom_g_ml)
 
 
   detritus_wider_fpom_g_predicted:
