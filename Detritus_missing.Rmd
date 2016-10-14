@@ -47,6 +47,10 @@ is_there_detritus <- the_detritus_list %>%
                                          "none")),
          total_brom   = map_dbl(data_present_values, nrow)) 
 
+the_detritus_list
+```
+
+```{r}
 count_the_detritus <- is_there_detritus %>% 
   group_by(has_detritus) %>% 
   summarize(total_bromeliad = sum(total_brom),
@@ -74,6 +78,24 @@ is_there_detritus %>%
   map_chr(~ paste0("* *", .x, "*\n")) %>% 
   cat
 ```
+
+## Brief interlude -- predicting fine detritus mass from volume
+
+```{r}
+detritus_wider_FG_detritus_corrected %>% 
+  filter(!is.na(detritus0_150)) %>% 
+  ## is there a standard error? if so its a prediction not an observation
+  mutate(prediction = ifelse(detritus0_150_se %>% is.na, "observation", "prediction")) %>% 
+  ## cheat -- make se 0 for observations so both can be plotted
+  replace_na(list(detritus0_150_se = 0)) %>% 
+  ggplot(aes(x = dataset_name, y = detritus0_150,
+             ymin = detritus0_150 - detritus0_150_se, 
+             ymax = detritus0_150 + detritus0_150_se, color = prediction)) +
+  scale_y_continuous(trans = "log2") +
+  geom_pointrange(position = position_jitter(width = 1.1), alpha = 0.3)
+```
+
+
 
 ### Sites with at least some -- how much is missing?
 
