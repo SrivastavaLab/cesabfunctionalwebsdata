@@ -34,14 +34,17 @@ We know that at several sites, no detritus information at all was collected. How
 
 ```{r}
 
-the_detritus_list <- detritus_wider_correct_frenchguiana %>% 
+the_detritus_list <- detritus_wider_FG_detritus_corrected %>% 
   nest(-visit_id, -dataset_id, -dataset_name) %>% 
   mutate(data_det = map(data, ~ .x %>% 
                           select(starts_with("detritus"))),
          data_present_values = map(data_det, ~ .x[which(colSums(is.na(.x)) < nrow(.x))]))
 
 is_there_detritus <- the_detritus_list %>% 
-  mutate(has_detritus = map_chr(data_present_values, ~ ifelse(ncol(.x) > 0, "at least some", "none")),
+  mutate(has_detritus = map_chr(data_present_values,
+                                ~ ifelse(ncol(.x) > 0,
+                                         "at least some",
+                                         "none")),
          total_brom   = map_dbl(data_present_values, nrow)) 
 
 count_the_detritus <- is_there_detritus %>% 

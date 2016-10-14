@@ -49,7 +49,9 @@ predict_function <- function(mod) {
     xs %>%
       list %>%
       set_names(respname) %>%
-      predict(mod, se.fit = TRUE, .)
+      predict(mod, se.fit = TRUE, .) %>%
+      ## returns a list. Add in the original values:
+      splice(xs = xs, .)
   }
 }
 
@@ -71,7 +73,8 @@ estimate_fpom_g_from_ml <- function(.detritus_wider_cardoso_corrected, .model_fp
     mutate(detritus0_150_prediction = map_if(data,
                                              ## UGH is there a better way to say "wherever that column is not all NA"
                                              ~ .x$fpom_ml %>% negate(is.na)(.) %>% all,
-                                             ~ fpom_convert_ml_into_g(.x$fpom_ml)))
+                                             ~ splice(bromeliad_id = .x$bromeliad_id,
+                                                      fpom_convert_ml_into_g(.x$fpom_ml))))
 
   ## here it could also spit out a message
 
@@ -86,16 +89,20 @@ predict_fpom_g <- function(.detritus_wider_FG_g) {
   }
 
   det_pred <- .detritus_wider_FG_g %>%
-    mutate(detritus0_150_pred = map(detritus0_150_prediction,
-                                    ## if it's not a dataframe, its a list -- that means it was predicted, not observed
-                                    safely(tidy_prediction, data_frame(detritus0_150_pv = NA_real_,
-                                                                         detritus0_150_se = NA_real_))))
+    mutate(detritus0_150_just_brom = map(detritus0_150_prediction,
+                                         ## everyone should have "bromeliad_id"
+                                         ~ data_frame(bromeliad_id = .x$bromeliad_id)),
+           detritus0_150_just_pred = map(detritus0_150_prediction,
+                                         ## if you don't have prediction variables, u are not a prediction
+                                         possibly(tidy_prediction, data_frame(detritus0_150_pv = NA_real_,
+                                                                              detritus0_150_se = NA_real_))),
+           ## stick em together (use cbind for the recycling)
+           detritus0_150_df        = map2(detritus0_150_just_brom, detritus0_150_just_pred, cbind))
 
   ## This approach with `safely` is OK. it would be even simpler with
   ## `possibly`, but what if we need those errors someday?? they would go here.
 
   det_pred %>%
-    mutate(detritus0_150_df = map(detritus0_150_pred, "result")) %>%
     unnest(detritus0_150_df)
 }
 ##
@@ -115,7 +122,7 @@ combine_observed_predicted_0_150_det <- function(.detritus_wider_correct_frenchg
   combined_cols <- .detritus_wider_correct_frenchguiana %>%
     # rename for clarity
     rename(detritus0_150_orig = detritus0_150) %>%
-    left_join(.detritus_wider_fpom_g_predicted, by = c("bromeliad_id", "dataset_id", "dataset_name")) %>%
+    left_join(.detritus_wider_fpom_g_predicted, by = c("dataset_id", "dataset_name", "bromeliad_id")) %>%
     # there should be no value present in both columns -- this is a horrible way to do it!
     verify(rowSums(cbind(!is.na(detritus0_150_orig), !is.na(detritus0_150_pv))) < 2) %>%
     # combine the two columns -- using ifelse should now be safe if the above check passed :D
@@ -123,12 +130,11 @@ combine_observed_predicted_0_150_det <- function(.detritus_wider_correct_frenchg
 
   # then check with (either) of the fpom columns
   combined_cols %>%
-    check_data_source_target("fpom_ml.x", "detritus0_150")
-
+    check_data_source_target("fpom_ml", "detritus0_150")
 
   # then clean it out if it works
   combined_cols %>%
-    select(-fpom_ml.x, -fpom_ml.y, -detritus0_150_orig, -detritus0_150_pv)
+    select(-fpom_ml, -detritus0_150_orig, -detritus0_150_pv)
   ## note that we keep detritus0_150_se which is now useful for prediction etc
   ## etc, could also be used to identify predicted values and reg values.
 
