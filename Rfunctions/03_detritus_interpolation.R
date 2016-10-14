@@ -54,3 +54,47 @@ predict_function <- function(mod) {
 }
 
 
+#' function to update the dataset with the new and correct fpom values for
+#' French Guiana. This uses the convenience function `predict_function()` to
+#' create the workhorse function that does the actual work
+
+estimate_fpom_g_from_ml <- function(.detritus_wider_cardoso_corrected, .model_fpom_g_ml) {
+
+  ## create function to estimate g from ml
+  fpom_convert_ml_into_g <- predict_function(.model_fpom_g_ml)
+
+  .detritus_wider_cardoso_corrected %>%
+    tbl_df %>%
+    select(dataset_id, bromeliad_id, dataset_name, fpom_ml) %>%
+    nest(bromeliad_id, fpom_ml) %>%
+    ## should there perhaps be a check that i'm not writing over data?
+    mutate(detritus0_150_prediction = map_if(data,
+                                             ## UGH is there a better way to say "wherever that column is not all NA"
+                                             ~ .x$fpom_ml %>% is.na %>% all %>% `!`(.),
+                                             ~ fpom_convert_ml_into_g(.x$fpom_ml)))
+
+  ## here it could also spit out a message
+
+}
+
+
+predict_fpom_g <- function(.detritus_wider_FG_g) {
+  .detritus_wider_FG_g %>%
+    mutate(detritus0_150_pred = map_if(detritus0_150_prediction,
+                                       negate(is.data.frame),
+                                       ~ data_frame(detritus0_150_pv = .x$fit,
+                                                    detritus0_150_se = .x$se.fit))) %>%
+    unnest(detritus0_150_pred)
+
+}
+##
+
+
+## nest the list where there is the same dataset id and then, then, you should
+## do the function wherever there is data. Thin ein a separate step, why don't
+## you just move the predictions (and the SEs) over where there is NOT data?
+
+
+## put the predicted values with the originals. Combine them side-by-side and
+## then run simple check -- there should be no predicted detritus where there is
+## also observed detritus
