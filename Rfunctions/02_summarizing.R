@@ -116,12 +116,51 @@ correct_cardoso_detritus_wider <- function(.detritus_wider){
 
 }
 
+#' helper function for when you fill one column in with another. When that
+#' happens, and if it happens correctly, the "source" column should be perfectly
+#' nested in the "target" column -- ie if there is a value in "source" there
+#' should never be a missing value in "target"
+check_data_source_target <- function(dataset, sourcename, targetname) {
+  testdata <- dataset %>%
+    # where the 'source' data was..
+    filter_(!is.na(sourcename)) %>%
+    # there should be no empty 'target' data!
+    filter_(is.na(targetname)) %>%
+    verify(., nrow(.) == 0)
+}
 
+
+### could also do this not to specific sites BUT to whatever sites have fpom_g
+### but not the other -- not detritus0_150
 correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
-  .detritus_wider_cardoso_corrected %>%
+
+  ## first correct the variable names -- move values from "fpom_g" "cpom_g" and
+  ## "dead_leaves", within the one site where they were recorded erroneously,
+  ## into correct "detritus*" columns
+  move_values_to_detritus <- .detritus_wider_cardoso_corrected %>%
     mutate(detritus0_150 = ifelse(dataset_id==211, fpom_g, detritus0_150))%>%
     mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
     mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
+
+  ### fix the mg error as well
+  fix_fpom_mp <- move_values_to_detritus %>%
+    mutate(detritus0_150 = ifelse(dataset_id==216, (fpom_mg/1000), detritus0_150))
+
+  ### remove these columns -- check first to confirm that no data is being discarded:
+
+
+  # check target and source columns
+  fix_fpom_mp %>%
+    check_data_source_target("fpom_g", "detritus0_150") %>%
+    check_data_source_target("cpom_g", "detritus150_20000") %>%
+    check_data_source_target("dead_leaves", "detritus20000_NA") %>%
+    check_data_source_target("fpom_mg", "detritus0_150")
+
+
+  # if that did not throw and error, drop the old columns
+  fix_fpom_mp %>%
+    select(-fpom_g, -cpom_g, -dead_leaves, -fpom_mg)
+
 }
 
 ## finally, coerce the data types to be correct -- usually either numeric or character
