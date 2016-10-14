@@ -70,7 +70,7 @@ estimate_fpom_g_from_ml <- function(.detritus_wider_cardoso_corrected, .model_fp
     ## should there perhaps be a check that i'm not writing over data?
     mutate(detritus0_150_prediction = map_if(data,
                                              ## UGH is there a better way to say "wherever that column is not all NA"
-                                             ~ .x$fpom_ml %>% is.na %>% all %>% `!`(.),
+                                             ~ .x$fpom_ml %>% negate(is.na)(.) %>% all,
                                              ~ fpom_convert_ml_into_g(.x$fpom_ml)))
 
   ## here it could also spit out a message
@@ -79,13 +79,24 @@ estimate_fpom_g_from_ml <- function(.detritus_wider_cardoso_corrected, .model_fp
 
 
 predict_fpom_g <- function(.detritus_wider_FG_g) {
-  .detritus_wider_FG_g %>%
-    mutate(detritus0_150_pred = map_if(detritus0_150_prediction,
-                                       negate(is.data.frame),
-                                       ~ data_frame(detritus0_150_pv = .x$fit,
-                                                    detritus0_150_se = .x$se.fit))) %>%
-    unnest(detritus0_150_pred)
 
+  tidy_prediction <- function(pred_list){
+    data_frame(detritus0_150_pv = pred_list$fit,
+               detritus0_150_se = pred_list$se.fit)
+  }
+
+  det_pred <- .detritus_wider_FG_g %>%
+    mutate(detritus0_150_pred = map(detritus0_150_prediction,
+                                    ## if it's not a dataframe, its a list -- that means it was predicted, not observed
+                                    safely(tidy_prediction, data_frame(detritus0_150_pv = NA_real_,
+                                                                         detritus0_150_se = NA_real_))))
+
+  ## This approach with `safely` is OK. it would be even simpler with
+  ## `possibly`, but what if we need those errors someday?? they would go here.
+
+  det_pred %>%
+    mutate(detritus0_150_df = map(detritus0_150_pred, "result")) %>%
+    unnest(detritus0_150_df)
 }
 ##
 
@@ -98,3 +109,27 @@ predict_fpom_g <- function(.detritus_wider_FG_g) {
 ## put the predicted values with the originals. Combine them side-by-side and
 ## then run simple check -- there should be no predicted detritus where there is
 ## also observed detritus
+combine_observed_predicted_0_150_det <- function(.detritus_wider_correct_frenchguiana, .detritus_wider_fpom_g_predicted) {
+
+# browser()
+  combined_cols <- .detritus_wider_correct_frenchguiana %>%
+    # rename for clarity
+    rename(detritus0_150_orig = detritus0_150) %>%
+    left_join(.detritus_wider_fpom_g_predicted, by = c("bromeliad_id", "dataset_id", "dataset_name")) %>%
+    # there should be no value present in both columns -- this is a horrible way to do it!
+    verify(rowSums(cbind(!is.na(detritus0_150_orig), !is.na(detritus0_150_pv))) < 2) %>%
+    # combine the two columns -- using ifelse should now be safe if the above check passed :D
+    mutate(detritus0_150 = ifelse(is.na(detritus0_150_orig), detritus0_150_pv, detritus0_150_orig))
+
+  # then check with (either) of the fpom columns
+  combined_cols %>%
+    check_data_source_target("fpom_ml.x", "detritus0_150")
+
+
+  # then clean it out if it works
+  combined_cols %>%
+    select(-fpom_ml.x, -fpom_ml.y, -detritus0_150_orig, -detritus0_150_pv)
+  ## note that we keep detritus0_150_se which is now useful for prediction etc
+  ## etc, could also be used to identify predicted values and reg values.
+
+}

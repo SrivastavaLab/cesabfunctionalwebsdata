@@ -165,16 +165,20 @@ targets:
   model_fpom_g_ml:
     command: fit_fpom_g_ml(fpom_fg_data)
 
-  ## then use both model and data to create the new variables
-
+  ## then use both model and data to create the new predictions
   detritus_wider_FG_g:
     command: estimate_fpom_g_from_ml(detritus_wider_correct_frenchguiana, model_fpom_g_ml)
 
-
+  ## in a separate step, extract the model predictions into a column
   detritus_wider_fpom_g_predicted:
     command: predict_fpom_g(detritus_wider_FG_g)
+
+  ## combine the observed and predicted values (keep se column)
+  detritus_wider_FG_detritus_corrected:
+    command: combine_observed_predicted_0_150_det(detritus_wider_correct_frenchguiana, detritus_wider_fpom_g_predicted)
+
 
   Detritus_missing.html:
     command: render("Detritus_missing.Rmd")
     depends:
-      - detritus_wider_correct_frenchguiana
+      - detritus_wider_FG_detritus_corrected
