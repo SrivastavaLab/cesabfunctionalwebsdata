@@ -9,9 +9,18 @@ packages:
   - bwgdata
   - stringr
   - assertr
+  - lubridate
+  - rmarkdown
+  - knitr
+  - ggplot2
+  - broom
+  - readr
 
 sources:
-  - Rfunctions
+  #- Rfunctions
+  - Rfunctions/01_accessing_cleaning.R
+  - Rfunctions/02_summarizing.R
+  - Rfunctions/03_detritus_interpolation.R
 
 targets:
   downloads:
@@ -19,13 +28,15 @@ targets:
       - dats
       - visits
       - broms
-      - spp
-      - abundance
+      - trts_all
+      - abds
 
   all:
     depends:
       - trts_all_filtered
       - abundance
+      - detritus_wider
+      - Detritus_missing.html
 #  downloads:
 #      -
 ## or should i give the original downloads a "clean" step, so that I could just delete them all and remake it again?
@@ -41,12 +52,6 @@ targets:
   broms:
     command: bwg_get(I("bromeliads"))
 
-  spp:
-    command: bwg_get(I("species"))
-
-## remove useless test datasets.
-  dats_filtered:
-    command: filter_test(dats)
 
 ## get every single abundance table (sensible datasets only)
   abds:
@@ -71,28 +76,109 @@ targets:
     command: tidy_dataset_list(abds)
     ## function is from bwgdata
 
+### load in supplementary data
+
+  fpom_fg_data:
+    command: read_fpom_fg("data-raw/FPOMdecanted_dryweight.csv")
+
+
+## remove useless test datasets.
+  blacklist:
+    command: make_blacklist(visits, dats)
+
+  dats_filtered:
+    command: anti_join(dats, blacklist)
+
+  visits_filtered:
+    command: anti_join(visits, blacklist)
+
+  abundance_filtered:
+    command: anti_join(abundance, blacklist)
+
+  brom_rename_unnest_filtered:
+    command: anti_join(broms_rename_unnest, blacklist)
+
+## coercing values if necessary
+
+  abundance_values:
+    command: coerce_values_abundance(abundance_filtered)
+
+  trts_all_values:
+    command: coerce_values_trts_all_filtered(trts_all_filtered)
+
+  visits_values:
+    command: coerce_values_visits(visits_filtered)
+
+  visits_date:
+    command: coerce_visits_date(visits_values)
+
+  dats_values:
+    command: coerce_values_dats(dats_filtered)
+
+  dats_date:
+    command: coerce_dats_date(dats_values)
+
+  ## drop a bad column name
+  brom_clean_name:
+    command: drop_bad_name(brom_rename_unnest_filtered)
+
+  broms_values:
+    command: coerce_values_brom_r_u(brom_clean_name)
+
+  broms_date:
+    command: coerce_broms_date(broms_values)
+
 ## summarizing datasets
 
   visitnames:
-    command: make_visitnames(visits, dats_filtered)
+    command: make_visitnames(visits_date, dats_date)
     ## dats_filtered is here to work in a semi-join.
 
   datasetnames:
     command: make_datasetnames(visitnames)
 
   diam_brom:
-    command: make_diam_brom(broms_rename_unnest)
+    command: make_diam_brom(broms_date)
 
   fpom_brom:
-    command: make_fpom_brom(broms_rename_unnest)
+    command: make_fpom_brom(broms_date)
 
   detritus_wide:
-    command: make_detritus_wide(broms_rename_unnest)
+    command: make_detritus_wide(broms_date)
 
   detritus_wider:
-    command: make_detritus_wider(broms, detritus_wide, visitnames, diam_brom, fpom_brom)
+    command: make_detritus_wider(broms_date, detritus_wide, visitnames, diam_brom, fpom_brom)
 
   ## correcting erroneous measurements in Cardoso -- moving some values to the right
 
   detritus_wider_cardoso_corrected:
     command: correct_cardoso_detritus_wider(detritus_wider)
+
+  ## correcting erroneous measurements in french Guiana -- mislabelled columns
+  detritus_wider_correct_frenchguiana:
+    command: correct_frenchguiana_detritus(detritus_wider_cardoso_corrected)
+
+  # inferring FPOM mass from FPOM volume
+
+  ## First step: create model
+
+  model_fpom_g_ml:
+    command: fit_fpom_g_ml(fpom_fg_data)
+
+  ## then use both model and data to create the new predictions
+  detritus_wider_FG_g:
+    command: estimate_fpom_g_from_ml(detritus_wider_correct_frenchguiana, model_fpom_g_ml)
+
+  ## in a separate step, extract the model predictions into a column
+  detritus_wider_fpom_g_predicted:
+    command: predict_fpom_g(detritus_wider_FG_g)
+
+  ## combine the observed and predicted values (keep se column)
+  detritus_wider_FG_detritus_corrected:
+    command: combine_observed_predicted_0_150_det(detritus_wider_correct_frenchguiana, detritus_wider_fpom_g_predicted)
+
+
+  Detritus_missing.html:
+    command: render("Detritus_missing.Rmd")
+    depends:
+      - detritus_wider_FG_detritus_corrected

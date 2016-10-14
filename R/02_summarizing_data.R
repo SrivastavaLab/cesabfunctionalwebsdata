@@ -164,9 +164,13 @@ fpom_convert_ml_into_g(7.6)
 #NOTE there is an input error: dead_leaves in Sinnamary was detritus>2cm x 2cm roughly, but in other sites #brown bromeliad leaves!
 
 sinn<-detritus_wider%>%filter(dataset_id==211)
+
 summary(glm(log(cpom_g)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.64
+
 plot(log(sinn$cpom_g)~log(sinn$fpom_g))
+
 summary(glm(log(dead_leaves)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.36
+
 plot((sinn$dead_leaves)~(sinn$fpom_g))
 sinn$detover150<-sinn$fpom_g+sinn$cpom_g+sinn$dead_leaves
 summary(glm(log(detover150)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.59
@@ -244,9 +248,14 @@ detritus_wider<-detritus_wider %>%
 
 #pitilla 2004 dissection visit 66
 
+## creating a dataset for generating a model.
 pitilla2000s<-detritus_wider%>%filter(dataset_id==56)
-pitilla2000s<-pitilla2000s%>%mutate(detritus0_NA = ifelse(visit_id==51, pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+pitilla2000s$detritus20000_NA+pitilla2000s$detritus850_20000,
-                                                          pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+pitilla2000s$detritus20000_NA+pitilla2000s$detritus1500_20000+pitilla2000s$detritus850_1500))
+pitilla2000s<-pitilla2000s%>%mutate(detritus0_NA = ifelse(visit_id==51,
+                                                          pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+
+                                                            pitilla2000s$detritus20000_NA+pitilla2000s$detritus850_20000,
+                                                          pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+
+                                                            pitilla2000s$detritus20000_NA+pitilla2000s$detritus1500_20000+
+                                                            pitilla2000s$detritus850_1500))
 summary(glm((detritus0_NA)~(diameter), family=gaussian, data=pitilla2000s)) #rsq=0.78
 plot((pitilla2000s$detritus0_NA)~(pitilla2000s$diameter))
 

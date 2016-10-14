@@ -27,6 +27,20 @@ filter_test <- function(x){
 }
 
 
+## pesky test datasets, and other garbage potentially, goes on a blacklist.
+
+make_blacklist <- function(.visits, .dats){
+  criteria <- .visits %>%
+    left_join(.dats, by = "dataset_id") %>%
+    ## count the sins here
+    filter(str_detect(name, "Test"))
+
+  criteria %>%
+    select(visit_id, dataset_id)
+}
+
+
+
 # Restructuring -------------------------------------------------------------
 
 
@@ -62,3 +76,4 @@ combine_multi_names <- function(.trts_all){
     unnest(names)
 
 }
+

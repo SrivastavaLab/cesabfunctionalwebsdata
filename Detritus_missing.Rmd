@@ -1,0 +1,419 @@
+---
+title: "Report on missing detritus"
+author: "Andrew"
+date: "14. 11. 2016"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+    toc_float: true
+    code_folding: hide
+    theme: paper
+---
+
+## Description of the problem
+
+The amount of detritus present in a bromeliad is probably important for the insect community which we find in that plant. Fortunately, members of the BWG frequently measured the amount of detritus that they found in their plants. Unfortunately, these measurements were inconsistent: taken with different sizes of sieves, sometimes sampling all possible detritus and sometimes leaving out the largest or smallest categories. 
+
+The good news is, that at least sometimes we can try to fill in what we are missing. The neutral news is that such interpolation/extrapolation/estimation always has error associated with it. This error will vary from dataset to dataset, depending on several factors:
+
+* the number of other variables measured
+* the modelling framework used
+* sample size
+* vagaries of any particular bromeliad and/or the leaves that fall into it.
+
+This report aims to summarize what we know and how we know it, regarding the interpolation of detritus amounts. 
+
+## State of the Data
+
+Within a **visit**, the techniques used to collect measurements should all be the same. There are three ways a visit might have incomplete detritus information: 
+
+### Sites with no detritus
+
+We know that at several sites, no detritus information at all was collected. How many such sites are there?
+
+```{r}
+
+the_detritus_list <- detritus_wider_FG_detritus_corrected %>% 
+  nest(-visit_id, -dataset_id, -dataset_name) %>% 
+  mutate(data_det = map(data, ~ .x %>% 
+                          select(starts_with("detritus"))),
+         data_present_values = map(data_det, ~ .x[which(colSums(is.na(.x)) < nrow(.x))]))
+
+is_there_detritus <- the_detritus_list %>% 
+  mutate(has_detritus = map_chr(data_present_values,
+                                ~ ifelse(ncol(.x) > 0,
+                                         "at least some",
+                                         "none")),
+         total_brom   = map_dbl(data_present_values, nrow)) 
+
+the_detritus_list
+```
+
+```{r}
+count_the_detritus <- is_there_detritus %>% 
+  group_by(has_detritus) %>% 
+  summarize(total_bromeliad = sum(total_brom),
+            total_site = n())
+
+count_the_detritus %>% 
+  gather(var, count, starts_with("total")) %>% 
+  ggplot(aes(x = has_detritus, y = count)) +
+  geom_bar(stat = "identity", fill = "lightgreen") + 
+  facet_wrap(~var, scales = "free_y", labeller = labeller(var = c(total_bromeliad = "Number of bromeliads",
+                                                                  total_site     = "Number of sites"))) + 
+  theme_minimal() +
+  xlab("Is there any detritus in the raw data?")
+
+
+```
+
+The datasets with no detritus data at all are:
+
+```{r results='asis'}
+is_there_detritus %>% 
+  filter(has_detritus == "none") %>% 
+  .[["dataset_name"]] %>% 
+  unique %>%
+  map_chr(~ paste0("* *", .x, "*\n")) %>% 
+  cat
+```
+
+## Brief interlude -- predicting fine detritus mass from volume
+
+```{r}
+detritus_wider_FG_detritus_corrected %>% 
+  filter(!is.na(detritus0_150)) %>% 
+  ## is there a standard error? if so its a prediction not an observation
+  mutate(prediction = ifelse(detritus0_150_se %>% is.na, "observation", "prediction")) %>% 
+  ## cheat -- make se 0 for observations so both can be plotted
+  replace_na(list(detritus0_150_se = 0)) %>% 
+  ggplot(aes(x = dataset_name, y = detritus0_150,
+             ymin = detritus0_150 - detritus0_150_se, 
+             ymax = detritus0_150 + detritus0_150_se, color = prediction)) +
+  scale_y_continuous(trans = "log2") +
+  geom_pointrange(position = position_jitter(width = 1.1), alpha = 0.3)
+```
+
+
+
+### Sites with at least some -- how much is missing?
+
+```{r}
+detritus_categories <- is_there_detritus %>% 
+  filter(has_detritus == "at least some") %>% 
+  mutate(category_names = data_present_values %>% map(colnames)) %>% 
+  unnest(category_names) %>% 
+  select(dataset_id, visit_id, dataset_name, category_names) %>% 
+  distinct() %>% 
+  arrange(dataset_name)
+
+
+detritus_ranges <- detritus_categories %>% 
+  separate(category_names, into = c("min", "max"), sep = "_", remove = FALSE) %>%
+  mutate(min = readr::parse_number(min),
+         max = readr::parse_number(max)) %>% 
+  rowwise %>% 
+  mutate(med = median(c(min, max))) %>% 
+  ungroup %>% 
+  mutate(med = ifelse(is.na(max), 25000, med)) %>% 
+  group_by(dataset_name) %>% 
+  arrange(dataset_name, med) %>% 
+  ungroup
+```
+
+
+```{r}
+
+count_sieves <- detritus_ranges %>% 
+  nest(-dataset_id, -dataset_name, -visit_id) %>% 
+  mutate(no_seives = map_dbl(data, nrow)) 
+
+
+```
+
+It seems to me that the major trouble here is that we don't have a simple way to see what _exactly_ is missing. There are three ways that we can be missing detritus : from the middle (that's impossible) from the start, and from the end
+
+#### The middle
+```{r}
+one_sieve <- count_sieves%>% 
+  filter(no_seives == 1)
+
+more_sieves <- count_sieves %>% 
+  filter(no_seives > 2)
+
+continuous_sieve <- more_sieves %>% 
+  mutate(data_sieve_seq = data %>% map( ~ .x %>% 
+                                          mutate(sieve_sing = dense_rank(med)))) %>% 
+  mutate(contin = data_sieve_seq %>% map(~ .x %>% 
+                                           ## the maximum of a sieve should be
+                                           ## the same as the last minimum
+                                           mutate(sames = max == lead(min))))
+
+
+continuous_sieve %>% 
+  mutate(no_missing_middle = contin %>% map_lgl(~ all(.x$sames[-nrow(.x)]))) %>% 
+  filter(!no_missing_middle) %>% 
+  kable
+
+```
+
+### the start or the end?
+
+
+Let's see if we can visualize, for all sites with more than one sieve, the range of the data:
+
+```{r fig.width=9}
+detritus_ranges_raw <- detritus_ranges %>% 
+  replace_na(list(max = 40000)) %>%
+  arrange(dataset_name)
+
+det_sieve_names <- unique(detritus_ranges_raw$category_names)
+
+virid_palette <- viridis::magma(length(det_sieve_names), begin = 0.2) %>%
+  set_names(det_sieve_names)
+
+
+plot_all <- function(X = c("21", "231", "106", "111", "196", "201", "191", "146", "151", 
+                           "156", "161", "166", "171", "351", "356", "361", "176", "181", 
+                           "91", "246", "266", "271", "281", "311", "316", "306", "326", 
+                           "241", "41", "51", "46", "56", "86", "371", "451", "116", "121", 
+                           "126", "346", "251", "96")){
+  
+  detritus_ranges_raw %>% 
+    ggplot(aes(x = visit_id, ymin = min, ymax = max)) +
+    scale_y_continuous(trans = "log2") +
+    geom_hline(yintercept = 40000, lwd = 0.8, colour = "lightgrey") +
+    geom_blank() +
+    geom_errorbar(aes(colour = category_names), width = 0.4, lwd = 1.2,
+                  data = detritus_ranges_raw %>% 
+                    filter(visit_id %in% X)) +
+    scale_colour_manual(name = "category_names", values = virid_palette) +
+    # theme_dark() +
+    theme(legend.position = "bottom", axis.text.x = element_text(size = 6))
+  # geom_text(aes(y = med, label = dataset_name), angle = 90)
+}
+
+plot_all()
+```
+
+## Filling in those missing values
+
+### Puerto Rico 2010
+
+#### Puerto Rico -- missing values
+
+From original document comments: 
+
+> Although Puerto Rico 2010 dataset=116 based only on relaxed diameter the adj r sq is 0.79
+#eqn from all 1990s El verde plants (n=189, rsq = 0.78) interestingly v. similar eqn from pitilla 2002 secondary
+
+
+Let us first see the data that we are trying to fill in:
+```{r}
+
+detritus_ranges_raw %>% 
+  filter(dataset_name %>% str_detect("El.*")) %>% 
+  .[["visit_id"]] %>% 
+  unique %>% 
+  plot_all
+```
+
+#### Puerto Rico -- models
+
+Every "missing" vertical bar here represents a visit in which no detritus is available. We use a model of **total detritus** as a function of **diameter**
+
+```{r}
+
+elverde90s <- detritus_wider_cardoso_corrected %>%
+  filter(dataset_id %in% c(131, 126, 121, 221))
+
+elverde90s$detritus0_NA <- with(elverde90s, detritus10_1500 + detritus1500_20000 + detritus20000_NA)
+
+mod <- glm(log(detritus0_NA)~log(diameter), data=elverde90s)
+
+mod %>% tidy %>% kable
+
+mod %>% glance() %>% kable()
+
+```
+
+We can see the model coefficients here. Below they are used in a function which fills in the missing detritus.
+
+```{r}
+plot(elverde90s$detritus0_NA~elverde90s$diameter)
+
+total_elverde2010 <- function(dia){
+  exp(-6.223+ 2.179* log(dia))
+}
+curve(total_elverde2010(x), add = TRUE)
+
+
+plot(log(elverde90s$detritus0_NA) ~ log(elverde90s$diameter))
+
+total_elverde2010 <- function(dia){
+  -6.223+ 2.179*(dia)
+}
+
+curve(total_elverde2010(x), add = TRUE)
+
+detritus_wider_elverde <- detritus_wider %>%
+  mutate(detritus0_NA = ifelse(dataset_id == 116, total_elverde2010(diameter), NA))
+
+```
+
+#### Las Gamas -- missing data
+
+```{r}
+detritus_wider_elverde %>% 
+  filter(dataset_id %in% c(166, 171, 181)) %>% 
+  .[["visit_id"]] %>% 
+  unique %>% 
+  plot_all
+```
+
+#### Las Gamas -- model
+
+We are missing the lowest size categories in Las Gamas. Filled in with this equation :
+
+```r
+fine_lasgamas<- function(med){
+  ((0.9857 *med) + 1.496)
+}
+```
+
+.. unfortunately right now I don't know where this comes from
+
+```{r}
+fine_lasgamas<- function(med){
+  ((0.9857 *med) + 1.496)
+}
+
+detritus_wider_lasgamas <- detritus_wider_elverde %>%
+  mutate(detritus0_150 = ifelse(dataset_id%in%c(166,171,181), fine_lasgamas(detritus150_850), detritus0_150))
+```
+
+#### Las Gamas -- filled in data
+
+```{r}
+detritus_wider_lasgamas %>% 
+  filter(dataset_id%in%c(166,171,181)) %>% 
+  ggplot(aes(x = detritus150_850, y = detritus0_150)) +
+  geom_point()
+
+```
+
+### French Guiana
+
+From the notes:
+
+> French Guiana only 186 (petit saut 2007) has fpom in ml, 211 (sinnamary 2011) has fpom cpom and deadleaves
+
+```r
+fpom_convert_ml_into_g<-function(FPOMml){(0.0013*(FPOMml)^2+0.0243*(FPOMml)+0.0369)}
+fpom_convert_ml_into_g(7.6)
+
+```
+
+**IMPORTANT** French Guiana contains some mislabelled columns. 
+
+```{r}
+#next move sinnamary detritus from "fpom/cpom/dead leaves into correct detrital categories:
+#NOTE: this should be corrected on BWGdb as well
+
+detritus_wider_fg <- detritus_wider_lasgamas %>%
+  mutate(detritus0_150 = ifelse(dataset_id==211, fpom_g, detritus0_150))%>%
+  mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
+  mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
+
+```
+
+
+```{r results="asis"}
+
+## function to show the summary of a model and its goodness of fit too
+kable_table <- function(mod){
+  output_list <- list("goodness of fit:" = glance, 
+       "parameters:" = tidy) %>% 
+    invoke_map(x = sinn_predict_coarse) %>% 
+    map(kable)
+  
+for (i in names(output_list)) {
+  cat(i)
+  
+  print(output_list[[i]])
+}
+}
+
+## filter sinnamary
+sinn <- detritus_wider%>%filter(dataset_id==211)
+
+sinn_predict_coarse <- glm(log(cpom_g) ~ log(fpom_g), data=sinn)
+
+kable_table(sinn_predict_coarse)
+
+plot(log(sinn$cpom_g)~log(sinn$fpom_g))
+```
+
+Predicting dead leaves from FPOM
+```{r}
+
+sinn_predict_dead <- glm(log(dead_leaves)~log(fpom_g), data=sinn)#sinnamary based eqn has rsq of 0.36
+
+kable_table(sinn_predict_dead)
+
+plot((sinn$dead_leaves)~(sinn$fpom_g))
+
+sinn$detover150<-sinn$fpom_g+sinn$cpom_g+sinn$dead_leaves
+
+
+sinn_predict_big <- glm(log(detover150)~log(fpom_g), data=sinn)#sinnamary based eqn has rsq of 0.59
+
+sinn_predict_big %>% 
+  kable_table()
+
+plot(log(sinn$detover150)~log(sinn$fpom_g))
+```
+
+Then, we define some functions based on this:
+
+```{r}
+over150_frenchguiana<- function(a){
+  exp(0.688*(a)+3.075)
+}
+
+cpom_frenchguiana<- function(FPOMg){
+  exp(0.858*log(FPOMg)+1.872)
+}
+
+largedet_frenchguiana<- function(FPOMg){
+  exp(0.582*log(FPOMg)+2.5545)
+}
+
+#this allometric equation is from data held offline by regis
+fpom_convert_ml_into_g<-function(FPOMml){(0.0013*(FPOMml)^2+0.0243*(FPOMml)+0.0369)}
+fpom_convert_ml_into_g(7.6)
+
+
+```
+
+
+```{r}
+
+detritus_wider_fg_fixed <- detritus_wider_fg %>%
+  mutate(detritus0_150 = ifelse(dataset_id==186, fpom_convert_ml_into_g(fpom_ml), detritus0_150))%>%
+  mutate(detritus150_20000 = ifelse(dataset_id==186, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
+  mutate(detritus20000_NA= ifelse(dataset_id==186, largedet_frenchguiana(detritus0_150), detritus20000_NA))
+
+detritus_wider_fg_filled <- detritus_wider_fg_fixed %>%
+  mutate(detritus0_150 = ifelse(dataset_id==216, (fpom_mg/1000), detritus0_150))%>%
+  mutate(detritus150_20000 = ifelse(dataset_id==216, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
+  mutate(detritus20000_NA= ifelse(dataset_id==216, largedet_frenchguiana(detritus0_150), detritus20000_NA))
+```
+
+```{r results="asis"}
+
+ff <- daff::render_diff(daff::diff_data(detritus_wider_fg_fixed, detritus_wider), view = FALSE)
+cat(ff)
+```
+
