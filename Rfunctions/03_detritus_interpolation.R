@@ -126,7 +126,7 @@ combine_observed_predicted_0_150_det <- function(.detritus_wider_correct_frenchg
     # there should be no value present in both columns -- this is a horrible way to do it!
     verify(rowSums(cbind(!is.na(detritus0_150_orig), !is.na(detritus0_150_pv))) < 2) %>%
     # combine the two columns -- using ifelse should now be safe if the above check passed :D
-    mutate(detritus0_150 = ifelse(is.na(detritus0_150_orig), detritus0_150_pv, detritus0_150_orig))
+    mutate(detritus0_150 = if_else(is.na(detritus0_150_orig), detritus0_150_pv, detritus0_150_orig))
 
   # then check with (either) of the fpom columns
   combined_cols %>%
