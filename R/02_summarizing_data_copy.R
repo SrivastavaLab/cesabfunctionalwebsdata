@@ -1,17 +1,5 @@
 
 
-
-## making some summary tables to help with visualizing missing data -----------------------------------------
-
-
-visitnames <- visits %>%
-  select(visit_id, dataset_id, dataset_name)
-
-datasetnames <- visitnames %>%
-  select(dataset_id, dataset_name) %>%
-  distinct()
-
-
 ## generate bromeliad-level data for each visit and each species
 
 vol_table <- broms %>%
