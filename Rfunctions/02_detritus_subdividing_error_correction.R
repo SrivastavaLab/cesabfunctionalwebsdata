@@ -139,13 +139,13 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
   ## "dead_leaves", within the one site where they were recorded erroneously,
   ## into correct "detritus*" columns
   move_values_to_detritus <- .detritus_wider_cardoso_corrected %>%
-    mutate(detritus0_150 = ifelse(dataset_id==211, fpom_g, detritus0_150))%>%
-    mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
-    mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
+    mutate(detritus0_150 = ifelse(dataset_id=="211", fpom_g, detritus0_150))%>%
+    mutate(detritus150_20000 = ifelse(dataset_id=="211", cpom_g, detritus150_20000))%>%
+    mutate(detritus20000_NA= ifelse(dataset_id=="211", dead_leaves, detritus20000_NA))
 
-  ### fix the mg error as well
+  ### fix the mg error as well -- in PetitSaut2014 and Nouragues 2009
   fix_fpom_mp <- move_values_to_detritus %>%
-    mutate(detritus0_150 = ifelse(dataset_id==216, (fpom_mg/1000), detritus0_150))
+    mutate(detritus0_150 = ifelse(dataset_id %in% c("206", "216"), (fpom_mg/1000), detritus0_150))
 
   ### remove these columns -- check first to confirm that no data is being discarded:
 
