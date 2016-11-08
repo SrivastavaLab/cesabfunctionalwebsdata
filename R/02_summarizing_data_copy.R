@@ -1,17 +1,6 @@
 
 
-## generate bromeliad-level data for each visit and each species
 
-vol_table <- broms %>%
-  group_by(visit_id, species) %>%
-  summarise(max_water         = mean(max_water,na.rm=TRUE),
-            extended_diameter = mean(extended_diameter,na.rm=TRUE),
-            diameter          = mean(diameter, na.rm=TRUE),
-            longest_leaf      = mean(longest_leaf, na.rm=TRUE),
-            num_leaf          = mean(num_leaf, na.rm=TRUE),
-            leaf_width        = mean(leaf_width, na.rm=TRUE),
-            plant_height_cm   = mean(plant_height_cm, na.rm=TRUE)) %>%
-  left_join(visitnames)
 
 ## For each bromeliad select the diameter
 diam_brom <- broms %>%
