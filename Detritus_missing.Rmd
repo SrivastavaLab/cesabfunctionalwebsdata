@@ -30,7 +30,7 @@ Within a **visit**, the techniques used to collect measurements should all be th
 
 ### Sites with no detritus
 
-We know that at several sites, no detritus information at all was collected. How many such sites are there?
+We know that at several sites, no detritus information at all was collected. How many such sites are there? (Note: all odd errors in the dataset should be corrected here:)
 
 ```{r}
 
@@ -51,7 +51,6 @@ is_there_detritus <- the_detritus_list %>%
                                          "none")),
          total_brom   = map_dbl(data_present_values, nrow)) 
 
-the_detritus_list
 ```
 
 ```{r}
@@ -96,9 +95,68 @@ detritus_wider_FG_detritus_corrected %>%
   ggplot(aes(x = dataset_name, y = detritus0_150,
              ymin = detritus0_150 - detritus0_150_se, 
              ymax = detritus0_150 + detritus0_150_se, fill = prediction)) +
-  geom_pointrange(position = position_jitter(width = 1.1), alpha = 0.3, pch = 21) +
+  geom_pointrange(position = position_jitter(width = 0.3), alpha = 0.3, pch = 21) +
   facet_wrap(~amt_det, scale = "free") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
+```
+
+Let's look at the model that generated these predictions:
+
+```{r}
+# fit_fpom_g_ml <- function(fpom_fg_data) {
+#   lm(fpom_g ~ I(fpom_ml^2) + fpom_ml, data = fpom_fg_data)
+# 
+# }
+# ffs <- formulae(~)
+
+## select datasets where the prediction ws made (or at least where it should have been! i.e. wherever the independent var is present:
+new_vals <- detritus_wider_FG_g %>% 
+  mutate(has_fpom_ml = data %>% map_lgl(~ .x %>% 
+                                          .[["fpom_ml"]] %>% 
+                                          negate(is.na)(.) %>% 
+                                          any)) %>% 
+  filter(has_fpom_ml) %>% 
+  unnest(data) %>% 
+  ## predict those values using the model
+  add_predictions(model_fpom_g_ml, var = "pred")
+
+## using raw data, re-create the model -- this time, over many bootstrap replicates.
+fg_mod_boot <- fpom_fg_data %>% 
+  select(fpom_ml, fpom_g) %>% 
+  modelr::bootstrap(500) %>% 
+  mutate(mod = map(strap, ~ lm(fpom_g ~ I(fpom_ml^2) + fpom_ml, data = .x)))
+
+# generate a range of values
+xs <- data_frame(fpom_ml = seq_range(fpom_fg_data$fpom_ml, n = 40, expand = TRUE))
+
+## predict, with these bootstrapped models, over the range of the observed dataset
+fg_mod_lines <- fg_mod_boot %>% 
+  mutate(model_preds = map(mod, ~ add_predictions(xs, model = .x, var = "boot"))) %>% 
+  unnest(model_preds)
+
+## turn bootstrap replicates into a 95% confidence interval, derived from *Data*
+fg_ribbon <- fg_mod_lines %>% 
+  nest(-fpom_ml) %>% 
+  mutate(ymin = map_dbl(data, ~ .x$boot %>%  quantile(probs = 0.975)),
+         ymax = map_dbl(data, ~ .x$boot %>%  quantile(probs = 0.025))) %>% 
+  select(-data) %>% 
+  # add in also the unbootstraped predicted values
+  left_join(xs %>% add_predictions(model_fpom_g_ml, var = "pred"))
+  
+
+
+fg_ribbon %>% 
+  ggplot(aes(x = fpom_ml, ymin = ymin, ymax = ymax, y = pred)) + 
+  geom_line() +
+  geom_ribbon(alpha = 0.3) +
+  geom_point(colour = "red", pch = 21, alpha = 0.4,
+             data = mutate(new_vals, ymin = NA_real_, ymax = NA_real_)) +
+  geom_point(aes(y = fpom_g), data = bind_rows(fg_ribbon,
+                                               fpom_fg_data %>% 
+                                                 select(fpom_ml, fpom_g))) + 
+  coord_cartesian(xlim = c(0, 45)) +
+  theme_bw() +
+  xlab("FPOM (ml)") + ylab("FPOM (g)")
 ```
 
 
@@ -123,7 +181,7 @@ detritus_ranges <- detritus_categories %>%
          max = readr::parse_number(max)) %>% 
   rowwise %>% 
   mutate(med = median(c(min, max))) %>% 
-  ungroup %>% 
+ungroup %>% 
   mutate(med = ifelse(is.na(max), 25000, med)) %>% 
   group_by(dataset_name) %>% 
   arrange(dataset_name, med) %>% 
