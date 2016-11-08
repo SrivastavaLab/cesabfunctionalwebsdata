@@ -73,6 +73,10 @@ estimate_fpom_g_from_ml <- function(.detritus_wider_cardoso_corrected, .model_fp
     mutate(detritus0_150_prediction = map_if(data,
                                              ## UGH is there a better way to say "wherever that column is not all NA"
                                              ~ .x$fpom_ml %>% negate(is.na)(.) %>% all,
+                                             ## if it is not all NA -- in other
+                                             ## words there are some values --
+                                             ## then run the prediction function
+                                             ## and spit out a list that contains the ids of the prediction
                                              ~ splice(bromeliad_id = .x$bromeliad_id,
                                                       fpom_convert_ml_into_g(.x$fpom_ml))))
 
@@ -80,9 +84,12 @@ estimate_fpom_g_from_ml <- function(.detritus_wider_cardoso_corrected, .model_fp
 
 }
 
-
+## this function takes a data.frame that has a mix of observed data and
+## prediction objects in the same list-column. this column is "heterogeneous" --
+## some elements are lists, others data.frames
 predict_fpom_g <- function(.detritus_wider_FG_g) {
 
+  ## convenience function for creating a data.frame out fo the predictions and standard errors
   tidy_prediction <- function(pred_list){
     data_frame(detritus0_150_pv = pred_list$fit,
                detritus0_150_se = pred_list$se.fit)
@@ -139,3 +146,9 @@ combine_observed_predicted_0_150_det <- function(.detritus_wider_correct_frenchg
   ## etc, could also be used to identify predicted values and reg values.
 
 }
+
+## OK an implicit assumption in the above is that all sites can and should
+## receive the new data -- whether it is observed, measured, or whatever. In
+## other words, even bromeliads which have no predictions, or for which the
+## bromeliads in question were actually measured for detritus in that range, are
+## given a brand new column.
