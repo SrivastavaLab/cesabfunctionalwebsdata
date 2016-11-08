@@ -1,20 +1,5 @@
-## summarizing a few of the bigger datasets
-## Before summarizing, we modify the data with allometric equations.
 
-require(dplyr)
-require(readr)
-require(tidyr)
-library(stringr)
-library(assertr)
-## convenience function for reading
-source("R/reading_functions.R")
 
-# bromeliads:  imporing with correct col types--------------------------------------------------------------
-
-broms <- read.csv("data-raw/01_broms.csv", stringsAsFactors = FALSE)
-
-visits <- read_csv("data-raw/01_visits.csv", col_types = "nncDnnnnnncnncc")
-datasets <- read_csv("data-raw/01_datasets.csv")
 
 ## making some summary tables to help with visualizing missing data -----------------------------------------
 
