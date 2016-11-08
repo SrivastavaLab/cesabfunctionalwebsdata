@@ -1,4 +1,5 @@
-## summarizing repeated datasets
+## correcting errors in detritus variables and subdividing data into useful columns
+
 
 ## visitnames are unique,
 make_visitnames <- function(.visits, .dats_filtered){
