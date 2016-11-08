@@ -4,14 +4,6 @@
 where_values <- function(x) which(!is.na(x))
 
 
-## for cardoso 2008
-#first we realized that the larger detritus in cardoso has been input into the wrong column
-#remove the next few lines if this gets fixed on BWGdb
-detritus_wider <- detritus_wider %>%
-  mutate(detritus150_NA = ifelse(visit_id == 21, detritus150_20000, detritus150_NA))
-detritus_wider <- detritus_wider %>%
-  mutate(detritus150_20000 = ifelse(visit_id == 21, NA, detritus150_20000))
-
 fine_cardoso2008<- function(coarse){
   exp(0.68961 * log(coarse) - 0.11363)
 }
