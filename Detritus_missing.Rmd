@@ -13,7 +13,7 @@ output:
 
 ## Description of the problem
 
-The amount of detritus present in a bromeliad is probably important for the insect community which we find in that plant. Fortunately, members of the BWG frequently measured the amount of detritus that they found in their plants. Unfortunately, these measurements were inconsistent: taken with different sizes of sieves, sometimes sampling all possible detritus and sometimes leaving out the largest or smallest categories. 
+The amount of detritus present in a bromeliad is probably important for the insect community which we find in that plant. Fortunately, members of the BWG frequently measured the amount of detritus that they found in their plants. Unfortunately, these measurements were inconsistent: taken with different sizes of sieves, sometimes sampling all possible detritus categories and sometimes leaving out the largest or smallest categories. 
 
 The good news is, that at least sometimes we can try to fill in what we are missing. The neutral news is that such interpolation/extrapolation/estimation always has error associated with it. This error will vary from dataset to dataset, depending on several factors:
 
@@ -35,7 +35,11 @@ We know that at several sites, no detritus information at all was collected. How
 ```{r}
 
 the_detritus_list <- detritus_wider_FG_detritus_corrected %>% 
+  ## take out se -- these are errors from prediction
+  select(-dplyr::contains("_se")) %>% 
+  ## keep variables which define groups
   nest(-visit_id, -dataset_id, -dataset_name) %>% 
+  ## keep only detritus columns with actual values
   mutate(data_det = map(data, ~ .x %>% 
                           select(starts_with("detritus"))),
          data_present_values = map(data_det, ~ .x[which(colSums(is.na(.x)) < nrow(.x))]))
@@ -88,11 +92,13 @@ detritus_wider_FG_detritus_corrected %>%
   mutate(prediction = ifelse(detritus0_150_se %>% is.na, "observation", "prediction")) %>% 
   ## cheat -- make se 0 for observations so both can be plotted
   replace_na(list(detritus0_150_se = 0)) %>% 
+  mutate(amt_det = cut(detritus0_150, breaks = c(0, 0.1, 1, 25))) %>% 
   ggplot(aes(x = dataset_name, y = detritus0_150,
              ymin = detritus0_150 - detritus0_150_se, 
-             ymax = detritus0_150 + detritus0_150_se, color = prediction)) +
-  scale_y_continuous(trans = "log2") +
-  geom_pointrange(position = position_jitter(width = 1.1), alpha = 0.3)
+             ymax = detritus0_150 + detritus0_150_se, fill = prediction)) +
+  geom_pointrange(position = position_jitter(width = 1.1), alpha = 0.3, pch = 21) +
+  facet_wrap(~amt_det, scale = "free") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
 ```
 
 
@@ -100,10 +106,12 @@ detritus_wider_FG_detritus_corrected %>%
 ### Sites with at least some -- how much is missing?
 
 ```{r}
+
 detritus_categories <- is_there_detritus %>% 
   filter(has_detritus == "at least some") %>% 
   mutate(category_names = data_present_values %>% map(colnames)) %>% 
   unnest(category_names) %>% 
+  arrange(dataset_name) %>% 
   select(dataset_id, visit_id, dataset_name, category_names) %>% 
   distinct() %>% 
   arrange(dataset_name)
