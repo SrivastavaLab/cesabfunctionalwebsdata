@@ -84,13 +84,6 @@ largedet_frenchguiana<- function(FPOMg){
   exp(0.582*log(FPOMg)+2.5545)
 }
 
-#next move sinnamary detritus from "fpom/cpom/dead leaves into correct detrital categories:
-#NOTE: this should be corrected on BWGdb as well
-
-detritus_wider<-detritus_wider %>%
-  mutate(detritus0_150 = ifelse(dataset_id==211, fpom_g, detritus0_150))%>%
-  mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
-  mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
 
 #next apply sinnamary-based allometric eqns to dataset 186 (petit saut 2007) where we do the rather dangerous thing
 #of converting fpom in ml to fpom in grams to predict detrital grams in another 2 categories
@@ -105,14 +98,8 @@ detritus_wider<-detritus_widerdataset%>%
   mutate(detritus150_20000 = ifelse(dataset_id==216, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
   mutate(detritus20000_NA= ifelse(dataset_id==216, largedet_frenchguiana(detritus0_150), detritus20000_NA))
 
-#first, Nourages 2006 (dataset 201) accidentally has particle counts in detritus categories
-#this needs to be corrected in BWGdb but for now:
 #next, in dataset 201 need to convert fpom_ml to g then make it into detritus0_150,
 
-detritus_wider<-detritus_wider %>%
-  mutate(detritus30_150 = ifelse(dataset_id==201,NA, detritus30_150))%>%
-  mutate(detritus0_30 = ifelse(dataset_id==201,NA, detritus0_30))%>%
-  mutate(detritus150_300 = ifelse(dataset_id==201,NA, detritus150_300))
 detritus_wider<-detritus_wider %>%
   mutate(detritus0_150 = ifelse(dataset_id==201,fpom_convert_ml_into_g(fpom_ml), detritus0_150))
 detritus_wider<-detritus_wider%>%
