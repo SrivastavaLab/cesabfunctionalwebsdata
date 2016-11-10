@@ -191,12 +191,25 @@ targets:
   stamenmap:
     command: get_map_SA()
 
+
+#include:
+#- remake_sites.yml
+
+  pr:
+    command: return(I("French Guiana"))
+
   data_quality.html:
-    command: render("data_quality.Rmd")
+    command: render("data_quality.md")
+
+  data_quality.md:
+    knitr: true
     depends:
       - visits_date
       - dats_date
       - detritus_wider_FG_detritus_corrected
       - broms_date
       - stamenmap
+      - dataset: pr
+
+
 
