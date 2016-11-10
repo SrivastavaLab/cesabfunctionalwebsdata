@@ -11,17 +11,17 @@ output:
     theme: paper
 ---
 
-## Dataset itself
-
-For Puerto Rico only:
-
 ```{r}
-site_data <- dats_date %>% 
-  filter(country == "Puerto Rico")
-```
-## location data
+loc <- dataset %>% str_replace("_", " ")
 
-Where in the world is this site? Note that any warnings around the figure below indicate that there is a *problem with the coordinates*
+site_data <- dats_date %>% 
+  filter(country == loc)
+```
+#Response variables for `r dataset %>% str_replace("_", " ")`
+
+## Location data
+
+Where in the world is this site? Note that any warnings around the figure below indicate that there is a ***problem with the coordinates***.
 ```{r}
 
 ggmap(stamenmap) + 
@@ -73,7 +73,7 @@ make_distrib_plot <- function(varname, .canonical_brom_data_long = canonical_bro
     geom_rug() + 
     facet_grid(species~dataset_name) +
     scale_fill_viridis(discrete = TRUE) +
-    theme_dark() +
+    theme_bw() +
     ggtitle(paste0("Distribution of the variable ", varname))
 }
 

@@ -1,0 +1,188 @@
+## list the names of sites
+
+
+
+targets:
+  reports:
+    depends:
+      - data_quality_Puerto_Rico.html
+      - data_quality_French_Guiana.html
+      - data_quality_Argentina.html
+      - data_quality_Brazil.html
+      - data_quality_Dominica.html
+      - data_quality_Netherlands_Antilles.html
+      - data_quality_Honduras.html
+      - data_quality_Colombia.html
+      - data_quality_Costa_Rica.html
+
+  Puerto_Rico:
+    command: return(I("Puerto_Rico"))
+
+  data_quality_Puerto_Rico.html:
+    command: render("data_quality_Puerto_Rico.md")
+
+  data_quality_Puerto_Rico.md:
+    knitr:
+      input: data_quality.Rmd
+      auto_figure_prefix: true
+    depends:
+      - visits_date
+      - dats_date
+      - detritus_wider_FG_detritus_corrected
+      - broms_date
+      - stamenmap
+      - dataset: Puerto_Rico
+
+
+  French_Guiana:
+    command: return(I("French_Guiana"))
+
+  data_quality_French_Guiana.html:
+    command: render("data_quality_French_Guiana.md")
+
+  data_quality_French_Guiana.md:
+    knitr:
+      input: data_quality.Rmd
+      auto_figure_prefix: true
+    depends:
+      - visits_date
+      - dats_date
+      - detritus_wider_FG_detritus_corrected
+      - broms_date
+      - stamenmap
+      - dataset: French_Guiana
+
+
+  Argentina:
+    command: return(I("Argentina"))
+
+  data_quality_Argentina.html:
+    command: render("data_quality_Argentina.md")
+
+  data_quality_Argentina.md:
+    knitr:
+      input: data_quality.Rmd
+      auto_figure_prefix: true
+    depends:
+      - visits_date
+      - dats_date
+      - detritus_wider_FG_detritus_corrected
+      - broms_date
+      - stamenmap
+      - dataset: Argentina
+
+
+  Brazil:
+    command: return(I("Brazil"))
+
+  data_quality_Brazil.html:
+    command: render("data_quality_Brazil.md")
+
+  data_quality_Brazil.md:
+    knitr:
+      input: data_quality.Rmd
+      auto_figure_prefix: true
+    depends:
+      - visits_date
+      - dats_date
+      - detritus_wider_FG_detritus_corrected
+      - broms_date
+      - stamenmap
+      - dataset: Brazil
+
+
+  Dominica:
+    command: return(I("Dominica"))
+
+  data_quality_Dominica.html:
+    command: render("data_quality_Dominica.md")
+
+  data_quality_Dominica.md:
+    knitr:
+      input: data_quality.Rmd
+      auto_figure_prefix: true
+    depends:
+      - visits_date
+      - dats_date
+      - detritus_wider_FG_detritus_corrected
+      - broms_date
+      - stamenmap
+      - dataset: Dominica
+
+
+  Netherlands_Antilles:
+    command: return(I("Netherlands_Antilles"))
+
+  data_quality_Netherlands_Antilles.html:
+    command: render("data_quality_Netherlands_Antilles.md")
+
+  data_quality_Netherlands_Antilles.md:
+    knitr:
+      input: data_quality.Rmd
+      auto_figure_prefix: true
+    depends:
+      - visits_date
+      - dats_date
+      - detritus_wider_FG_detritus_corrected
+      - broms_date
+      - stamenmap
+      - dataset: Netherlands_Antilles
+
+
+  Honduras:
+    command: return(I("Honduras"))
+
+  data_quality_Honduras.html:
+    command: render("data_quality_Honduras.md")
+
+  data_quality_Honduras.md:
+    knitr:
+      input: data_quality.Rmd
+      auto_figure_prefix: true
+    depends:
+      - visits_date
+      - dats_date
+      - detritus_wider_FG_detritus_corrected
+      - broms_date
+      - stamenmap
+      - dataset: Honduras
+
+
+  Colombia:
+    command: return(I("Colombia"))
+
+  data_quality_Colombia.html:
+    command: render("data_quality_Colombia.md")
+
+  data_quality_Colombia.md:
+    knitr:
+      input: data_quality.Rmd
+      auto_figure_prefix: true
+    depends:
+      - visits_date
+      - dats_date
+      - detritus_wider_FG_detritus_corrected
+      - broms_date
+      - stamenmap
+      - dataset: Colombia
+
+
+  Costa_Rica:
+    command: return(I("Costa_Rica"))
+
+  data_quality_Costa_Rica.html:
+    command: render("data_quality_Costa_Rica.md")
+
+  data_quality_Costa_Rica.md:
+    knitr:
+      input: data_quality.Rmd
+      auto_figure_prefix: true
+    depends:
+      - visits_date
+      - dats_date
+      - detritus_wider_FG_detritus_corrected
+      - broms_date
+      - stamenmap
+      - dataset: Costa_Rica
+
+

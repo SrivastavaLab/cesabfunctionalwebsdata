@@ -39,7 +39,7 @@ targets:
       - abundance
       - detritus_wider
       - Detritus_missing.html
-      - data_quality.html
+      - reports
 #  downloads:
 #      -
 ## or should i give the original downloads a "clean" step, so that I could just delete them all and remake it again?
@@ -192,24 +192,7 @@ targets:
     command: get_map_SA()
 
 
-#include:
-#- remake_sites.yml
-
-  pr:
-    command: return(I("French Guiana"))
-
-  data_quality.html:
-    command: render("data_quality.md")
-
-  data_quality.md:
-    knitr: true
-    depends:
-      - visits_date
-      - dats_date
-      - detritus_wider_FG_detritus_corrected
-      - broms_date
-      - stamenmap
-      - dataset: pr
-
+include:
+- remake_sites.yml
 
 
