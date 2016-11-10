@@ -15,11 +15,12 @@ packages:
   - ggplot2
   - broom
   - readr
+  - modelr
 
 sources:
   #- Rfunctions
   - Rfunctions/01_accessing_cleaning.R
-  - Rfunctions/02_summarizing.R
+  - Rfunctions/02_detritus_subdividing_error_correction.R
   - Rfunctions/03_detritus_interpolation.R
 
 targets:
@@ -37,6 +38,7 @@ targets:
       - abundance
       - detritus_wider
       - Detritus_missing.html
+      - data_quality.html
 #  downloads:
 #      -
 ## or should i give the original downloads a "clean" step, so that I could just delete them all and remake it again?
@@ -182,3 +184,11 @@ targets:
     command: render("Detritus_missing.Rmd")
     depends:
       - detritus_wider_FG_detritus_corrected
+
+  data_quality.html:
+    command: render("data_quality.Rmd")
+    depends:
+      - visits_date
+      - dats_date
+      - detritus_wider_FG_detritus_corrected
+      - broms_date
