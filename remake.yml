@@ -22,6 +22,7 @@ sources:
   - Rfunctions/01_accessing_cleaning.R
   - Rfunctions/02_detritus_subdividing_error_correction.R
   - Rfunctions/03_detritus_interpolation.R
+  - Rfunctions/99_mapping_checking.R
 
 targets:
   downloads:
@@ -185,6 +186,11 @@ targets:
     depends:
       - detritus_wider_FG_detritus_corrected
 
+  # get a pretty map
+
+  stamenmap:
+    command: get_map_SA()
+
   data_quality.html:
     command: render("data_quality.Rmd")
     depends:
@@ -192,3 +198,5 @@ targets:
       - dats_date
       - detritus_wider_FG_detritus_corrected
       - broms_date
+      - stamenmap
+

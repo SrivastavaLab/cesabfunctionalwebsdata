@@ -18,9 +18,18 @@ For Puerto Rico only:
 ```{r}
 site_data <- dats_date %>% 
   filter(country == "Puerto Rico")
-
-kable(site_data)
 ```
+## location data
+
+Where in the world is this site? Note that any warnings around the figure below indicate that there is a *problem with the coordinates*
+```{r}
+
+ggmap(stamenmap) + 
+  geom_point(colour = "darkgreen", data = site_data %>% 
+               select(lon = lng, lat))
+```
+
+
 the sites and the years they were  collected: 
 
 ```{r}
