@@ -18,6 +18,8 @@ For Puerto Rico only:
 ```{r}
 site_data <- dats_date %>% 
   filter(country == "Puerto Rico")
+
+kable(site_data)
 ```
 the sites and the years they were  collected: 
 
@@ -41,7 +43,7 @@ a map?
 
 ## Detritus & other Bromeliad things
 
-```{r}
+```{r fig.height=9, fig.width=10}
 canonical_brom_data <- detritus_wider_FG_detritus_corrected %>% 
   ## take out se -- these are errors from prediction
   select(-dplyr::contains("_se")) %>% 
@@ -51,14 +53,34 @@ canonical_brom_data <- detritus_wider_FG_detritus_corrected %>%
   left_join(broms_date %>% select(bromeliad_id, species)) 
 
 
-canonical_brom_data %>% 
-  gather(var, val, -visit_id, -bromeliad_id, -dataset_id, -dataset_name, -species) %>% 
-  filter(var %in% c("actual_water")) %>% 
-  ggplot(aes(x = species, y = val)) +
-  geom_violin() +
-  geom_point(position = position_jitter(width = 0.3), alpha = 0.2) +
-  facet_grid(var~dataset_name, scales = "free") +
-  coord_flip()
+canonical_brom_data_long <- canonical_brom_data %>% 
+  gather(var, val, -visit_id, -bromeliad_id, -dataset_id, -dataset_name, -species)
+
+make_distrib_plot <- function(varname, .canonical_brom_data_long = canonical_brom_data_long) {
+  .canonical_brom_data_long %>% 
+    filter(var %in% c(varname)) %>% 
+    ggplot(aes(fill = species, x = val)) +
+    geom_density() +
+    geom_rug() + 
+    facet_grid(species~dataset_name) +
+    scale_fill_viridis(discrete = TRUE) +
+    theme_dark() +
+    ggtitle(paste0("Distribution of the variable ", varname))
+}
+
+present_data <- canonical_brom_data_long %>% 
+  nest(val) %>% 
+  mutate(absent = map_lgl(data, ~ all(is.na(.x)))) %>% 
+  filter(!absent) %>% 
+  unnest(data)
+
+present_var_names <- present_data %>% 
+  select(-absent) %>% 
+  .[["var"]] %>% 
+  unique
+
+map(present_var_names, make_distrib_plot, .canonical_brom_data_long = present_data)
+
 ```
 
 Number of plants of each species in each site:
