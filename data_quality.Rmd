@@ -1,0 +1,66 @@
+---
+title: "Data Quality checks for the BWG"
+author: "Andrew"
+date: "14. 11. 2016"
+output: 
+  html_document:
+    toc: true
+    toc_depth: 5
+    toc_float: true
+    code_folding: hide
+    theme: paper
+---
+
+## Dataset itself
+
+For Puerto Rico only:
+
+```{r}
+site_data <- dats_date %>% 
+  filter(country == "Puerto Rico")
+```
+the sites and the years they were  collected: 
+
+```{r}
+site_data %>% 
+  select(name, year) %>% 
+  distinct() %>% 
+  arrange(year)
+```
+
+Info on the person responsible:
+
+```{r}
+site_data %>% select(owner_name:faculty_email) %>% distinct %>% kable
+```
+
+(maybe place personal information separately? or release dates separately?)
+
+
+a map?
+
+## Detritus & other Bromeliad things
+
+```{r}
+canonical_brom_data <- detritus_wider_FG_detritus_corrected %>% 
+  ## take out se -- these are errors from prediction
+  select(-dplyr::contains("_se")) %>% 
+  # just this site
+  semi_join(site_data) %>% 
+  # add bromeliad spp names
+  left_join(broms_date %>% select(bromeliad_id, species)) 
+
+
+canonical_brom_data %>% 
+  gather(var, val, -visit_id, -bromeliad_id, -dataset_id, -dataset_name, -species) %>% 
+  filter(var %in% c("actual_water")) %>% 
+  ggplot(aes(x = species, y = val)) +
+  geom_violin() +
+  geom_point(position = position_jitter(width = 0.3), alpha = 0.2) +
+  facet_grid(var~dataset_name, scales = "free") +
+  coord_flip()
+```
+
+Number of plants of each species in each site:
+
+

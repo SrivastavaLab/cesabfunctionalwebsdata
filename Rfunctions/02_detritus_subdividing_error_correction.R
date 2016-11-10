@@ -1,4 +1,5 @@
-## summarizing repeated datasets
+## correcting errors in detritus variables and subdividing data into useful columns
+
 
 ## visitnames are unique,
 make_visitnames <- function(.visits, .dats_filtered){
@@ -138,13 +139,13 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
   ## "dead_leaves", within the one site where they were recorded erroneously,
   ## into correct "detritus*" columns
   move_values_to_detritus <- .detritus_wider_cardoso_corrected %>%
-    mutate(detritus0_150 = ifelse(dataset_id==211, fpom_g, detritus0_150))%>%
-    mutate(detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000))%>%
-    mutate(detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
+    mutate(detritus0_150 = ifelse(dataset_id=="211", fpom_g, detritus0_150))%>%
+    mutate(detritus150_20000 = ifelse(dataset_id=="211", cpom_g, detritus150_20000))%>%
+    mutate(detritus20000_NA= ifelse(dataset_id=="211", dead_leaves, detritus20000_NA))
 
-  ### fix the mg error as well
+  ### fix the mg error as well -- in PetitSaut2014 and Nouragues 2009
   fix_fpom_mp <- move_values_to_detritus %>%
-    mutate(detritus0_150 = ifelse(dataset_id==216, (fpom_mg/1000), detritus0_150))
+    mutate(detritus0_150 = ifelse(dataset_id %in% c("206", "216"), (fpom_mg/1000), detritus0_150))
 
   ### remove these columns -- check first to confirm that no data is being discarded:
 
@@ -159,7 +160,12 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
 
   # if that did not throw and error, drop the old columns
   fix_fpom_mp %>%
-    select(-fpom_g, -cpom_g, -dead_leaves, -fpom_mg)
+    select(-fpom_g, -cpom_g, -dead_leaves, -fpom_mg) %>%
+    ## Nourages 2006 (dataset 201) accidentally has particle counts in detritus categories
+    #this needs to be corrected in BWGdb but for now
+    mutate(detritus30_150 = if_else(dataset_id==201,NA_real_, detritus30_150)) %>%
+    mutate(detritus0_30 = if_else(dataset_id==201,NA_real_, detritus0_30)) %>%
+    mutate(detritus150_300 = if_else(dataset_id==201,NA_real_, detritus150_300))
 
 }
 
