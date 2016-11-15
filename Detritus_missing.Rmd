@@ -107,7 +107,16 @@ Let's look at the model that generated these predictions:
 #   lm(fpom_g ~ I(fpom_ml^2) + fpom_ml, data = fpom_fg_data)
 # 
 # }
-# ffs <- formulae(~)
+ffs <- formulae(~ fpom_g, 
+                linear = ~ fpom_ml,
+                quadratic = ~ I(fpom_ml^2) + fpom_ml)
+
+# fit all models with the test data:
+observed_data <- fpom_fg_data %>% 
+  select(fpom_ml, fpom_g)
+
+model_list <- observed_data %>% 
+  fit_with(lm, ffs)
 
 ## select datasets where the prediction ws made (or at least where it should have been! i.e. wherever the independent var is present:
 new_vals <- detritus_wider_FG_g %>% 
@@ -117,44 +126,61 @@ new_vals <- detritus_wider_FG_g %>%
                                           any)) %>% 
   filter(has_fpom_ml) %>% 
   unnest(data) %>% 
-  ## predict those values using the model
-  add_predictions(model_fpom_g_ml, var = "pred")
+  select(dataset_name, bromeliad_id, fpom_ml)
+
+model_predictions <- model_list %>% 
+  map_df(add_predictions, data = new_vals, .id = "model_type")
+```
+
+```{r}
+
 
 ## using raw data, re-create the model -- this time, over many bootstrap replicates.
 fg_mod_boot <- fpom_fg_data %>% 
   select(fpom_ml, fpom_g) %>% 
-  modelr::bootstrap(500) %>% 
-  mutate(mod = map(strap, ~ lm(fpom_g ~ I(fpom_ml^2) + fpom_ml, data = .x)))
+  bootstrap(500) %>% 
+  mutate(mod = map(strap, ~ .x %>% fit_with(lm, ffs)),
+         f = map(mod, ~ data_frame(model_type = names(.), model_obj = .))) %>% 
+  unnest(f)
 
 # generate a range of values
 xs <- data_frame(fpom_ml = seq_range(fpom_fg_data$fpom_ml, n = 40, expand = TRUE))
 
 ## predict, with these bootstrapped models, over the range of the observed dataset
 fg_mod_lines <- fg_mod_boot %>% 
-  mutate(model_preds = map(mod, ~ add_predictions(xs, model = .x, var = "boot"))) %>% 
+  mutate(model_preds = map(model_obj, ~ add_predictions(model = .x, data = xs, var = "boot"))) %>% 
   unnest(model_preds)
 
 ## turn bootstrap replicates into a 95% confidence interval, derived from *Data*
-fg_ribbon <- fg_mod_lines %>% 
-  nest(-fpom_ml) %>% 
+fg_ribbon_interval <- fg_mod_lines %>% 
+  nest(-model_type, -fpom_ml) %>% 
   mutate(ymin = map_dbl(data, ~ .x$boot %>%  quantile(probs = 0.975)),
          ymax = map_dbl(data, ~ .x$boot %>%  quantile(probs = 0.025))) %>% 
-  select(-data) %>% 
-  # add in also the unbootstraped predicted values
-  left_join(xs %>% add_predictions(model_fpom_g_ml, var = "pred"))
+  select(-data)
   
 
 
-fg_ribbon %>% 
-  ggplot(aes(x = fpom_ml, ymin = ymin, ymax = ymax, y = pred)) + 
-  geom_line() +
-  geom_ribbon(alpha = 0.3) +
-  geom_point(colour = "red", pch = 21, alpha = 0.4,
-             data = mutate(new_vals, ymin = NA_real_, ymax = NA_real_)) +
-  geom_point(aes(y = fpom_g), data = bind_rows(fg_ribbon,
-                                               fpom_fg_data %>% 
-                                                 select(fpom_ml, fpom_g))) + 
-  coord_cartesian(xlim = c(0, 45)) +
+fg_predictions <- model_predictions %>% 
+  select(model_type, fpom_ml, pred) %>% 
+  mutate(ymin = NA_real_, ymax = NA_real_)
+
+dummy_dots <- fpom_fg_data %>% 
+  select(fpom_ml, fpom_g) %>% 
+  {data_frame(model_type = c("linear", "quadratic"), data = list(., .))} %>% 
+  unnest(data) %>% 
+  mutate(ymin = NA_real_, ymax = NA_real_)
+
+model_line <- model_list %>% 
+  map_df(~ add_predictions(data = xs, model = .x), .id = "model_type") %>% 
+  mutate(ymin = NA_real_, ymax = NA_real_)
+
+fg_ribbon_interval %>% 
+  ggplot(aes(x = fpom_ml, ymin = ymin, ymax = ymax))  +
+  facet_wrap(~model_type) + 
+  geom_ribbon(fill = "lightgrey") +
+  geom_point(aes(y = pred), colour = "red", data = fg_predictions) +
+  geom_line(aes(y = pred), data = model_line) +
+  geom_point(aes(y = fpom_g), data = dummy_dots) + 
   theme_bw() +
   xlab("FPOM (ml)") + ylab("FPOM (g)")
 ```
