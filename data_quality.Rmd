@@ -37,7 +37,8 @@ the sites and the years they were  collected:
 site_data %>% 
   select(name, year) %>% 
   distinct() %>% 
-  arrange(year)
+  arrange(year) %>% 
+  kable
 ```
 
 Info on the person responsible:
@@ -46,14 +47,10 @@ Info on the person responsible:
 site_data %>% select(owner_name:faculty_email) %>% distinct %>% kable
 ```
 
-(maybe place personal information separately? or release dates separately?)
-
-
-a map?
 
 ## Detritus & other Bromeliad things
 
-```{r fig.height=9, fig.width=10}
+```{r fig.height=9, fig.width=10, fig.cap="", message=FALSE}
 canonical_brom_data <- detritus_wider_FG_detritus_corrected %>% 
   ## take out se -- these are errors from prediction
   select(-dplyr::contains("_se")) %>% 
