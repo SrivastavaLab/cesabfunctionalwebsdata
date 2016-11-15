@@ -25,7 +25,8 @@ Where in the world is this site? Note that any warnings around the figure below 
 ```{r}
 
 ggmap(stamenmap) + 
-  geom_point(colour = "darkgreen", data = site_data %>% 
+  geom_point(colour = "red", size = 3, alpha = 0.5, 
+             data = site_data %>% 
                select(lon = lng, lat))
 ```
 

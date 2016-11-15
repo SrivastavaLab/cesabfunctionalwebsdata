@@ -16,6 +16,8 @@ packages:
   - broom
   - readr
   - modelr
+  - ggmap
+  - viridis
 
 sources:
   #- Rfunctions
