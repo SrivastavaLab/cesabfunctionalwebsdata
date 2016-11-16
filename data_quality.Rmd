@@ -50,7 +50,7 @@ site_data %>% select(owner_name:faculty_email) %>% distinct %>% kable
 
 ## Detritus & other Bromeliad things
 
-```{r fig.height=9, fig.width=10, fig.cap="", message=FALSE}
+```{r fig.height=7, fig.width=12, fig.cap="", message=FALSE, dev= 'svg'}
 canonical_brom_data <- detritus_wider_FG_detritus_corrected %>% 
   ## take out se -- these are errors from prediction
   select(-dplyr::contains("_se")) %>% 
@@ -63,16 +63,19 @@ canonical_brom_data <- detritus_wider_FG_detritus_corrected %>%
 canonical_brom_data_long <- canonical_brom_data %>% 
   gather(var, val, -visit_id, -bromeliad_id, -dataset_id, -dataset_name, -species)
 
+
 make_distrib_plot <- function(varname, .canonical_brom_data_long = canonical_brom_data_long) {
   .canonical_brom_data_long %>% 
     filter(var %in% c(varname)) %>% 
+    complete(species, dataset_name) %>% 
     ggplot(aes(fill = species, x = val)) +
     geom_density() +
     geom_rug() + 
     facet_grid(species~dataset_name) +
     scale_fill_viridis(discrete = TRUE) +
-    theme_bw() +
-    ggtitle(paste0("Distribution of the variable ", varname))
+    theme_minimal() +
+    ggtitle(varname) +
+    xlab("Value")
 }
 
 present_data <- canonical_brom_data_long %>% 
@@ -86,10 +89,16 @@ present_var_names <- present_data %>%
   .[["var"]] %>% 
   unique
 
-map(present_var_names, make_distrib_plot, .canonical_brom_data_long = present_data)
+plots <- map(present_var_names, make_distrib_plot, .canonical_brom_data_long = canonical_brom_data_long)
+
+walk(plots, print)
 
 ```
 
-Number of plants of each species in each site:
+Other ideas:
 
+minimum
+maximum
+median
+sd (arrange data by descending sd)
 
