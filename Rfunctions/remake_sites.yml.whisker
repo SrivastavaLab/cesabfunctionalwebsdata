@@ -6,19 +6,19 @@ targets:
   reports:
     depends:
     {{#site_names}}
-      - data_quality_{{site_name}}.html
+      - data_quality/data_quality_{{site_name}}.html
     {{/site_names}}
 
 {{#site_names}}
   {{site_name}}:
     command: return(I("{{site_name}}"))
 
-  data_quality_{{site_name}}.html:
-    command: render("data_quality_{{site_name}}.md")
+  data_quality/data_quality_{{site_name}}.html:
+    command: render("data_quality/data_quality_{{site_name}}.md")
 
-  data_quality_{{site_name}}.md:
+  data_quality/data_quality_{{site_name}}.md:
     knitr:
-      input: data_quality.Rmd
+      input: data_quality/data_quality.Rmd
       auto_figure_prefix: true
     depends:
       - visits_date
