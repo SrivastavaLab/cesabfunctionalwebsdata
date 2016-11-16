@@ -18,6 +18,7 @@ packages:
   - modelr
   - ggmap
   - viridis
+  - rmarkdown
 
 sources:
   #- Rfunctions
