@@ -22,7 +22,7 @@ site_data <- dats_date %>%
 ## Location data
 
 Where in the world is this site? Note that any warnings around the figure below indicate that there is a ***problem with the coordinates***.
-```{r}
+```{r fig.cap=""}
 
 ggmap(stamenmap) + 
   geom_point(colour = "red", size = 3, alpha = 0.5, 
@@ -95,10 +95,4 @@ walk(plots, print)
 
 ```
 
-Other ideas:
-
-minimum
-maximum
-median
-sd (arrange data by descending sd)
 
