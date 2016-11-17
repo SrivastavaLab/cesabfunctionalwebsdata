@@ -1,8 +1,5 @@
 ## what sites?
 
-fine_cardoso2008<- function(coarse){
-
-}
 
 show_function_with_all_data <- function(df, xvar, yvar, est_f){
   requireNamespace("assertthat")
@@ -34,18 +31,14 @@ show_function_with_all_data <- function(df, xvar, yvar, est_f){
     ylab(yname)
 }
 
-show_function_with_all_data(detritus_wider_correct_frenchguiana, xvar = "detritus150_20000", yvar = "detritus0_150", fine_cardoso2008)
+estimating_equation_data <- frame_data(
+  ~xvar,                  ~yvar,              ~est_f,                                                   ~used_on_dataset,
+  "detritus150_20000",    "detritus0_150",    function(coarse) {exp(0.68961 * log(coarse) - 0.11363)},   c(6),
+  "detritus1500_20000",   "detritus10_1500",  function(med)    {exp(0.79031 * log(med) - 0.070033)},     c(111)
+)
 
-pred_plots <- frame_data(
-  ~xvar,                  ~yvar,              ~est_f,
-  "detritus150_20000",    "detritus0_150",    function(coarse) {exp(0.68961 * log(coarse) - 0.11363)},
-  "detritus1500_20000",   "detritus10_1500",  function(med)    {exp(0.79031 * log(med) - 0.070033)}
-) %>%
+
+estimating_equation_data %>%
+  select(-used_on_dataset) %>%
   pmap(show_function_with_all_data, df = detritus_wider_correct_frenchguiana)
 
-
-fine_saba2009 <- function(med){
-  exp(0.79031 * log(med) - 0.070033)
-}
-
-show_function_with_all_data(detritus_wider_correct_frenchguiana, xvar = "detritus1500_20000", yvar = "detritus10_1500", fine_saba2009)
