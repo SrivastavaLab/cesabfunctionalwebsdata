@@ -60,10 +60,12 @@ test <- estimating_function_data %>%
   # select the required input rows
   mutate(src_df = map(src_dat, ~ detritus_wider_correct_frenchguiana %>%
                         filter(dataset_id %in% .x)),
-  # create a "total" column, if any, using the source data and the equation
-    src_newv = map2(src_df, eqn,  ~ mutate_(.x, "detritus0_NA" = .y[[1]]))) %>%
-  # create modelling function
-  # mutate()
+         # create a "total" column, if any, using the source data and the equation
+         src_newv = map2(src_df, eqn,  ~ mutate_(.x, "detritus0_NA" = .y[[1]])),
+         # create modelling function
+         fml = map2(.x = xvar, .y = yvar, ~ formulae(.y[[1]], .x[[1]])),
+         mod = map2(.x = src_newv, .y = fml, ~ fit_with(data = .x, .formulas = .y, .f = glm))
+  )
 
 
 detritus_wider_correct_frenchguiana %>% filter(dataset_id %in% c("131", "126"))
