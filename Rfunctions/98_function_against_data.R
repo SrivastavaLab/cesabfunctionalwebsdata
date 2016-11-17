@@ -50,9 +50,22 @@ detritus_wider_correct_frenchguiana %>%
   mutate(detritus0_NA =  detritus10_1500 + detritus1500_20000 + detritus20000_NA) %>%
   glm(log(detritus0_NA)~log(diameter), data=elverde90s)
 
+estimating_function_data <-
+  frame_data(
+    ~target_dat, ~src_dat,                       ~eqn,                                                              ~xvar,               ~yvar,
+    116,         c("131", "126", "121", "221"),  list(~ detritus10_1500 + detritus1500_20000 + detritus20000_NA),  list(~detritus0_NA),  list(~log(detritus0_NA))
+  )
 
-ff <- ~ detritus10_1500 + detritus1500_20000 + detritus20000_NA
+test <- estimating_function_data %>%
+  # select the required input rows
+  mutate(src_df = map(src_dat, ~ detritus_wider_correct_frenchguiana %>%
+                        filter(dataset_id %in% .x)),
+  # create a "total" column, if any, using the source data and the equation
+    src_newv = map2(src_df, eqn,  ~ mutate_(.x, "detritus0_NA" = .y[[1]]))) %>%
+  # create modelling function
+  # mutate()
 
-detritus_wider_correct_frenchguiana %>%
-  mutate_(detritus0_NA = lazyeval::interp(ff)) %>%
-  glimpse
+
+detritus_wider_correct_frenchguiana %>% filter(dataset_id %in% c("131", "126"))
+
+estimating_function_data$src_dat
