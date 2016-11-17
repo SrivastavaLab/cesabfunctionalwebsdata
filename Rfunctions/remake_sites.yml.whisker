@@ -20,6 +20,7 @@ targets:
     knitr:
       input: data_quality/data_quality.Rmd
       auto_figure_prefix: true
+      chdir: true
     depends:
       - visits_date
       - dats_date
