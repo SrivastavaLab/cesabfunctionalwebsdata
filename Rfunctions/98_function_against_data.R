@@ -39,8 +39,9 @@ show_function_with_all_data <- function(df, xvar, yvar, est_f){
 ## make the setup data
 estimating_equation_data <- frame_data(
   ~xvar,                  ~yvar,              ~est_f,                                                   ~used_on_dataset,
-  "detritus150_NA",    "detritus0_150",    function(coarse) {exp(0.68961 * log(coarse) - 0.11363)},   c(6),
-  "detritus1500_20000",   "detritus10_1500",  function(med)    {exp(0.79031 * log(med) - 0.070033)},     c(111)
+  "detritus150_NA",       "detritus0_150",    function(coarse) {exp(0.68961 * log(coarse) - 0.11363)},   c(6),
+  "detritus1500_20000",   "detritus10_1500",  function(med)    {exp(0.79031 * log(med) - 0.070033)},     c(111),
+  "detritus150_850",      "detritus0_150",    function(med)    { ((0.9857 *med) + 1.496)},               c(166,171,181)
 )
 
 ## generate plots & add to data.frame
@@ -61,8 +62,11 @@ equation_plots %>%
 # applying functions to data ----------------------------------------------
 
 filter_by_dataset_id <- function(used_on_dataset, xvar, df, ...){
+
+  ds_id <- unlist(used_on_dataset)
+
   df %>%
-    filter(dataset_id %in% used_on_dataset) %>%
+    filter(dataset_id %in% ds_id) %>%
     # check to make sure predictors actually exist
     assert_(not_na, xvar) %>%
     # and that dataset is not 0 from the filter above
@@ -93,11 +97,12 @@ detritus_estimate_function_filt <- estimating_equation_data %>%
          .to  = "filtered_data")
 
 
-detritus_estimate_function_filt %>%
+new_detritus <- detritus_estimate_function_filt %>%
   select(-used_on_dataset) %>%
   by_row(mutate_new_col %>%
            lift)
 
+new_detritus$.out %>% map(`[[`, 36)
 
 # what if it is a model tho -----------------------------------------------
 
