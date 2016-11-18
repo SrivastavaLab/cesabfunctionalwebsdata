@@ -1,0 +1,13 @@
+---
+output: md_document
+---
+
+
+# Data preparation for FUNCTIONALWEBS
+Data cleaning and organization for CESAB FUNCTIONALWEBS papers
+
+
+```{r setup, include=TRUE}
+library(dplyr)
+dir(pattern = "^data.*html") %>% paste0("http://aammd.info/data_quality/", .)
+```

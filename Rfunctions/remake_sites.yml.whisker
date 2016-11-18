@@ -1,0 +1,32 @@
+## list the names of sites
+
+
+
+targets:
+  reports:
+    depends:
+    {{#site_names}}
+      - data_quality/data_quality_{{site_name}}.html
+    {{/site_names}}
+
+{{#site_names}}
+  {{site_name}}:
+    command: return(I("{{site_name}}"))
+
+  data_quality/data_quality_{{site_name}}.html:
+    command: render("data_quality/data_quality_{{site_name}}.md")
+
+  data_quality/data_quality_{{site_name}}.md:
+    knitr:
+      input: data_quality/data_quality.Rmd
+      auto_figure_prefix: true
+      chdir: true
+    depends:
+      - visits_date
+      - dats_date
+      - detritus_wider_FG_detritus_corrected
+      - broms_date
+      - stamenmap
+      - dataset: {{site_name}}
+
+{{/site_names}}

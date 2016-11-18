@@ -16,6 +16,9 @@ packages:
   - broom
   - readr
   - modelr
+  - ggmap
+  - viridis
+  - rmarkdown
 
 sources:
   #- Rfunctions
@@ -39,7 +42,7 @@ targets:
       - abundance
       - detritus_wider
       - Detritus_missing.html
-      - data_quality.html
+      - reports
 #  downloads:
 #      -
 ## or should i give the original downloads a "clean" step, so that I could just delete them all and remake it again?
@@ -191,12 +194,8 @@ targets:
   stamenmap:
     command: get_map_SA()
 
-  data_quality.html:
-    command: render("data_quality.Rmd")
-    depends:
-      - visits_date
-      - dats_date
-      - detritus_wider_FG_detritus_corrected
-      - broms_date
-      - stamenmap
+
+include:
+- remake_sites.yml
+
 

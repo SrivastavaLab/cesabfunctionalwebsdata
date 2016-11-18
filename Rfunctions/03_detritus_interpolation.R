@@ -6,6 +6,7 @@
 #' subsequent regressions, so that their predictions can be weighted by SE or
 #' something
 
+#' read in requisite data.
 read_fpom_fg <- function(path) {
   path %>%
     read_csv(col_types =
