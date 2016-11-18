@@ -62,6 +62,8 @@ test <- estimating_function_data %>%
          fml = map2(.x = xvar, .y = yvar, ~ formulae(.y[[1]], .x[[1]])),
          mod = map2(.x = src_newv, .y = fml, ~ fit_with(data = .x, .formulas = .y, .f = glm))
   )
+# note that fml and mod are lists, not a formula and a model respectively.
+
 
 ## for validating
 test %>%
@@ -105,8 +107,5 @@ df_list %>%
   geom_point() +
   coord_trans(y = "log")
 
-estimating_function_data %>%
-  mutate()
-filter(, estimating_function_data)
 
 ## maybe one huge data.frame is not helpful -- try invoke_rows with smaller, function-specific data_frames that can then be gathered
