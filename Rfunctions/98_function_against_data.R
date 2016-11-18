@@ -1,16 +1,21 @@
 
+
+# plotting functions ------------------------------------------------------
+
+
+# the goal of these functions is to compare a function to any available datasets
+# with the same predictor and response variables. These functions are not from
+# anywhere that I know of, so this is the closest I can think of a way to
+# validate them
 show_function_with_all_data <- function(df, xvar, yvar, est_f){
   requireNamespace("assertthat")
 
-  xname <- as.character(xvar)
-  yname <- as.character(yvar)
-
-  assert_that(has_name(detritus_wider_correct_frenchguiana, xname))
-  assert_that(has_name(detritus_wider_correct_frenchguiana, yname))
+  assert_that(has_name(detritus_wider_correct_frenchguiana, xvar))
+  assert_that(has_name(detritus_wider_correct_frenchguiana, yvar))
 
 
   dat <- df %>%
-    select_(xs = xname, ys = yname, "dataset_name") %>%
+    select_(xs = xvar, ys = yvar, "dataset_name") %>%
     filter(complete.cases(.))
 
   assert_that(nrow(dat) > 0)
@@ -27,20 +32,18 @@ show_function_with_all_data <- function(df, xvar, yvar, est_f){
     geom_line(aes(colour = NULL), data = curve_dat) +
     viridis::scale_color_viridis(discrete = TRUE) +
     coord_trans("log", "log") +
-    xlab(xname) +
-    ylab(yname)
+    xlab(xvar) +
+    ylab(yvar)
 }
 
 ## make the setup data
 estimating_equation_data <- frame_data(
   ~xvar,                  ~yvar,              ~est_f,                                                   ~used_on_dataset,
-  "detritus150_20000",    "detritus0_150",    function(coarse) {exp(0.68961 * log(coarse) - 0.11363)},   c(6),
+  "detritus150_NA",    "detritus0_150",    function(coarse) {exp(0.68961 * log(coarse) - 0.11363)},   c(6),
   "detritus1500_20000",   "detritus10_1500",  function(med)    {exp(0.79031 * log(med) - 0.070033)},     c(111)
 )
 
-
-glimpse(estimating_equation_data)
-
+## generate plots & add to data.frame
 equation_plots <- estimating_equation_data %>%
   select(-used_on_dataset) %>%
   by_row(show_function_with_all_data %>%
@@ -49,9 +52,51 @@ equation_plots <- estimating_equation_data %>%
            # lift from using named arguements to using a
            lift_dl)
 
+# plot
 equation_plots %>%
   select(.out) %>%
   walk(print)
+
+
+# applying functions to data ----------------------------------------------
+
+filter_by_dataset_id <- function(used_on_dataset, xvar, df, ...){
+  df %>%
+    filter(dataset_id %in% used_on_dataset) %>%
+    # check to make sure predictors actually exist
+    assert_(not_na, xvar) %>%
+    # and that dataset is not 0 from the filter above
+    verify(nrow(.) > 0)
+}
+
+mutate_new_col <- function(xvar, yvar, est_f, filtered_data){
+  # predicted flag as column or different header?
+  # test for all(is.na()) in target
+  newname <- paste0(yvar, "_function")
+
+  assert_that(length(est_f) == 1)
+  ff <- est_f[[1]]
+
+  mexp <- lazyeval::interp(~ ff(x), x = as.name(xvar))
+
+  ll <-  list(mexp) %>% set_names(newname)
+
+  filtered_data[[1]] %>%
+    mutate_(.dots = ll)
+
+}
+
+
+detritus_estimate_function_filt <- estimating_equation_data %>%
+  by_row(filter_by_dataset_id %>% lift,
+         df = detritus_wider_correct_frenchguiana,
+         .to  = "filtered_data")
+
+
+detritus_estimate_function_filt %>%
+  select(-used_on_dataset) %>%
+  by_row(mutate_new_col %>%
+           lift)
 
 
 # what if it is a model tho -----------------------------------------------
