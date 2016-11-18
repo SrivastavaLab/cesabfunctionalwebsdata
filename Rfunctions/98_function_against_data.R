@@ -102,7 +102,7 @@ new_detritus <- detritus_estimate_function_filt %>%
   by_row(mutate_new_col %>%
            lift)
 
-new_detritus$.out %>% map(`[[`, 36)
+new_detritus$.out %>% map(select, 36) %>% map(head)
 
 # what if it is a model tho -----------------------------------------------
 
