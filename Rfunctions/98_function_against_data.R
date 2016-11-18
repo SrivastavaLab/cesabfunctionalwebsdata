@@ -1,9 +1,7 @@
-## what sites?
-
 
 show_function_with_all_data <- function(df, xvar, yvar, est_f){
   requireNamespace("assertthat")
-  # browser()
+
   xname <- as.character(xvar)
   yname <- as.character(yvar)
 
@@ -20,7 +18,6 @@ show_function_with_all_data <- function(df, xvar, yvar, est_f){
   # extract the function: TODO make sure it is length 1 before doing this
   f <- est_f[[1]]
 
-
   curve_dat <- data_frame(xs     = seq_range(dat$xs, n = 40, expand = FALSE),
                           ys     = f(xs))
 
@@ -34,21 +31,27 @@ show_function_with_all_data <- function(df, xvar, yvar, est_f){
     ylab(yname)
 }
 
+## make the setup data
 estimating_equation_data <- frame_data(
   ~xvar,                  ~yvar,              ~est_f,                                                   ~used_on_dataset,
   "detritus150_20000",    "detritus0_150",    function(coarse) {exp(0.68961 * log(coarse) - 0.11363)},   c(6),
   "detritus1500_20000",   "detritus10_1500",  function(med)    {exp(0.79031 * log(med) - 0.070033)},     c(111)
 )
 
+
 glimpse(estimating_equation_data)
 
-estimating_equation_data %>%
+equation_plots <- estimating_equation_data %>%
   select(-used_on_dataset) %>%
   by_row(show_function_with_all_data %>%
            # use the most recent dataset for these calculations
            partial(df = detritus_wider_correct_frenchguiana) %>%
-           # lift from using named arguements to using a list
+           # lift from using named arguements to using a
            lift_dl)
+
+equation_plots %>%
+  select(.out) %>%
+  walk(print)
 
 
 # what if it is a model tho -----------------------------------------------
