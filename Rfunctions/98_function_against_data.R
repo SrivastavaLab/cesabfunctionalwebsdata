@@ -107,6 +107,14 @@ estimating_function_data <-
     116,         c("131", "126", "121", "221"),  list(~ detritus10_1500 + detritus1500_20000 + detritus20000_NA),  list(~diameter),  list(~log(detritus0_NA))
   )
 
+## do something like
+# make the formulae into actual formulae
+estimating_equation_data %>%
+  mutate(xvar = xvar %>% map(as.formula),
+         yvar = yvar %>% map(as.formula))
+
+
+
 test <- estimating_function_data %>%
   # select the required input rows
   mutate(src_df = map(src_dat, ~ detritus_wider_correct_frenchguiana %>%
