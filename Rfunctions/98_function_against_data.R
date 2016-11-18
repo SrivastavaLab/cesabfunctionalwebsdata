@@ -46,10 +46,6 @@ estimating_equation_data %>%
 
 # what if it is a model tho -----------------------------------------------
 
-detritus_wider_correct_frenchguiana %>%
-  mutate(detritus0_NA =  detritus10_1500 + detritus1500_20000 + detritus20000_NA) %>%
-  glm(log(detritus0_NA)~log(diameter), data=elverde90s)
-
 estimating_function_data <-
   frame_data(
     ~target_dat, ~src_dat,                       ~eqn,                                                              ~xvar,               ~yvar,
