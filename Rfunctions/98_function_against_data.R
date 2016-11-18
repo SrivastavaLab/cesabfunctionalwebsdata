@@ -17,9 +17,12 @@ show_function_with_all_data <- function(df, xvar, yvar, est_f){
 
   assert_that(nrow(dat) > 0)
 
+  # extract the function: TODO make sure it is length 1 before doing this
+  f <- est_f[[1]]
+
 
   curve_dat <- data_frame(xs     = seq_range(dat$xs, n = 40, expand = FALSE),
-                          ys     = est_f(xs))
+                          ys     = f(xs))
 
   dat %>%
     ggplot(aes(x = xs, y = ys, colour = dataset_name)) +
@@ -37,11 +40,15 @@ estimating_equation_data <- frame_data(
   "detritus1500_20000",   "detritus10_1500",  function(med)    {exp(0.79031 * log(med) - 0.070033)},     c(111)
 )
 
+glimpse(estimating_equation_data)
 
 estimating_equation_data %>%
   select(-used_on_dataset) %>%
-  pmap(show_function_with_all_data, df = detritus_wider_correct_frenchguiana)
-
+  by_row(show_function_with_all_data %>%
+           # use the most recent dataset for these calculations
+           partial(df = detritus_wider_correct_frenchguiana) %>%
+           # lift from using named arguements to using a list
+           lift_dl)
 
 
 # what if it is a model tho -----------------------------------------------
