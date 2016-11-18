@@ -19,6 +19,8 @@ packages:
   - ggmap
   - viridis
   - rmarkdown
+  - assertthat
+  - lazyeval
 
 sources:
   #- Rfunctions
@@ -26,6 +28,7 @@ sources:
   - Rfunctions/02_detritus_subdividing_error_correction.R
   - Rfunctions/03_detritus_interpolation.R
   - Rfunctions/99_mapping_checking.R
+  - Rfunctions/find_symbols.R
 
 targets:
   downloads:
