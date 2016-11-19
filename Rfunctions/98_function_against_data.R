@@ -58,6 +58,10 @@ equation_plots <- estimating_equation_data %>%
            lift_dl %>%
            possibly(otherwise = NA_real_))
 
+
+detritus_wider_correct_frenchguiana %>%
+  filter(dataset_id == 6)
+
 # plot
 equation_plots %>%
   select(.out) %>%
@@ -66,6 +70,20 @@ equation_plots %>%
 
 # applying functions to data ----------------------------------------------
 
+
+#' filter the dataset to just the data that this particular model uses.
+#'
+#' Before using an equation to predict a certain detritus volume, the data
+#' should be filtered to show just the data that will be used to do the
+#' prediction. This simplifies things like validation, plotting, and combining
+#' with the rest of the data later.
+#'
+#' @param used_on_dataset Which dataset will this be used on?
+#' @param xvar the predictor variable used. only used for checking to make sure
+#'   it exists at this site
+#' @param df the dataset that this is used on (the most recent one)
+#' @param ... cheating! allowing unused columns to pass through and come out the
+#'   other end of by_row
 filter_by_dataset_id <- function(used_on_dataset, xvar, df, ...){
 
   ds_id <- unlist(used_on_dataset)
