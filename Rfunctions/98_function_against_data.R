@@ -45,6 +45,9 @@ estimating_equation_data <- frame_data(
   "detritus150_850",      "detritus0_150",    function(med)    { ((0.9857 *med) + 1.496)},               c(166,171,181)
 )
 
+## could easily add an "equation meant to be used on dataset" arguement, which
+## would convert used_on_dataset to dataset_name, then add to ggtitle
+
 ## generate plots & add to data.frame
 equation_plots <- estimating_equation_data %>%
   select(-used_on_dataset) %>%
