@@ -129,26 +129,39 @@ new_detritus$.out %>% map(select, 36) %>% map(head)
 
 # what if it is a model tho -----------------------------------------------
 
+# first, create any combinations of detritus values which are needed in later
+# modelling
+
+detritus_wider_new_variables <- detritus_wider_FG_detritus_corrected %>%
+  mutate(detritus10_1500_2000_NA = detritus10_1500 + detritus1500_20000 + detritus20000_NA)
+
+
+detritus_wider_new_variables %>%
+  filter(!is.na(detritus10_1500_2000_NA)) %>%
+  select(dataset_id) %>%
+  distinct
+
+## first row -- why not 136??
+
+# create the table of formulae
 estimating_function_data <-
   frame_data(
-    ~target_dat, ~src_dat,                       ~eqn,                                                              ~xvar,               ~yvar,
-    116,         c("131", "126", "121", "221"),  list(~ detritus10_1500 + detritus1500_20000 + detritus20000_NA),  list(~diameter),  list(~log(detritus0_NA))
+    ~target_dat, ~src_dat,                       ~xvar,        ~yvar,
+    116,         c("131", "126", "121", "221"),  "~diameter",  "~detritus10_1500_2000_NA"
   )
 
 ## do something like
 # make the formulae into actual formulae
-estimating_equation_data %>%
+estimating_function_data %>%
   mutate(xvar = xvar %>% map(as.formula),
          yvar = yvar %>% map(as.formula))
 
 
-
 test <- estimating_function_data %>%
   # select the required input rows
-  mutate(src_df = map(src_dat, ~ detritus_wider_correct_frenchguiana %>%
+  mutate(src_df = map(src_dat,
+                      ~ detritus_wider_correct_frenchguiana %>%
                         filter(dataset_id %in% .x)),
-         # create a "total" column, if any, using the source data and the equation
-         src_newv = map2(src_df, eqn,  ~ mutate_(.x, "detritus0_NA" = .y[[1]])),
          # create modelling function
          fml = map2(.x = xvar, .y = yvar, ~ formulae(.y[[1]], .x[[1]])),
          mod = map2(.x = src_newv, .y = fml, ~ fit_with(data = .x, .formulas = .y, .f = glm))
