@@ -146,28 +146,53 @@ detritus_wider_new_variables %>%
 # create the table of formulae
 estimating_function_data <-
   frame_data(
-    ~target_dat, ~src_dat,                       ~xvar,        ~yvar,
-    116,         c("131", "126", "121", "221"),  "~diameter",  "~detritus10_1500_2000_NA"
+    ~target_dat, ~src_dat,                       ~xvar,        ~yvar,                      ~.f, ~family,
+    116,         c("131", "126", "121", "221"),  "~diameter",  "~detritus10_1500_2000_NA", glm, "gaussian"
   )
 
 ## do something like
 # make the formulae into actual formulae
-estimating_function_data %>%
+estimating_function_data_f <- estimating_function_data %>%
   mutate(xvar = xvar %>% map(as.formula),
          yvar = yvar %>% map(as.formula))
 
 
-test <- estimating_function_data %>%
+# create a dataframe that holds everything we need to run the models:
+test <- estimating_function_data_f %>%
   # select the required input rows
   mutate(src_df = map(src_dat,
-                      ~ detritus_wider_correct_frenchguiana %>%
+                      ~ detritus_wider_new_variables %>%
                         filter(dataset_id %in% .x)),
          # create modelling function
-         fml = map2(.x = xvar, .y = yvar, ~ formulae(.y[[1]], .x[[1]])),
-         mod = map2(.x = src_newv, .y = fml, ~ fit_with(data = .x, .formulas = .y, .f = glm))
-  )
-# note that fml and mod are lists, not a formula and a model respectively.
+         fml = map2(.x = xvar, .y = yvar, ~ formulae(.y, .x)),
+         fml = unlist(fml))
 
+
+# write a function which uses all these arguements to create a model
+fit_predictive_model <- function(src_df, fml, .f, family, target_dat) {
+  # mod_list = fit_with(src_df)
+# browser()
+  ff <- .f[[1]]
+  mod <- fit_with(data = src_df[[1]], .f = ff, .formulas = fml, family = family)
+
+
+  return(mod)
+}
+
+test$src_df[[1]] %>% names
+
+test %>%
+  select(-src_dat, -xvar, -yvar) %>%
+  by_row(fit_predictive_model %>% lift)
+
+
+
+         mod = map2(.x = src_df, .y = fml, ~ fit_with(data = .x, .formulas = .y, .f = glm)))
+
+# note that fml and mod are lists, not a formula and a model respectively.
+test %>%
+  mutate(ff = fml %>% unlist) %>%
+  select(-src_df)
 
 ## for validating
 test %>%
