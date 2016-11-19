@@ -45,7 +45,6 @@ targets:
       - trts_all_filtered
       - abundance
       - detritus_wider
-      - Detritus_missing.html
       - reports
 #  downloads:
 #      -
