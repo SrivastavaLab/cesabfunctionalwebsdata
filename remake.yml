@@ -187,10 +187,10 @@ targets:
     command: combine_observed_predicted_0_150_det(detritus_wider_correct_frenchguiana, detritus_wider_fpom_g_predicted)
 
 
-  Detritus_missing.html:
-    command: render("Detritus_missing.Rmd")
-    depends:
-      - detritus_wider_FG_detritus_corrected
+ # Detritus_missing.html:
+#    command: render("Detritus_missing.Rmd")
+#    depends:
+#      - detritus_wider_FG_detritus_corrected
 
   # get a pretty map
 
