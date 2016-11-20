@@ -140,3 +140,22 @@ create_model_table <- function(){
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))
 }
+
+derive_modelling_information <- function(.model_table, .detritus_data){
+  # create a dataframe that holds everything we need to run the models:
+  .model_table %>%
+    # select the required input rows
+    mutate(src_df = map(src_dat,
+                        ~ .detritus_data %>%
+                          # TODO: ? add select() to contain only some variables??
+                          filter(dataset_id %in% .x)),
+           # create modelling function
+           fml = map2(.x = xvar, .y = yvar, ~ formulae(.y, .x)),
+           fml = flatten(fml)) %>%
+    mutate(x_symb = xvar %>% map(find_symbols),
+           y_symb = yvar %>% map(find_symbols),
+           x_funs = x_symb %>% map_chr("functions"),
+           x_vars = x_symb %>% map_chr("variables"),
+           y_funs = y_symb %>% map_chr("functions"),
+           y_vars = y_symb %>% map_chr("variables"))
+}

@@ -45,22 +45,8 @@ detritus_wider_new_variables %>%
 # create the table of formulae
 model_table <- create_model_table()
 
+modelling_information <- derive_modelling_information(model_table, detritus_wider_new_variables)
 
-# create a dataframe that holds everything we need to run the models:
-modelling_information <- estimating_function_data_f %>%
-  # select the required input rows
-  mutate(src_df = map(src_dat,
-                      ~ detritus_wider_new_variables %>%
-                        filter(dataset_id %in% .x)),
-         # create modelling function
-         fml = map2(.x = xvar, .y = yvar, ~ formulae(.y, .x)),
-         fml = unlist(fml)) %>%
-  mutate(x_symb = xvar %>% map(find_symbols),
-         y_symb = yvar %>% map(find_symbols),
-         x_funs = x_symb %>% map_chr("functions"),
-         x_vars = x_symb %>% map_chr("variables"),
-         y_funs = y_symb %>% map_chr("functions"),
-         y_vars = y_symb %>% map_chr("variables"))
 
 modelling_information %>% glimpse
 
