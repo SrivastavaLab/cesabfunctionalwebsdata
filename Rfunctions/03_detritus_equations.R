@@ -201,7 +201,10 @@ make_prediction_xs <- function(m_id, src_df, x_vars) {
 
 make_prediction_df <- function(m_id, incoming_data, predicting_model, y_vars, y_funs){
 
+  # browser()
   dd <- incoming_data[[1]]
+
+  y_vars <- paste0(y_vars, "_pred")
 
   predict_dat <- partial(add_predictions, data = dd, var = y_vars)
 
@@ -238,14 +241,19 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
 
   # browser()
 
+  # rename variables for plotting
+  plotdat <- dd %>%
+    select_(xs = x_vars,
+            ys = y_vars)
+
+  # tweak the name - predicted values have "pred" on the side
+  y_vars <- paste0(y_vars, "_pred")
 
   ld <- curve_data[[1]] %>%
     select_(xs = x_vars,
             ys = y_vars)
 
-  dd %>%
-    select_(xs = x_vars,
-            ys = y_vars) %>%
+  plotdat %>%
     ggplot(aes(x = xs, y = ys)) +
     geom_point() +
     geom_line(data = ld) +
