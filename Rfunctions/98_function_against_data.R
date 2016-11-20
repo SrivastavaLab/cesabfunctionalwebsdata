@@ -63,6 +63,15 @@ plotting_information <- observed_model_fit %>%
               select(m_id, target_dat, x_funs, y_funs, x_vars, y_vars),
             by = "m_id")
 
+fit_to_real_life <- observed_model_fit %>%
+  select(m_id, predicting_model, target_dat) %>%
+  left_join(modelling_information %>% select(m_id, y_vars)) %>%
+  mutate(target_df = map(target_dat, ~ detritus_wider_FG_detritus_corrected %>%
+                           # TODO: ? add select() to contain only some variables??
+                           filter(dataset_id %in% .x))) %>%
+  select(m_id, incoming_data = target_df, predicting_model, y_vars) %>%
+  by_row(make_prediction_df %>% lift, .to = "pred_data")
+
 
 # create the x range over which all the models should be predicted. TODO make n a variable??
 data_for_drawing_line <- plotting_information %>%
