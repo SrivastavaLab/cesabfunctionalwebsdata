@@ -222,19 +222,15 @@ make_prediction_df <- function(m_id, src_df, x_vars, predicting_model, y_vars){
 
 }
 
-plotting_information %>%
+plotting_info_pred <- plotting_information %>%
   select(m_id, src_df, x_vars, predicting_model, y_vars) %>%
-  by_row(make_prediction_df %>% lift, .to = "curve_data")
+  by_row(make_prediction_df %>% lift, .to = "curve_data") %>%
+  left_join(plotting_information %>%
+              select(m_id, x_funs, y_funs))
 
 
 
-
-         curve_data_pred = map_n(.x = curve_data,
-                                .y = predicting_model,
-                                .z = y_vars,
-                                ~ add_predictions(.x, .y[[1]], var = .z)))
-
-plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data_pred,...){
+plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
   dd <- src_df[[1]]
 
   # give "identity" if x_funs or y_funs is ""
@@ -243,31 +239,31 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data_pred,...)
   xt <- switch_trans(x_funs)
   yt <- switch_trans(y_funs)
 
+  # browser()
+  # back transformation function for y axis (x not necessary because it is in the function?)
+  back_trans <- switch(y_funs, log = exp, I)
+
+  ld <- curve_data[[1]] %>%
+    select_(xs = x_vars,
+            ys = y_vars) %>%
+    mutate(ys = back_trans(ys))
+
   dd %>%
     select_(xs = x_vars,
            ys = y_vars) %>%
     ggplot(aes(x = xs, y = ys)) +
     geom_point() +
-    geom_line(data = curve_data_pred[[1]] %>%
-                select_(xs = x_vars,
-                        ys = y_vars))
+    geom_line(data = ld) +
     labs(x = x_vars, y = y_vars) +
     coord_trans(x = xt, y = yt)
 
 }
 
-
-plots <- plotting_information %>%
+plots <- plotting_info_pred %>%
   by_row(plot_fn %>% lift, .to = "model_fit_plot")
 
 plots %>% select(model_fit_plot) %>% walk(print)
 
-         mod = map2(.x = src_df, .y = fml, ~ fit_with(data = .x, .formulas = .y, .f = glm)))
-
-# note that fml and mod are lists, not a formula and a model respectively.
-test %>%
-  mutate(ff = fml %>% unlist) %>%
-  select(-src_df)
 
 ## for validating
 test %>%
