@@ -198,16 +198,22 @@ make_prediction_xs <- function(m_id, src_df, x_vars) {
 
 
 
-make_prediction_df <- function(m_id, incoming_data, predicting_model, y_vars){
-  # browser()
+make_prediction_df <- function(m_id, incoming_data, predicting_model, y_vars, y_funs){
 
   dd <- incoming_data[[1]]
 
   predict_dat <- partial(add_predictions, data = dd, var = y_vars)
 
+  # back transformation function for y axis (x not necessary because it is in the function?)
+  back_trans <- switch(y_funs, log = exp, I)
+
   modlist <- predicting_model[[1]] # just because it is a list-column, get the first element (which is a list lol)
-  map_df(modlist, predict_dat)
+  out <- map_df(modlist, predict_dat)
+
+  out[[y_vars]] <- back_trans(out[[y_vars]])
 }
+
+
 
 construct_plotting_information <- function(.observed_model_fit, .modelling_information) {
   .observed_model_fit %>%
@@ -228,8 +234,7 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
   yt <- switch_trans(y_funs)
 
   # browser()
-  # back transformation function for y axis (x not necessary because it is in the function?)
-  back_trans <- switch(y_funs, log = exp, I)
+
 
   ld <- curve_data[[1]] %>%
     select_(xs = x_vars,
@@ -248,3 +253,29 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
 }
 # TODO perhaps a color map to show the site(s)??
 
+
+# Coup de Grace: use the model fit to add the missing values to observed data from another site
+estimate_missing_detritus_new_site <- function(.observed_model_fit, .modelling_information,
+                                               .detritus_data){
+  # extract the fit data that we need
+  fit_data_needed <- .observed_model_fit %>%
+    select(m_id, predicting_model, target_dat)
+
+  # there are some "model-level" info that we also need -- specifically info
+  # about the y variable and transformations if any
+  model_info <- .modelling_information %>%
+    select(m_id, y_vars, y_funs)
+
+  # join these, add filtered dataset to model
+  fit_data_needed %>%
+    left_join(model_info) %>%
+    mutate(target_df = target_dat %>%
+             map(~ .detritus_data %>%
+                   # TODO: ? add select() to contain only some variables??
+                   filter(dataset_id %in% .x))
+    ) %>%
+    # get the precise variables we need to add predictions
+    select(m_id, incoming_data = target_df, predicting_model, y_vars, y_funs) %>%
+    by_row(make_prediction_df %>% lift, .to = "pred_data")
+
+}

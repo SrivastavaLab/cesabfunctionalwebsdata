@@ -60,14 +60,10 @@ observed_model_fit <- do_fit_predictive_model(modelling_information)
 plotting_information <- construct_plotting_information(.observed_model_fit = observed_model_fit,
                                                        .modelling_information = modelling_information)
 
-fit_to_real_life <- observed_model_fit %>%
-  select(m_id, predicting_model, target_dat) %>%
-  left_join(modelling_information %>% select(m_id, y_vars)) %>%
-  mutate(target_df = map(target_dat, ~ detritus_wider_FG_detritus_corrected %>%
-                           # TODO: ? add select() to contain only some variables??
-                           filter(dataset_id %in% .x))) %>%
-  select(m_id, incoming_data = target_df, predicting_model, y_vars) %>%
-  by_row(make_prediction_df %>% lift, .to = "pred_data")
+
+fit_to_real_life <- estimate_missing_detritus_new_site(.observed_model_fit = observed_model_fit,
+                                                       .modelling_information = modelling_information,
+                                                       .detritus_data = detritus_wider_FG_detritus_corrected)
 
 
 # create the x range over which all the models should be predicted. TODO make n a variable??
