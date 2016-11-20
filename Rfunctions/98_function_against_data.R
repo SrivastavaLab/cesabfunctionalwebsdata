@@ -146,8 +146,8 @@ detritus_wider_new_variables %>%
 # create the table of formulae
 estimating_function_data <-
   frame_data(
-    ~target_dat, ~src_dat,                       ~xvar,            ~yvar,                           ~.f, ~family,
-    116,         c("131", "126", "121", "221"),  "~log(diameter)", "~log(detritus10_1500_2000_NA)", glm, "gaussian"
+    ~m_id, ~target_dat, ~src_dat,                       ~xvar,            ~yvar,                           ~.f, ~family,
+    "m1",   116,         c("131", "126", "121", "221"),  "~log(diameter)", "~log(detritus10_1500_2000_NA)", glm, "gaussian"
   )
 
 ## do something like
@@ -178,7 +178,7 @@ modelling_information <- estimating_function_data_f %>%
 modelling_information %>% glimpse
 
 # write a function which uses all these arguements to create a model
-fit_predictive_model <- function(src_df, fml, .f, family, target_dat) {
+fit_predictive_model <- function(m_id, src_df, fml, .f, family, target_dat) {
   # mod_list = fit_with(src_df)
 # browser()
   ff <- .f[[1]]
@@ -191,30 +191,26 @@ fit_predictive_model <- function(src_df, fml, .f, family, target_dat) {
 
 test_mod <- modelling_information %>%
   # selet the functions's arguements
-  select(src_df, fml, .f, family, target_dat) %>%
+  select(m_id, src_df, fml, .f, family, target_dat) %>%
   by_row(fit_predictive_model %>% lift,
-         .to = "predicting_model")
+         .to = "predicting_model") %>%
+  mutate(predicting_model = predicting_model %>% flatten)
 
-test_mod$predicting_model %>% flatten
-
-
-# add model prediction dataframe for plotting.
-test_mod
 
 # add back in what is needed for plotting
 
 plotting_information <- test_mod %>%
-  select(target_dat, src_df, predicting_model) %>%
+  select(m_id, target_dat, src_df, predicting_model) %>%
   left_join(modelling_information %>%
-              select(target_dat, x_funs, y_funs, x_vars, y_vars),
-            by = "target_dat")
+              select(m_id, target_dat, x_funs, y_funs, x_vars, y_vars),
+            by = "m_id")
 
-make_prediction_df <- function(src_df, x_vars, predicting_model, y_vars){
+make_prediction_df <- function(m_id, src_df, x_vars, predicting_model, y_vars){
   # browser()
 
   dd <- src_df[[1]]
 
-  mm <- predicting_model[[1]][[1]]
+  mm <- predicting_model[[1]]
 
   dd %>%
     .[[x_vars]] %>%
@@ -227,7 +223,7 @@ make_prediction_df <- function(src_df, x_vars, predicting_model, y_vars){
 }
 
 plotting_information %>%
-  select(src_df, x_vars, predicting_model, y_vars) %>%
+  select(m_id, src_df, x_vars, predicting_model, y_vars) %>%
   by_row(make_prediction_df %>% lift, .to = "curve_data")
 
 
