@@ -182,7 +182,10 @@ fit_predictive_model <- function(m_id, src_df, fml, .f, family, target_dat) {
   # mod_list = fit_with(src_df)
 # browser()
   ff <- .f[[1]]
-  mod <- fit_with(data = src_df[[1]], .f = ff, .formulas = fml, family = family)
+
+  fit_dat <- partial(fit_with, .f = ff, .formulas = fml, family = family)
+
+  mod <- map(src_df, fit_dat)
 
 
   return(mod)
@@ -200,27 +203,47 @@ test_mod <- modelling_information %>%
 # add back in what is needed for plotting
 
 plotting_information <- test_mod %>%
-  select(m_id, target_dat, src_df, predicting_model) %>%
+  select(m_id, src_df, predicting_model) %>%
   left_join(modelling_information %>%
               select(m_id, target_dat, x_funs, y_funs, x_vars, y_vars),
             by = "m_id")
 
-make_prediction_df <- function(m_id, src_df, x_vars, predicting_model, y_vars){
-  # browser()
 
+make_prediction_xs <- function(m_id, src_df, x_vars) {
   dd <- src_df[[1]]
-
-  mm <- predicting_model[[1]]
 
   dd %>%
     .[[x_vars]] %>%
     seq_range(n = 30) %>%
     list(.) %>%
     set_names(x_vars) %>%
-    as.data.frame %>%
-    add_predictions(mm, y_vars)
-
+    as.data.frame
 }
+
+# create the x range over which all the models should be predicted. TODO make n a variable??
+plotting_information %>%
+  select(m_id, src_df, x_vars) %>%
+  by_row(make_prediction_xs %>% lift, .to = "xs_range") %>%
+  select(-src_df, -x_vars)
+
+# genrate an appropriate prediction funciton for each varible
+
+make_prediction_df <- function(m_id, src_df, predicting_model, y_vars){
+  # browser()
+
+  dd <- src_df[[1]]
+
+  predict_dat <- partial(add_predictions, data = dd, var = y_vars)
+
+  modlist <- predicting_model[[1]] # just because it is a list-column, get the first element (which is a list lol)
+  map_df(modlist, predict_dat)
+}
+
+
+plotting_information %>%
+  select(m_id, src_df, predicting_model, y_vars) %>%
+  # mutate(predicting_model = flatten(predicting_model)) %>%
+  by_row(make_prediction_df %>% lift, .to = "curve_data")
 
 # here is where we bootstrap if we bootstrap
 plotting_info_pred <- plotting_information %>%
