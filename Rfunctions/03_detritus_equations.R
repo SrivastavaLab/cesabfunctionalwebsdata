@@ -159,3 +159,26 @@ derive_modelling_information <- function(.model_table, .detritus_data){
            y_funs = y_symb %>% map_chr("functions"),
            y_vars = y_symb %>% map_chr("variables"))
 }
+
+
+# write a function which uses all these arguements to create a model
+fit_predictive_model <- function(m_id, src_df, fml, .f, family, target_dat) {
+  # mod_list = fit_with(src_df)
+  # browser()
+  ff <- .f[[1]]
+
+  fit_dat <- partial(fit_with, .f = ff, .formulas = fml, family = family)
+
+  mod <- map(src_df, fit_dat)
+
+
+  return(mod)
+}
+
+
+modelling_information %>%
+  # selet the functions's arguements
+  select(m_id, src_df, fml, .f, family, target_dat) %>%
+  by_row(fit_predictive_model %>% lift,
+         .to = "predicting_model") %>%
+  mutate(predicting_model = predicting_model %>% flatten)

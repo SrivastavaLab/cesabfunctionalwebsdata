@@ -47,30 +47,15 @@ model_table <- create_model_table()
 
 modelling_information <- derive_modelling_information(model_table, detritus_wider_new_variables)
 
+# demo of bootstrapping a model
+mi <- modelling_information %>%
+  mutate(boot_src_dat = map(src_df, modelr::bootstrap, n = 10))
 
-modelling_information %>% glimpse
-
-# write a function which uses all these arguements to create a model
-fit_predictive_model <- function(m_id, src_df, fml, .f, family, target_dat) {
-  # mod_list = fit_with(src_df)
-# browser()
-  ff <- .f[[1]]
-
-  fit_dat <- partial(fit_with, .f = ff, .formulas = fml, family = family)
-
-  mod <- map(src_df, fit_dat)
+mi$boot_src_dat %>% str(max.level = 4)
 
 
-  return(mod)
-}
-
-
-test_mod <- modelling_information %>%
-  # selet the functions's arguements
-  select(m_id, src_df, fml, .f, family, target_dat) %>%
-  by_row(fit_predictive_model %>% lift,
-         .to = "predicting_model") %>%
-  mutate(predicting_model = predicting_model %>% flatten)
+test_mod <-
+# TODO cut back to only what is needed later
 
 
 # add back in what is needed for plotting
