@@ -76,12 +76,12 @@ data_for_drawing_line <- plotting_information %>%
 
 plotting_info_pred <- plotting_information %>%
   left_join(data_for_drawing_line, by = "m_id") %>%
-  select(m_id, incoming_data = xs_range, predicting_model, y_vars) %>%
+  select(m_id, incoming_data = xs_range, predicting_model, y_vars, y_funs) %>%
   # mutate(predicting_model = flatten(predicting_model)) %>%
   by_row(make_prediction_df %>% lift, .to = "curve_data")
 
 plots <- plotting_info_pred %>%
-  left_join(modelling_information %>% select(m_id, src_df, x_funs, y_funs, x_vars)) %>%
+  left_join(modelling_information %>% select(m_id, src_df, x_funs, x_vars)) %>%
   by_row(plot_fn %>% lift, .to = "model_fit_plot")
 
 plots %>% select(model_fit_plot) %>% walk(print)

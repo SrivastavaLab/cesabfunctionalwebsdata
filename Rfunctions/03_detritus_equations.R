@@ -211,6 +211,8 @@ make_prediction_df <- function(m_id, incoming_data, predicting_model, y_vars, y_
   out <- map_df(modlist, predict_dat)
 
   out[[y_vars]] <- back_trans(out[[y_vars]])
+
+  return(out)
 }
 
 
@@ -238,8 +240,7 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
 
   ld <- curve_data[[1]] %>%
     select_(xs = x_vars,
-            ys = y_vars) %>%
-    mutate(ys = back_trans(ys))
+            ys = y_vars)
 
   dd %>%
     select_(xs = x_vars,
