@@ -1,121 +1,116 @@
 
-show_function_with_all_data <- function(df, xvar, yvar, est_f){
-  requireNamespace("assertthat")
 
-  xname <- as.character(xvar)
-  yname <- as.character(yvar)
+source("Rfunctions/03_detritus_equations.R")
 
-  assert_that(has_name(detritus_wider_correct_frenchguiana, xname))
-  assert_that(has_name(detritus_wider_correct_frenchguiana, yname))
+equation_table <- create_equation_table()
 
+## could easily add an "equation meant to be used on dataset" arguement, which
+## would convert used_on_dataset to dataset_name, then add to ggtitle
 
-  dat <- df %>%
-    select_(xs = xname, ys = yname, "dataset_name") %>%
-    filter(complete.cases(.))
+## generate plots & add to data.frame
+equation_plots <- plot_data_with_equation_table(equation_table,
+                                                .detritus_data = detritus_wider_FG_detritus_corrected)
 
-  assert_that(nrow(dat) > 0)
+detritus_wider_correct_frenchguiana %>%
+  filter(dataset_id == 6)
 
-  # extract the function: TODO make sure it is length 1 before doing this
-  f <- est_f[[1]]
-
-  curve_dat <- data_frame(xs     = seq_range(dat$xs, n = 40, expand = FALSE),
-                          ys     = f(xs))
-
-  dat %>%
-    ggplot(aes(x = xs, y = ys, colour = dataset_name)) +
-    geom_point() +
-    geom_line(aes(colour = NULL), data = curve_dat) +
-    viridis::scale_color_viridis(discrete = TRUE) +
-    coord_trans("log", "log") +
-    xlab(xname) +
-    ylab(yname)
-}
-
-## make the setup data
-estimating_equation_data <- frame_data(
-  ~xvar,                  ~yvar,              ~est_f,                                                   ~used_on_dataset,
-  "detritus150_20000",    "detritus0_150",    function(coarse) {exp(0.68961 * log(coarse) - 0.11363)},   c(6),
-  "detritus1500_20000",   "detritus10_1500",  function(med)    {exp(0.79031 * log(med) - 0.070033)},     c(111)
-)
-
-
-glimpse(estimating_equation_data)
-
-equation_plots <- estimating_equation_data %>%
-  select(-used_on_dataset) %>%
-  by_row(show_function_with_all_data %>%
-           # use the most recent dataset for these calculations
-           partial(df = detritus_wider_correct_frenchguiana) %>%
-           # lift from using named arguements to using a
-           lift_dl)
-
+# plot
 equation_plots %>%
   select(.out) %>%
   walk(print)
 
 
+# applying functions to data ----------------------------------------------
+
+detritus_estimate_function_filt <- do_filter_dataset_id(equation_table, detritus_wider_FG_detritus_corrected)
+
+new_detritus <- do_mutate_new_col(detritus_estimate_function_filt)
+
+new_detritus$.out %>% map(select, 36) %>% map(head)
+
 # what if it is a model tho -----------------------------------------------
 
-estimating_function_data <-
-  frame_data(
-    ~target_dat, ~src_dat,                       ~eqn,                                                              ~xvar,               ~yvar,
-    116,         c("131", "126", "121", "221"),  list(~ detritus10_1500 + detritus1500_20000 + detritus20000_NA),  list(~diameter),  list(~log(detritus0_NA))
-  )
+# first, create any combinations of detritus values which are needed in later
+# modelling
 
-test <- estimating_function_data %>%
-  # select the required input rows
-  mutate(src_df = map(src_dat, ~ detritus_wider_correct_frenchguiana %>%
-                        filter(dataset_id %in% .x)),
-         # create a "total" column, if any, using the source data and the equation
-         src_newv = map2(src_df, eqn,  ~ mutate_(.x, "detritus0_NA" = .y[[1]])),
-         # create modelling function
-         fml = map2(.x = xvar, .y = yvar, ~ formulae(.y[[1]], .x[[1]])),
-         mod = map2(.x = src_newv, .y = fml, ~ fit_with(data = .x, .formulas = .y, .f = glm))
-  )
-# note that fml and mod are lists, not a formula and a model respectively.
+detritus_wider_new_variables <- add_new_columns_for_prediction(detritus_wider_FG_detritus_corrected)
+
+detritus_wider_new_variables %>%
+  filter(!is.na(detritus10_1500_2000_NA)) %>%
+  select(dataset_id) %>%
+  distinct
+
+## first row -- why not 136??
+
+# create the table of formulae
+model_table <- create_model_table()
+
+modelling_information <- derive_modelling_information(model_table, detritus_wider_new_variables)
+
+# demo of bootstrapping a model
+mi <- modelling_information %>%
+  mutate(boot_src_dat = map(src_df, modelr::bootstrap, n = 10))
+
+mi$boot_src_dat %>% str(max.level = 4)
+
+observed_model_fit <- do_fit_predictive_model(modelling_information)
+
+# add back in what is needed for plotting
+
+plotting_information <- construct_plotting_information(.observed_model_fit = observed_model_fit,
+                                                       .modelling_information = modelling_information)
 
 
-## for validating
-test %>%
-  select(src_newv, fml, mod)
 
-test$src_newv[[1]] %>%
-  add_predictions(model = test$mod[[1]][[1]], var = "detritus0_NA_pred") %>%
-  mutate(detritus0_NA_pred = exp(detritus0_NA_pred)) %>%
-  ggplot(aes(x = diameter, y = detritus0_NA)) +
-  geom_point() +
-  geom_line(aes(y = detritus0_NA_pred)) +
-  coord_trans(y = "log")
+data_plots <- plot_model_and_supporting_data(.plotting_information = plotting_information,
+                                             .modelling_information = modelling_information)
 
-rmse(test$mod[[1]][[1]], test$src_newv[[1]])
-rsquare(test$mod[[1]][[1]], test$src_newv[[1]])
-mae(test$mod[[1]][[1]], test$src_newv[[1]])
+data_plots %>% select(model_fit_plot) %>% walk(print)
 
-list(rmse, rsquare, mae) %>%
-  invoke_map(model = test$mod[[1]][[1]], data = test$src_newv[[1]])
 
-# split by target or source data, predict (use same name) then combine -- labels
-# to new column called something like obs_or_prediction
+# add to original data ----------------------------------------------------
 
-df_list <- test %>%
-  select(target_dat, src_newv, mod) %>%
-  # get the targetd df just as above
-  mutate(target_df = map(target_dat, ~ detritus_wider_correct_frenchguiana %>%
-                        filter(dataset_id %in% .x)),
-         # add predictions to it
-         target_df_pred = map2(target_df, mod, ~ add_predictions(.x, .y[[1]], "detritus0_NA")),
-         target_df_pred = map(target_df_pred, ~ .x %>% mutate(detritus0_NA = exp(detritus0_NA)))
-  ) %>%
-  {list(observed = .[["src_newv"]],
-        predicted = .[["target_df_pred"]]
-        )}
+fit_to_real_life <- estimate_missing_detritus_new_site(.observed_model_fit = observed_model_fit,
+                                                       .modelling_information = modelling_information,
+                                                       .detritus_data = detritus_wider_FG_detritus_corrected)
 
-df_list %>%
-  flatten %>%
-  bind_rows(.id = "detritus0_NA_pred") %>%
-  ggplot(aes(x = diameter, y = detritus0_NA, colour = detritus0_NA_pred)) +
-  geom_point() +
-  coord_trans(y = "log")
+
+fit_to_real_life$pred_data %>% map(select, 36) %>% map(head)
+
+
+#
+# ## for validating
+#
+# list(rmse, rsquare, mae) %>%
+#   map(invoke_rows, .d = test_mod %>% select(m_id, data = src_df, model = predicting_model), .collate = "cols")
+# # TODO extract these into a data_frame
+#
+# list(rmse, rsquare, mae) %>%
+#   invoke_map(list(model = test_mod$predicting_model,
+#                   data = test_mod$src_df))
+#
+# # split by target or source data, predict (use same name) then combine -- labels
+# # to new column called something like obs_or_prediction
+#
+# df_list <- test %>%
+#   select(target_dat, src_newv, mod) %>%
+#   # get the targetd df just as above
+#   mutate(target_df = map(target_dat, ~ detritus_wider_correct_frenchguiana %>%
+#                         filter(dataset_id %in% .x)),
+#          # add predictions to it
+#          target_df_pred = map2(target_df, mod, ~ add_predictions(.x, .y[[1]], "detritus0_NA")),
+#          target_df_pred = map(target_df_pred, ~ .x %>% mutate(detritus0_NA = exp(detritus0_NA)))
+#   ) %>%
+#   {list(observed = .[["src_newv"]],
+#         predicted = .[["target_df_pred"]]
+#         )}
+#
+# df_list %>%
+#   flatten %>%
+#   bind_rows(.id = "detritus0_NA_pred") %>%
+#   ggplot(aes(x = diameter, y = detritus0_NA, colour = detritus0_NA_pred)) +
+#   geom_point() +
+#   coord_trans(y = "log")
 
 
 ## maybe one huge data.frame is not helpful -- try invoke_rows with smaller, function-specific data_frames that can then be gathered

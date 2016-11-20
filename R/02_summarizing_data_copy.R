@@ -1,60 +1,60 @@
-### predicting the fine detritus from the rest of the data####################
-
-## should be no copying over
-where_values <- function(x) which(!is.na(x))
-
-
-fine_cardoso2008<- function(coarse){
-  exp(0.68961 * log(coarse) - 0.11363)
-}
-
-detritus_wider <- detritus_wider %>%
-  mutate(detritus0_150 = ifelse(visit_id == 21, fine_cardoso2008(detritus150_20000), detritus0_150))
-
-
-## for saba datasetid=111 visits 451 121 126 116 detritus150_20000 detritus20000_NA
-fine_saba2009 <- function(med){
-  exp(0.79031 * log(med) - 0.070033)
-}
-
-detritus_wider<-detritus_wider %>%
-  mutate(detritus0_1500 = ifelse(dataset_id == 111, fine_saba2009(detritus1500_20000), NA))
+# ### predicting the fine detritus from the rest of the data####################
+#
+# ## should be no copying over
+# where_values <- function(x) which(!is.na(x))
+#
+#
+# fine_cardoso2008<- function(coarse){
+#   exp(0.68961 * log(coarse) - 0.11363)
+# }
+#
+# detritus_wider <- detritus_wider %>%
+#   mutate(detritus0_150 = ifelse(visit_id == 21, fine_cardoso2008(detritus150_20000), detritus0_150))
+#
+#
+# ## for saba datasetid=111 visits 451 121 126 116 detritus150_20000 detritus20000_NA
+# fine_saba2009 <- function(med){
+#   exp(0.79031 * log(med) - 0.070033)
+# }
+#
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus0_1500 = ifelse(dataset_id == 111, fine_saba2009(detritus1500_20000), NA))
 
 ## Although Puerto Rico 2010 dataset=116 based only on relaxed diameter the adj r sq is 0.79
 #eqn from all 1990s El verde plants (n=189, rsq = 0.78) interestingly v. similar eqn from pitilla 2002 secondary
 
-elverde90s <- detritus_wider %>%
-  filter(dataset_id==131| dataset_id==126|dataset_id==121|dataset_id==221)
-
-elverde90s$detritus0_NA <- with(elverde90s, detritus10_1500 + detritus1500_20000 + detritus20000_NA)
-summary(glm(log(detritus0_NA)~log(diameter), data=elverde90s))
-plot(log(elverde90s$detritus0_NA)~log(elverde90s$diameter))
-
-total_elverde2010 <- function(dia){
-  exp(-6.223+ 2.179* log(dia))
-}
-
-detritus_wider<-detritus_wider %>%
-  mutate(detritus0_NA = ifelse(dataset_id == 116, total_elverde2010(diameter), NA))
+# elverde90s <- detritus_wider %>%
+#   filter(dataset_id==131| dataset_id==126|dataset_id==121|dataset_id==221)
+#
+# elverde90s$detritus0_NA <- with(elverde90s, detritus10_1500 + detritus1500_20000 + detritus20000_NA)
+# summary(glm(log(detritus0_NA)~log(diameter), data=elverde90s))
+# plot(log(elverde90s$detritus0_NA)~log(elverde90s$diameter))
+#
+# total_elverde2010 <- function(dia){
+#   exp(-6.223+ 2.179* log(dia))
+# }
+#
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus0_NA = ifelse(dataset_id == 116, total_elverde2010(diameter), NA))
 
 #Dominica dataset=136, visit = 191, 196, 201 is just fine
 
 #Macae detritus could not be estimated with rsq > 0.5
 
-#argentina Las gamas datasets 166, 171, 181
-
-fine_lasgamas<- function(med){
-  ((0.9857 *med) + 1.496)
-}
-
-detritus_wider<-detritus_wider %>%
-  mutate(detritus0_150 = ifelse(dataset_id%in%c(166,171,181), fine_lasgamas(detritus150_850), detritus0_150))
+# #argentina Las gamas datasets 166, 171, 181
+#
+# fine_lasgamas<- function(med){
+#   ((0.9857 *med) + 1.496)
+# }
+#
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus0_150 = ifelse(dataset_id%in%c(166,171,181), fine_lasgamas(detritus150_850), detritus0_150))
 
 #French Guiana only 186 (petit saut 2007) has fpom in ml, 211 (sinnamary 2011) has fpom cpom and deadleaves
 
-#this allometric equation is from data held offline by regis
-fpom_convert_ml_into_g<-function(FPOMml){(0.0013*(FPOMml)^2+0.0243*(FPOMml)+0.0369)}
-fpom_convert_ml_into_g(7.6)
+# #this allometric equation is from data held offline by regis
+# fpom_convert_ml_into_g<-function(FPOMml){(0.0013*(FPOMml)^2+0.0243*(FPOMml)+0.0369)}
+# fpom_convert_ml_into_g(7.6)
 
 #now french guiana Sinnamary (dataset 211) generate detritus from detritus allometric equations and fns
 #NOTE there is an input error: dead_leaves in Sinnamary was detritus>2cm x 2cm roughly, but in other sites #brown bromeliad leaves!
@@ -94,7 +94,7 @@ detritus_wider<-detritus_wider %>%
   mutate(detritus150_20000 = ifelse(dataset_id==186, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
   mutate(detritus20000_NA= ifelse(dataset_id==186, largedet_frenchguiana(detritus0_150), detritus20000_NA))
 
-detritus_wider<-detritus_widerdataset%>%
+detritus_wider<-detritus_wider %>%
   mutate(detritus150_20000 = ifelse(dataset_id==216, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
   mutate(detritus20000_NA= ifelse(dataset_id==216, largedet_frenchguiana(detritus0_150), detritus20000_NA))
 
