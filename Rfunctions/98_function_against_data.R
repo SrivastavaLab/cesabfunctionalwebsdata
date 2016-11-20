@@ -146,8 +146,8 @@ detritus_wider_new_variables %>%
 # create the table of formulae
 estimating_function_data <-
   frame_data(
-    ~target_dat, ~src_dat,                       ~xvar,        ~yvar,                      ~.f, ~family,
-    116,         c("131", "126", "121", "221"),  "~diameter",  "~detritus10_1500_2000_NA", glm, "gaussian"
+    ~target_dat, ~src_dat,                       ~xvar,        ~yvar,                           ~.f, ~family,
+    116,         c("131", "126", "121", "221"),  "~diameter",  "~log(detritus10_1500_2000_NA)", glm, "gaussian"
   )
 
 ## do something like
@@ -155,6 +155,8 @@ estimating_function_data <-
 estimating_function_data_f <- estimating_function_data %>%
   mutate(xvar = xvar %>% map(as.formula),
          yvar = yvar %>% map(as.formula))
+
+estimating_function_data_f
 
 
 # create a dataframe that holds everything we need to run the models:
@@ -165,8 +167,13 @@ test <- estimating_function_data_f %>%
                         filter(dataset_id %in% .x)),
          # create modelling function
          fml = map2(.x = xvar, .y = yvar, ~ formulae(.y, .x)),
-         fml = unlist(fml))
+         fml = unlist(fml)) %>%
+  mutate(symb = xvar %>% map(find_symbols),
+         symb = yvar %>% map(find_symbols),
+         funs = symb %>% map("functions"),
+         vars = symb %>% map("variables"))
 
+test %>% glimpse
 
 # write a function which uses all these arguements to create a model
 fit_predictive_model <- function(src_df, fml, .f, family, target_dat) {
@@ -181,9 +188,11 @@ fit_predictive_model <- function(src_df, fml, .f, family, target_dat) {
 
 test$src_df[[1]] %>% names
 
-test %>%
+test_mod <- test %>%
   select(-src_dat, -xvar, -yvar) %>%
   by_row(fit_predictive_model %>% lift)
+
+test_mod$.out
 
 
 
