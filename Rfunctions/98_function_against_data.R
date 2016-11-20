@@ -222,6 +222,7 @@ make_prediction_df <- function(m_id, src_df, x_vars, predicting_model, y_vars){
 
 }
 
+# here is where we bootstrap if we bootstrap
 plotting_info_pred <- plotting_information %>%
   select(m_id, src_df, x_vars, predicting_model, y_vars) %>%
   by_row(make_prediction_df %>% lift, .to = "curve_data") %>%
@@ -266,23 +267,14 @@ plots %>% select(model_fit_plot) %>% walk(print)
 
 
 ## for validating
-test %>%
-  select(src_newv, fml, mod)
-
-test$src_newv[[1]] %>%
-  add_predictions(model = test$mod[[1]][[1]], var = "detritus0_NA_pred") %>%
-  mutate(detritus0_NA_pred = exp(detritus0_NA_pred)) %>%
-  ggplot(aes(x = diameter, y = detritus0_NA)) +
-  geom_point() +
-  geom_line(aes(y = detritus0_NA_pred)) +
-  coord_trans(y = "log")
-
-rmse(test$mod[[1]][[1]], test$src_newv[[1]])
-rsquare(test$mod[[1]][[1]], test$src_newv[[1]])
-mae(test$mod[[1]][[1]], test$src_newv[[1]])
 
 list(rmse, rsquare, mae) %>%
-  invoke_map(model = test$mod[[1]][[1]], data = test$src_newv[[1]])
+  map(invoke_rows, .d = test_mod %>% select(m_id, data = src_df, model = predicting_model), .collate = "cols")
+# TODO extract these into a data_frame
+
+list(rmse, rsquare, mae) %>%
+  invoke_map(list(model = test_mod$predicting_model,
+                  data = test_mod$src_df))
 
 # split by target or source data, predict (use same name) then combine -- labels
 # to new column called something like obs_or_prediction
