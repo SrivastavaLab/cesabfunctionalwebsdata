@@ -168,10 +168,12 @@ modelling_information <- estimating_function_data_f %>%
          # create modelling function
          fml = map2(.x = xvar, .y = yvar, ~ formulae(.y, .x)),
          fml = unlist(fml)) %>%
-  mutate(symb = xvar %>% map(find_symbols),
-         symb = yvar %>% map(find_symbols),
-         funs = symb %>% map_chr("functions"),
-         vars = symb %>% map_chr("variables"))
+  mutate(x_symb = xvar %>% map(find_symbols),
+         y_symb = yvar %>% map(find_symbols),
+         x_funs = x_symb %>% map_chr("functions"),
+         x_vars = x_symb %>% map_chr("variables"),
+         y_funs = y_symb %>% map_chr("functions"),
+         y_vars = y_symb %>% map_chr("variables"))
 
 modelling_information %>% glimpse
 
@@ -192,18 +194,40 @@ test_mod <- modelling_information %>%
   select(src_df, fml, .f, family, target_dat) %>%
   by_row(fit_predictive_model %>% lift)
 
-test_mod$.out
+test_mod$.out %>% flatten
 
 # add back in what is needed for plotting
 
-test_mod %>%
+plotting_information <- test_mod %>%
   select(target_dat, src_df, .out) %>%
   left_join(modelling_information %>%
-              select(target_dat, funs, vars),
+              select(target_dat, x_funs, y_funs, x_vars, y_vars),
             by = "target_dat")
 
+plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, ...){
+  dd <- src_df[[1]]
+
+  # give "identity" if x_funs or y_funs is ""
+  switch_trans <- function(x) switch(x, "log" = "log", "identity")
+  # get correct axis transformations
+  xt <- switch_trans(x_funs)
+  yt <- switch_trans(y_funs)
+
+  dd %>%
+    select_(xs = x_vars,
+           ys = y_vars) %>%
+    ggplot(aes(x = xs, y = ys)) +
+    geom_point() +
+    labs(x = x_vars, y = y_vars) +
+    coord_trans(x = xt, y = yt)
+
+}
 
 
+plots <- plotting_information %>%
+  by_row(plot_fn %>% lift, .to = "model_fit_plot")
+
+plots %>% select(model_fit_plot) %>% walk(print)
 
          mod = map2(.x = src_df, .y = fml, ~ fit_with(data = .x, .formulas = .y, .f = glm)))
 
