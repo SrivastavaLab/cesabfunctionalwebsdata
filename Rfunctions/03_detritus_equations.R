@@ -49,7 +49,7 @@ create_equation_table <- function() {
 plot_data_with_equation_table <- function(.equation_table, .detritus_data) {
   .equation_table %>%
     select(-used_on_dataset) %>%
-    by_row(plot_function_with_all_data %>%
+    by_row(plot_equation_with_all_data %>%
              # use the most recent dataset for these calculations
              partial(df = .detritus_data) %>%
              # lift from using named arguements to using a list
@@ -134,8 +134,9 @@ add_new_columns_for_prediction <- function(.detritus_data) {
 
 create_model_table <- function(){
   frame_data(
-    ~m_id, ~target_dat, ~src_dat,                       ~xvar,            ~yvar,                           ~.f, ~family,
-    "m1",   116,         c("131", "126", "121", "221"),  "~log(diameter)", "~log(detritus10_1500_2000_NA)", glm, "gaussian"
+    ~m_id, ~target_dat,      ~src_dat,                       ~xvar,                ~yvar,                           ~.f, ~family,
+    "m1",   "116",           c("131", "126", "121", "221"),  "~log(diameter)",     "~log(detritus10_1500_2000_NA)", glm, "gaussian",
+    "m2",   c("186", "216"), c("211"),                       "~log(detritus0_150)","~log(detritus150_20000)",       glm, "gaussian"
   ) %>%
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))
