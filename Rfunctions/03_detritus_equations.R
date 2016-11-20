@@ -175,10 +175,68 @@ fit_predictive_model <- function(m_id, src_df, fml, .f, family, target_dat) {
   return(mod)
 }
 
+do_fit_predictive_model <- function(.modelling_information){
+  .modelling_information %>%
+    # selet the functions's arguements
+    select(m_id, src_df, fml, .f, family, target_dat) %>%
+    by_row(fit_predictive_model %>% lift,
+           .to = "predicting_model") %>%
+    mutate(predicting_model = predicting_model %>% flatten)
+}
 
-modelling_information %>%
-  # selet the functions's arguements
-  select(m_id, src_df, fml, .f, family, target_dat) %>%
-  by_row(fit_predictive_model %>% lift,
-         .to = "predicting_model") %>%
-  mutate(predicting_model = predicting_model %>% flatten)
+
+make_prediction_xs <- function(m_id, src_df, x_vars) {
+  dd <- src_df[[1]]
+
+  dd %>%
+    .[[x_vars]] %>%
+    seq_range(n = 30) %>%
+    list(.) %>%
+    set_names(x_vars) %>%
+    as.data.frame
+}
+
+
+
+make_prediction_df <- function(m_id, incoming_data, predicting_model, y_vars){
+  # browser()
+
+  dd <- incoming_data[[1]]
+
+  predict_dat <- partial(add_predictions, data = dd, var = y_vars)
+
+  modlist <- predicting_model[[1]] # just because it is a list-column, get the first element (which is a list lol)
+  map_df(modlist, predict_dat)
+}
+
+
+
+plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
+  dd <- src_df[[1]]
+
+  # give "identity" if x_funs or y_funs is ""
+  switch_trans <- function(x) switch(x, "log" = "log", "identity")
+  # get correct axis transformations
+  xt <- switch_trans(x_funs)
+  yt <- switch_trans(y_funs)
+
+  # browser()
+  # back transformation function for y axis (x not necessary because it is in the function?)
+  back_trans <- switch(y_funs, log = exp, I)
+
+  ld <- curve_data[[1]] %>%
+    select_(xs = x_vars,
+            ys = y_vars) %>%
+    mutate(ys = back_trans(ys))
+
+  dd %>%
+    select_(xs = x_vars,
+            ys = y_vars) %>%
+    ggplot(aes(x = xs, y = ys)) +
+    geom_point() +
+    geom_line(data = ld) +
+    labs(x = x_vars, y = y_vars) +
+    coord_trans(x = xt, y = yt)
+
+}
+# TODO perhaps a color map to show the site(s)??

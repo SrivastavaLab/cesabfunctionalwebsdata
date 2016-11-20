@@ -55,8 +55,6 @@ mi$boot_src_dat %>% str(max.level = 4)
 
 observed_model_fit <- do_fit_predictive_model(modelling_information)
 
-
-
 # add back in what is needed for plotting
 
 plotting_information <- observed_model_fit %>%
@@ -66,17 +64,6 @@ plotting_information <- observed_model_fit %>%
             by = "m_id")
 
 
-make_prediction_xs <- function(m_id, src_df, x_vars) {
-  dd <- src_df[[1]]
-
-  dd %>%
-    .[[x_vars]] %>%
-    seq_range(n = 30) %>%
-    list(.) %>%
-    set_names(x_vars) %>%
-    as.data.frame
-}
-
 # create the x range over which all the models should be predicted. TODO make n a variable??
 data_for_drawing_line <- plotting_information %>%
   select(m_id, src_df, x_vars) %>%
@@ -85,56 +72,11 @@ data_for_drawing_line <- plotting_information %>%
 
 # genrate an appropriate prediction funciton for each varible
 
-make_prediction_df <- function(m_id, incoming_data, predicting_model, y_vars){
-  # browser()
-
-  dd <- incoming_data[[1]]
-
-  predict_dat <- partial(add_predictions, data = dd, var = y_vars)
-
-  modlist <- predicting_model[[1]] # just because it is a list-column, get the first element (which is a list lol)
-  map_df(modlist, predict_dat)
-}
-
-
 plotting_info_pred <- plotting_information %>%
   left_join(data_for_drawing_line, by = "m_id") %>%
   select(m_id, incoming_data = xs_range, predicting_model, y_vars) %>%
   # mutate(predicting_model = flatten(predicting_model)) %>%
   by_row(make_prediction_df %>% lift, .to = "curve_data")
-
-wtf$curve_data[[1]] %>% glimpse
-
-
-
-plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
-  dd <- src_df[[1]]
-
-  # give "identity" if x_funs or y_funs is ""
-  switch_trans <- function(x) switch(x, "log" = "log", "identity")
-  # get correct axis transformations
-  xt <- switch_trans(x_funs)
-  yt <- switch_trans(y_funs)
-
-  # browser()
-  # back transformation function for y axis (x not necessary because it is in the function?)
-  back_trans <- switch(y_funs, log = exp, I)
-
-  ld <- curve_data[[1]] %>%
-    select_(xs = x_vars,
-            ys = y_vars) %>%
-    mutate(ys = back_trans(ys))
-
-  dd %>%
-    select_(xs = x_vars,
-           ys = y_vars) %>%
-    ggplot(aes(x = xs, y = ys)) +
-    geom_point() +
-    geom_line(data = ld) +
-    labs(x = x_vars, y = y_vars) +
-    coord_trans(x = xt, y = yt)
-
-}
 
 plots <- plotting_info_pred %>%
   left_join(modelling_information %>% select(m_id, src_df, x_funs, y_funs, x_vars)) %>%
