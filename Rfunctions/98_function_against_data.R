@@ -8,7 +8,8 @@ equation_table <- create_equation_table()
 ## would convert used_on_dataset to dataset_name, then add to ggtitle
 
 ## generate plots & add to data.frame
-equation_plots <- plot_data_with_equation_table(equation_table)
+equation_plots <- plot_data_with_equation_table(equation_table,
+                                                .detritus_data = detritus_wider_FG_detritus_corrected)
 
 detritus_wider_correct_frenchguiana %>%
   filter(dataset_id == 6)
@@ -21,60 +22,9 @@ equation_plots %>%
 
 # applying functions to data ----------------------------------------------
 
+detritus_estimate_function_filt <- do_filter_dataset_id(equation_table, detritus_wider_FG_detritus_corrected)
 
-#' filter the dataset to just the data that this particular model uses.
-#'
-#' Before using an equation to predict a certain detritus volume, the data
-#' should be filtered to show just the data that will be used to do the
-#' prediction. This simplifies things like validation, plotting, and combining
-#' with the rest of the data later.
-#'
-#' @param used_on_dataset Which dataset will this be used on?
-#' @param xvar the predictor variable used. only used for checking to make sure
-#'   it exists at this site
-#' @param df the dataset that this is used on (the most recent one)
-#' @param ... cheating! allowing unused columns to pass through and come out the
-#'   other end of by_row
-filter_by_dataset_id <- function(used_on_dataset, xvar, df, ...){
-
-  ds_id <- unlist(used_on_dataset)
-
-  df %>%
-    filter(dataset_id %in% ds_id) %>%
-    # check to make sure predictors actually exist
-    assert_(not_na, xvar) %>%
-    # and that dataset is not 0 from the filter above
-    verify(nrow(.) > 0)
-}
-
-mutate_new_col <- function(xvar, yvar, est_f, filtered_data){
-  # predicted flag as column or different header?
-  # test for all(is.na()) in target
-  newname <- paste0(yvar, "_function")
-
-  assert_that(length(est_f) == 1)
-  ff <- est_f[[1]]
-
-  mexp <- lazyeval::interp(~ ff(x), x = as.name(xvar))
-
-  ll <-  list(mexp) %>% set_names(newname)
-
-  filtered_data[[1]] %>%
-    mutate_(.dots = ll)
-
-}
-
-
-detritus_estimate_function_filt <- estimating_equation_data %>%
-  by_row(filter_by_dataset_id %>% lift,
-         df = detritus_wider_correct_frenchguiana,
-         .to  = "filtered_data")
-
-
-new_detritus <- detritus_estimate_function_filt %>%
-  select(-used_on_dataset) %>%
-  by_row(mutate_new_col %>%
-           lift)
+new_detritus <- do_mutate_new_col(detritus_estimate_function_filt)
 
 new_detritus$.out %>% map(select, 36) %>% map(head)
 

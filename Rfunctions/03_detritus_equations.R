@@ -46,13 +46,79 @@ create_equation_table <- function() {
 }
 
 
-plot_data_with_equation_table <- function(.equation_table) {
+plot_data_with_equation_table <- function(.equation_table, .detritus_data) {
   .equation_table %>%
     select(-used_on_dataset) %>%
     by_row(plot_function_with_all_data %>%
              # use the most recent dataset for these calculations
-             partial(df = detritus_wider_correct_frenchguiana) %>%
+             partial(df = .detritus_data) %>%
              # lift from using named arguements to using a list
              lift_dl %>%
              possibly(otherwise = NA_real_))
 }
+
+
+#' filter the dataset to just the data that this particular model uses.
+#'
+#' Before using an equation to predict a certain detritus volume, the data
+#' should be filtered to show just the data that will be used to do the
+#' prediction. This simplifies things like validation, plotting, and combining
+#' with the rest of the data later.
+#'
+#' @param used_on_dataset Which dataset will this be used on?
+#' @param xvar the predictor variable used. only used for checking to make sure
+#'   it exists at this site
+#' @param df the dataset that this is used on (the most recent one)
+#' @param ... cheating! allowing unused columns to pass through and come out the
+#'   other end of by_row
+filter_by_dataset_id <- function(used_on_dataset, xvar, df, ...){
+
+  ds_id <- unlist(used_on_dataset)
+
+  df %>%
+    filter(dataset_id %in% ds_id) %>%
+    # check to make sure predictors actually exist
+    assert_(not_na, xvar) %>%
+    # and that dataset is not 0 from the filter above
+    verify(nrow(.) > 0)
+}
+
+mutate_new_col <- function(xvar, yvar, est_f, filtered_data){
+  # predicted flag as column or different header?
+  # test for all(is.na()) in target
+  newname <- paste0(yvar, "_function")
+
+  assert_that(length(est_f) == 1)
+
+  # unlist function(it is in a list column)
+  ff <- est_f[[1]]
+
+  mexp <- lazyeval::interp(~ ff(x), x = as.name(xvar))
+
+  ll <-  list(mexp) %>% set_names(newname)
+
+  filtered_data[[1]] %>%
+    mutate_(.dots = ll)
+
+}
+
+do_filter_dataset_id <- function(.equation_table, .detritus_data) {
+  .equation_table %>%
+    by_row(filter_by_dataset_id %>%
+             lift %>%
+             possibly(NA_real_),
+           df = .detritus_data,
+           .to  = "filtered_data")
+}
+
+do_mutate_new_col <- function(.filtered_df_table){
+  .filtered_df_table %>%
+    # this only works because of possibly() above, and in reality should do
+    # nothing -- why are functions being applied to absent data; there must be an
+    # error
+    filter(!is.na(filtered_data)) %>%
+    select(-used_on_dataset) %>%
+    by_row(mutate_new_col %>%
+             lift)
+}
+
