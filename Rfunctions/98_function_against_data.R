@@ -192,19 +192,53 @@ fit_predictive_model <- function(src_df, fml, .f, family, target_dat) {
 test_mod <- modelling_information %>%
   # selet the functions's arguements
   select(src_df, fml, .f, family, target_dat) %>%
-  by_row(fit_predictive_model %>% lift)
+  by_row(fit_predictive_model %>% lift,
+         .to = "predicting_model")
 
-test_mod$.out %>% flatten
+test_mod$predicting_model %>% flatten
+
+
+# add model prediction dataframe for plotting.
+test_mod
 
 # add back in what is needed for plotting
 
 plotting_information <- test_mod %>%
-  select(target_dat, src_df, .out) %>%
+  select(target_dat, src_df, predicting_model) %>%
   left_join(modelling_information %>%
               select(target_dat, x_funs, y_funs, x_vars, y_vars),
             by = "target_dat")
 
-plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, ...){
+make_prediction_df <- function(src_df, x_vars, predicting_model, y_vars){
+  # browser()
+
+  dd <- src_df[[1]]
+
+  mm <- predicting_model[[1]][[1]]
+
+  dd %>%
+    .[[x_vars]] %>%
+    seq_range(n = 30) %>%
+    list(.) %>%
+    set_names(x_vars) %>%
+    as.data.frame %>%
+    add_predictions(mm, y_vars)
+
+}
+
+plotting_information %>%
+  select(src_df, x_vars, predicting_model, y_vars) %>%
+  by_row(make_prediction_df %>% lift, .to = "curve_data")
+
+
+
+
+         curve_data_pred = map_n(.x = curve_data,
+                                .y = predicting_model,
+                                .z = y_vars,
+                                ~ add_predictions(.x, .y[[1]], var = .z)))
+
+plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data_pred,...){
   dd <- src_df[[1]]
 
   # give "identity" if x_funs or y_funs is ""
@@ -218,6 +252,9 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, ...){
            ys = y_vars) %>%
     ggplot(aes(x = xs, y = ys)) +
     geom_point() +
+    geom_line(data = curve_data_pred[[1]] %>%
+                select_(xs = x_vars,
+                        ys = y_vars))
     labs(x = x_vars, y = y_vars) +
     coord_trans(x = xt, y = yt)
 
