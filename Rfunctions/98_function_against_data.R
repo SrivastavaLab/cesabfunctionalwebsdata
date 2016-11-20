@@ -33,9 +33,7 @@ new_detritus$.out %>% map(select, 36) %>% map(head)
 # first, create any combinations of detritus values which are needed in later
 # modelling
 
-detritus_wider_new_variables <- detritus_wider_FG_detritus_corrected %>%
-  mutate(detritus10_1500_2000_NA = detritus10_1500 + detritus1500_20000 + detritus20000_NA)
-
+detritus_wider_new_variables <- add_new_columns_for_prediction(detritus_wider_FG_detritus_corrected)
 
 detritus_wider_new_variables %>%
   filter(!is.na(detritus10_1500_2000_NA)) %>%
@@ -45,19 +43,7 @@ detritus_wider_new_variables %>%
 ## first row -- why not 136??
 
 # create the table of formulae
-estimating_function_data <-
-  frame_data(
-    ~m_id, ~target_dat, ~src_dat,                       ~xvar,            ~yvar,                           ~.f, ~family,
-    "m1",   116,         c("131", "126", "121", "221"),  "~log(diameter)", "~log(detritus10_1500_2000_NA)", glm, "gaussian"
-  )
-
-## do something like
-# make the formulae into actual formulae
-estimating_function_data_f <- estimating_function_data %>%
-  mutate(xvar = xvar %>% map(as.formula),
-         yvar = yvar %>% map(as.formula))
-
-estimating_function_data_f
+model_table <- create_model_table()
 
 
 # create a dataframe that holds everything we need to run the models:
