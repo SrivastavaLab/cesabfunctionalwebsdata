@@ -23,19 +23,19 @@
 ## Although Puerto Rico 2010 dataset=116 based only on relaxed diameter the adj r sq is 0.79
 #eqn from all 1990s El verde plants (n=189, rsq = 0.78) interestingly v. similar eqn from pitilla 2002 secondary
 
-elverde90s <- detritus_wider %>%
-  filter(dataset_id==131| dataset_id==126|dataset_id==121|dataset_id==221)
-
-elverde90s$detritus0_NA <- with(elverde90s, detritus10_1500 + detritus1500_20000 + detritus20000_NA)
-summary(glm(log(detritus0_NA)~log(diameter), data=elverde90s))
-plot(log(elverde90s$detritus0_NA)~log(elverde90s$diameter))
-
-total_elverde2010 <- function(dia){
-  exp(-6.223+ 2.179* log(dia))
-}
-
-detritus_wider<-detritus_wider %>%
-  mutate(detritus0_NA = ifelse(dataset_id == 116, total_elverde2010(diameter), NA))
+# elverde90s <- detritus_wider %>%
+#   filter(dataset_id==131| dataset_id==126|dataset_id==121|dataset_id==221)
+#
+# elverde90s$detritus0_NA <- with(elverde90s, detritus10_1500 + detritus1500_20000 + detritus20000_NA)
+# summary(glm(log(detritus0_NA)~log(diameter), data=elverde90s))
+# plot(log(elverde90s$detritus0_NA)~log(elverde90s$diameter))
+#
+# total_elverde2010 <- function(dia){
+#   exp(-6.223+ 2.179* log(dia))
+# }
+#
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus0_NA = ifelse(dataset_id == 116, total_elverde2010(diameter), NA))
 
 #Dominica dataset=136, visit = 191, 196, 201 is just fine
 
@@ -94,7 +94,7 @@ detritus_wider<-detritus_wider %>%
   mutate(detritus150_20000 = ifelse(dataset_id==186, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
   mutate(detritus20000_NA= ifelse(dataset_id==186, largedet_frenchguiana(detritus0_150), detritus20000_NA))
 
-detritus_wider<-detritus_widerdataset%>%
+detritus_wider<-detritus_wider %>%
   mutate(detritus150_20000 = ifelse(dataset_id==216, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
   mutate(detritus20000_NA= ifelse(dataset_id==216, largedet_frenchguiana(detritus0_150), detritus20000_NA))
 
