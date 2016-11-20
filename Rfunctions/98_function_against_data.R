@@ -57,11 +57,8 @@ observed_model_fit <- do_fit_predictive_model(modelling_information)
 
 # add back in what is needed for plotting
 
-plotting_information <- observed_model_fit %>%
-  select(m_id, src_df, predicting_model) %>%
-  left_join(modelling_information %>%
-              select(m_id, target_dat, x_funs, y_funs, x_vars, y_vars),
-            by = "m_id")
+plotting_information <- construct_plotting_information(.observed_model_fit = observed_model_fit,
+                                                       .modelling_information = modelling_information)
 
 fit_to_real_life <- observed_model_fit %>%
   select(m_id, predicting_model, target_dat) %>%

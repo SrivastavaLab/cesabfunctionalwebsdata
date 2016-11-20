@@ -209,6 +209,13 @@ make_prediction_df <- function(m_id, incoming_data, predicting_model, y_vars){
   map_df(modlist, predict_dat)
 }
 
+construct_plotting_information <- function(.observed_model_fit, .modelling_information) {
+  .observed_model_fit %>%
+    select(m_id, src_df, predicting_model) %>%
+    left_join(.modelling_information %>%
+                select(m_id, target_dat, x_funs, y_funs, x_vars, y_vars),
+              by = "m_id")
+}
 
 
 plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
@@ -240,3 +247,4 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
 
 }
 # TODO perhaps a color map to show the site(s)??
+
