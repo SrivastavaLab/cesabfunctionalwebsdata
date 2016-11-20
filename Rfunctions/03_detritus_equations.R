@@ -5,7 +5,7 @@
 # with the same predictor and response variables. These functions are not from
 # anywhere that I know of, so this is the closest I can think of a way to
 # validate them
-show_function_with_all_data <- function(df, xvar, yvar, est_f){
+plot_equation_with_all_data <- function(df, xvar, yvar, est_f){
   requireNamespace("assertthat")
 
   assert_that(has_name(detritus_wider_correct_frenchguiana, xvar))
@@ -33,4 +33,26 @@ show_function_with_all_data <- function(df, xvar, yvar, est_f){
     coord_trans("log", "log") +
     xlab(xvar) +
     ylab(yvar)
+}
+
+## make the setup data
+create_equation_table <- function() {
+  frame_data(
+    ~xvar,                  ~yvar,              ~est_f,                                                   ~used_on_dataset,
+    "detritus150_20000",    "detritus0_150",    function(coarse) {exp(0.68961 * log(coarse) - 0.11363)},   c(6),
+    "detritus1500_20000",   "detritus10_1500",  function(med)    {exp(0.79031 * log(med) - 0.070033)},     c(111),
+    "detritus150_850",      "detritus0_150",    function(med)    { ((0.9857 *med) + 1.496)},               c(166,171,181)
+  )
+}
+
+
+plot_data_with_equation_table <- function(.equation_table) {
+  .equation_table %>%
+    select(-used_on_dataset) %>%
+    by_row(plot_function_with_all_data %>%
+             # use the most recent dataset for these calculations
+             partial(df = detritus_wider_correct_frenchguiana) %>%
+             # lift from using named arguements to using a list
+             lift_dl %>%
+             possibly(otherwise = NA_real_))
 }
