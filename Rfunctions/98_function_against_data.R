@@ -146,8 +146,8 @@ detritus_wider_new_variables %>%
 # create the table of formulae
 estimating_function_data <-
   frame_data(
-    ~target_dat, ~src_dat,                       ~xvar,        ~yvar,                           ~.f, ~family,
-    116,         c("131", "126", "121", "221"),  "~diameter",  "~log(detritus10_1500_2000_NA)", glm, "gaussian"
+    ~target_dat, ~src_dat,                       ~xvar,            ~yvar,                           ~.f, ~family,
+    116,         c("131", "126", "121", "221"),  "~log(diameter)", "~log(detritus10_1500_2000_NA)", glm, "gaussian"
   )
 
 ## do something like
