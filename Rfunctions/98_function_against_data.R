@@ -61,30 +61,20 @@ plotting_information <- construct_plotting_information(.observed_model_fit = obs
                                                        .modelling_information = modelling_information)
 
 
+
+data_plots <- plot_model_and_supporting_data(.plotting_information = plotting_information,
+                                             .modelling_information = modelling_information)
+
+data_plots %>% select(model_fit_plot) %>% walk(print)
+
+
+# add to original data ----------------------------------------------------
+
 fit_to_real_life <- estimate_missing_detritus_new_site(.observed_model_fit = observed_model_fit,
                                                        .modelling_information = modelling_information,
                                                        .detritus_data = detritus_wider_FG_detritus_corrected)
 
 
-# create the x range over which all the models should be predicted. TODO make n a variable??
-data_for_drawing_line <- plotting_information %>%
-  select(m_id, src_df, x_vars) %>%
-  by_row(make_prediction_xs %>% lift, .to = "xs_range") %>%
-  select(-src_df, -x_vars)
-
-# genrate an appropriate prediction funciton for each varible
-
-plotting_info_pred <- plotting_information %>%
-  left_join(data_for_drawing_line, by = "m_id") %>%
-  select(m_id, incoming_data = xs_range, predicting_model, y_vars, y_funs) %>%
-  # mutate(predicting_model = flatten(predicting_model)) %>%
-  by_row(make_prediction_df %>% lift, .to = "curve_data")
-
-plots <- plotting_info_pred %>%
-  left_join(modelling_information %>% select(m_id, src_df, x_funs, x_vars)) %>%
-  by_row(plot_fn %>% lift, .to = "model_fit_plot")
-
-plots %>% select(model_fit_plot) %>% walk(print)
 
 
 ## for validating

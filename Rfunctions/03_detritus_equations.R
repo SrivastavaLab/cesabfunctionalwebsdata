@@ -255,6 +255,38 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
 # TODO perhaps a color map to show the site(s)??
 
 
+
+# plotting models ---------------------------------------------------------
+
+plot_model_and_supporting_data <- function(.plotting_information, .modelling_information) {
+
+  # create the x range over which all the models should be predicted.
+  data_for_drawing_line <- .plotting_information %>%
+    select(m_id, src_df, x_vars) %>%
+    by_row(make_prediction_xs %>% lift, .to = "xs_range") %>%
+    select(-src_df, -x_vars)
+
+  # join back to original and run another function -- this time, to add predictions
+  plotting_info_pred <- .plotting_information %>%
+    left_join(data_for_drawing_line, by = "m_id") %>%
+    select(m_id, incoming_data = xs_range, predicting_model, y_vars, y_funs) %>%
+    # mutate(predicting_model = flatten(predicting_model)) %>%
+    by_row(make_prediction_df %>% lift, .to = "curve_data")
+
+  # TODO another pipeline here, that takes a list of models (derived from
+  # bootstraps) which will be part of plotting_information. Then applies this in
+  # a process similar to the above, then generates a list of predictions. Then
+  # applies quantiles to this list.
+
+  plots <- plotting_info_pred %>%
+    left_join(.modelling_information %>% select(m_id, src_df, x_funs, x_vars)) %>%
+    by_row(plot_fn %>% lift, .to = "model_fit_plot")
+
+
+}
+
+
+
 # Coup de Grace: use the model fit to add the missing values to observed data from another site
 estimate_missing_detritus_new_site <- function(.observed_model_fit, .modelling_information,
                                                .detritus_data){
