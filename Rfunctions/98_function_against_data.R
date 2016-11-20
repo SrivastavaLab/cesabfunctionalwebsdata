@@ -160,7 +160,7 @@ estimating_function_data_f
 
 
 # create a dataframe that holds everything we need to run the models:
-test <- estimating_function_data_f %>%
+modelling_information <- estimating_function_data_f %>%
   # select the required input rows
   mutate(src_df = map(src_dat,
                       ~ detritus_wider_new_variables %>%
@@ -170,10 +170,10 @@ test <- estimating_function_data_f %>%
          fml = unlist(fml)) %>%
   mutate(symb = xvar %>% map(find_symbols),
          symb = yvar %>% map(find_symbols),
-         funs = symb %>% map("functions"),
-         vars = symb %>% map("variables"))
+         funs = symb %>% map_chr("functions"),
+         vars = symb %>% map_chr("variables"))
 
-test %>% glimpse
+modelling_information %>% glimpse
 
 # write a function which uses all these arguements to create a model
 fit_predictive_model <- function(src_df, fml, .f, family, target_dat) {
@@ -186,13 +186,22 @@ fit_predictive_model <- function(src_df, fml, .f, family, target_dat) {
   return(mod)
 }
 
-test$src_df[[1]] %>% names
 
-test_mod <- test %>%
-  select(-src_dat, -xvar, -yvar) %>%
+test_mod <- modelling_information %>%
+  # selet the functions's arguements
+  select(src_df, fml, .f, family, target_dat) %>%
   by_row(fit_predictive_model %>% lift)
 
 test_mod$.out
+
+# add back in what is needed for plotting
+
+test_mod %>%
+  select(target_dat, src_df, .out) %>%
+  left_join(modelling_information %>%
+              select(target_dat, funs, vars),
+            by = "target_dat")
+
 
 
 
