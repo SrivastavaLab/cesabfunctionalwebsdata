@@ -53,14 +53,13 @@ mi <- modelling_information %>%
 
 mi$boot_src_dat %>% str(max.level = 4)
 
+observed_model_fit <- do_fit_predictive_model(modelling_information)
 
-test_mod <-
-# TODO cut back to only what is needed later
 
 
 # add back in what is needed for plotting
 
-plotting_information <- test_mod %>%
+plotting_information <- observed_model_fit %>%
   select(m_id, src_df, predicting_model) %>%
   left_join(modelling_information %>%
               select(m_id, target_dat, x_funs, y_funs, x_vars, y_vars),
@@ -79,17 +78,17 @@ make_prediction_xs <- function(m_id, src_df, x_vars) {
 }
 
 # create the x range over which all the models should be predicted. TODO make n a variable??
-plotting_information %>%
+data_for_drawing_line <- plotting_information %>%
   select(m_id, src_df, x_vars) %>%
   by_row(make_prediction_xs %>% lift, .to = "xs_range") %>%
   select(-src_df, -x_vars)
 
 # genrate an appropriate prediction funciton for each varible
 
-make_prediction_df <- function(m_id, src_df, predicting_model, y_vars){
+make_prediction_df <- function(m_id, incoming_data, predicting_model, y_vars){
   # browser()
 
-  dd <- src_df[[1]]
+  dd <- incoming_data[[1]]
 
   predict_dat <- partial(add_predictions, data = dd, var = y_vars)
 
@@ -98,19 +97,13 @@ make_prediction_df <- function(m_id, src_df, predicting_model, y_vars){
 }
 
 
-wtf <- plotting_information %>%
-  select(m_id, src_df, predicting_model, y_vars) %>%
+plotting_info_pred <- plotting_information %>%
+  left_join(data_for_drawing_line, by = "m_id") %>%
+  select(m_id, incoming_data = xs_range, predicting_model, y_vars) %>%
   # mutate(predicting_model = flatten(predicting_model)) %>%
   by_row(make_prediction_df %>% lift, .to = "curve_data")
 
 wtf$curve_data[[1]] %>% glimpse
-
-# here is where we bootstrap if we bootstrap
-plotting_info_pred <- plotting_information %>%
-  select(m_id, src_df, x_vars, predicting_model, y_vars) %>%
-  by_row(make_prediction_df %>% lift, .to = "curve_data") %>%
-  left_join(plotting_information %>%
-              select(m_id, x_funs, y_funs))
 
 
 
@@ -144,6 +137,7 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
 }
 
 plots <- plotting_info_pred %>%
+  left_join(modelling_information %>% select(m_id, src_df, x_funs, y_funs, x_vars)) %>%
   by_row(plot_fn %>% lift, .to = "model_fit_plot")
 
 plots %>% select(model_fit_plot) %>% walk(print)
