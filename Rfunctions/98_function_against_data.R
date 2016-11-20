@@ -75,7 +75,7 @@ fit_to_real_life <- estimate_missing_detritus_new_site(.observed_model_fit = obs
                                                        .detritus_data = detritus_wider_FG_detritus_corrected)
 
 
-fit_to_real_life %>% map(select, 36) %>% map(head)
+fit_to_real_life$pred_data %>% map(select, 36) %>% map(head)
 
 
 #
