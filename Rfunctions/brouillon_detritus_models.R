@@ -45,6 +45,24 @@ data_plots %>% select(model_fit_plot) %>% walk(print)
 fit_to_real_life$pred_data %>% map(select, 36) %>% map(head)
 
 
+summary_model_predict
+
+modelr_summaries <- function(m_id, predicting_model, src_df){
+
+  m <- predicting_model[[1]][[1]]
+  list(rmse = rmse, rsquare = rsquare, mae = mae) %>%
+    invoke_map(model = m, data = src_df[[1]])
+}
+
+observed_model_fit %>%
+  select(m_id, predicting_model, src_df) %>%
+  by_row(modelr_summaries %>% lift) %>%
+  mutate(outcol = map(.out, as.data.frame)) %>%
+  unnest(outcol)
+
+
+observed_model_fit$predicting_model %>% flatten %>% map(glance)
+
 #
 # ## for validating
 #
