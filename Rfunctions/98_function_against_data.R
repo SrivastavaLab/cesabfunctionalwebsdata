@@ -3,10 +3,6 @@
 ## could easily add an "equation meant to be used on dataset" arguement, which
 ## would convert used_on_dataset to dataset_name, then add to ggtitle
 
-
-detritus_wider_correct_frenchguiana %>%
-  filter(dataset_id == 6)
-
 # plot
 equation_plots %>%
   select(.out) %>%
@@ -15,11 +11,9 @@ equation_plots %>%
 
 # applying functions to data ----------------------------------------------
 
-detritus_estimate_function_filt <- do_filter_dataset_id(equation_table, detritus_wider_FG_detritus_corrected)
+new_detritus <- do_mutate_new_col()
 
-new_detritus <- do_mutate_new_col(detritus_estimate_function_filt)
-
-new_detritus$.out %>% map(select, 36) %>% map(head)
+detritus_estimated_with_equation$.out %>% map(select, 36) %>% map(head)
 
 # what if it is a model tho -----------------------------------------------
 

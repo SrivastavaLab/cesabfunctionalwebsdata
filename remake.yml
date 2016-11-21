@@ -46,7 +46,8 @@ targets:
       - trts_all_filtered
       - abundance
       - detritus_wider
-      - reports
+      - detritus_estimated_with_equation
+      #- reports
 #  downloads:
 #      -
 ## or should i give the original downloads a "clean" step, so that I could just delete them all and remake it again?
@@ -195,6 +196,11 @@ targets:
   equation_plots:
     command: plot_data_with_equation_table(equation_table, .detritus_data = detritus_wider_0_150_added)
 
+  detritus_estimate_equation_filt:
+    command: do_filter_dataset_id(equation_table, .detritus_data = detritus_wider_0_150_added)
+
+  detritus_estimated_with_equation:
+    command: do_mutate_new_col(detritus_estimate_equation_filt)
 
  # Detritus_missing.html:
 #    command: render("Detritus_missing.Rmd")
