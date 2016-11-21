@@ -187,6 +187,14 @@ targets:
   detritus_wider_FG_detritus_corrected:
     command: combine_observed_predicted_0_150_det(detritus_wider_correct_frenchguiana, detritus_wider_fpom_g_predicted)
 
+# estimating missing detritus with equations ----------------------------------
+
+  equation_table:
+    command: create_equation_table()
+
+  equation_plots:
+    command: plot_data_with_equation_table(equation_table, .detritus_data = detritus_wider_FG_detritus_corrected)
+
 
  # Detritus_missing.html:
 #    command: render("Detritus_missing.Rmd")

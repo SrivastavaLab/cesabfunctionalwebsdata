@@ -1,15 +1,8 @@
 
 
-source("Rfunctions/03_detritus_equations.R")
-
-equation_table <- create_equation_table()
-
 ## could easily add an "equation meant to be used on dataset" arguement, which
 ## would convert used_on_dataset to dataset_name, then add to ggtitle
 
-## generate plots & add to data.frame
-equation_plots <- plot_data_with_equation_table(equation_table,
-                                                .detritus_data = detritus_wider_FG_detritus_corrected)
 
 detritus_wider_correct_frenchguiana %>%
   filter(dataset_id == 6)
