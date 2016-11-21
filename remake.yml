@@ -47,6 +47,9 @@ targets:
       - abundance
       - detritus_wider
       - detritus_estimated_with_equation
+      - detritus_equation_plots
+      - detritus_estimated_with_model
+      - detritus_model_plots
       #- reports
 #  downloads:
 #      -
@@ -193,7 +196,7 @@ targets:
   equation_table:
     command: create_equation_table()
 
-  equation_plots:
+  detritus_equation_plots:
     command: plot_data_with_equation_table(equation_table, .detritus_data = detritus_wider_0_150_added)
 
   detritus_estimate_equation_filt:
@@ -201,6 +204,33 @@ targets:
 
   detritus_estimated_with_equation:
     command: do_mutate_new_col(detritus_estimate_equation_filt)
+
+# estimating missing detritus with MODELS --------------------------------------
+
+  detritus_wider_new_variables:
+    command: add_new_columns_for_prediction(detritus_wider_0_150_added)
+
+  model_table:
+    command: create_model_table()
+
+  modelling_information:
+    command: derive_modelling_information(model_table, detritus_wider_new_variables)
+
+  observed_model_fit:
+    command: do_fit_predictive_model(modelling_information)
+
+  plotting_information:
+    command: construct_plotting_information(.observed_model_fit = observed_model_fit,
+                                            .modelling_information = modelling_information)
+
+  detritus_model_plots:
+    command: plot_model_and_supporting_data(.plotting_information = plotting_information,
+                                            .modelling_information = modelling_information)
+
+  detritus_estimated_with_model:
+    command: estimate_missing_detritus_new_site(.observed_model_fit = observed_model_fit,
+                                                .modelling_information = modelling_information,
+                                                .detritus_data = detritus_wider_0_150_added)
 
  # Detritus_missing.html:
 #    command: render("Detritus_missing.Rmd")

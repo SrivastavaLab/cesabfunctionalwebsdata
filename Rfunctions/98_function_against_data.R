@@ -17,11 +17,6 @@ detritus_estimated_with_equation$.out %>% map(select, 36) %>% map(head)
 
 # what if it is a model tho -----------------------------------------------
 
-# first, create any combinations of detritus values which are needed in later
-# modelling
-
-detritus_wider_new_variables <- add_new_columns_for_prediction(detritus_wider_FG_detritus_corrected)
-
 detritus_wider_new_variables %>%
   filter(!is.na(detritus10_1500_2000_NA)) %>%
   select(dataset_id) %>%
@@ -29,10 +24,7 @@ detritus_wider_new_variables %>%
 
 ## first row -- why not 136??
 
-# create the table of formulae
-model_table <- create_model_table()
 
-modelling_information <- derive_modelling_information(model_table, detritus_wider_new_variables)
 
 # demo of bootstrapping a model
 mi <- modelling_information %>%
@@ -40,26 +32,14 @@ mi <- modelling_information %>%
 
 mi$boot_src_dat %>% str(max.level = 4)
 
-observed_model_fit <- do_fit_predictive_model(modelling_information)
 
 # add back in what is needed for plotting
 
-plotting_information <- construct_plotting_information(.observed_model_fit = observed_model_fit,
-                                                       .modelling_information = modelling_information)
-
-
-
-data_plots <- plot_model_and_supporting_data(.plotting_information = plotting_information,
-                                             .modelling_information = modelling_information)
 
 data_plots %>% select(model_fit_plot) %>% walk(print)
 
 
 # add to original data ----------------------------------------------------
-
-fit_to_real_life <- estimate_missing_detritus_new_site(.observed_model_fit = observed_model_fit,
-                                                       .modelling_information = modelling_information,
-                                                       .detritus_data = detritus_wider_FG_detritus_corrected)
 
 
 fit_to_real_life$pred_data %>% map(select, 36) %>% map(head)
