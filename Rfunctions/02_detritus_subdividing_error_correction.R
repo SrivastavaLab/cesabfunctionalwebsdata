@@ -30,7 +30,7 @@ make_diam_brom <- function(.broms){
     no_detritus_brom
 
   nodet %>%
-    select(bromeliad_id, bromeliad_id, actual_water, max_water,
+    select(bromeliad_id, species, actual_water, max_water,
            longest_leaf, num_leaf, dead_leaves, height, diameter, extended_diameter,
            leaf_width, catchment_diameter, catchment_height_cm, catchment_diameter_cm,
            tank_height_cm, plant_area, plant_area_m2) %>%
