@@ -77,3 +77,12 @@ combine_multi_names <- function(.trts_all){
 
 }
 
+
+
+# import corrected names --------------------------------------------------
+
+import_BromeliadSpecies <- function(path){
+  read_delim(path,
+             ";", escape_double = FALSE, trim_ws = TRUE)
+}
+

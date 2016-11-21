@@ -191,6 +191,14 @@ targets:
   detritus_wider_0_150_added:
     command: combine_observed_predicted_0_150_det(detritus_wider_correct_frenchguiana, detritus_wider_fpom_g_predicted)
 
+
+
+# import corrected bromeliad names --------------------------------------------------
+
+  bromeliad_spp:
+    command: import_BromeliadSpecies("data-intermediate/BromeliadSpecies.csv")
+
+
 # estimating missing detritus with equations ----------------------------------
 
   equation_table:
