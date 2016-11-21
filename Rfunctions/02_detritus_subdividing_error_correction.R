@@ -322,3 +322,27 @@ coerce_broms_date <- function(.broms_values){
 
 
 
+# correct bromeliad names -------------------------------------------------
+
+correct_bromeliad_names <- function(.detritus_wider, .bromeliad_spp){
+
+  # WHIIIIITESPACE
+  detritus_wider_clean <- .detritus_wider %>%
+    mutate(species = species %>% str_trim(side = "both"))
+
+  out <- detritus_wider_clean %>%
+    left_join(.bromeliad_spp %>%
+                select(species = `Former name`,
+                       species_name = `Proposed name`))
+
+  out_nrow <- filter(out, is.na(species_name)) %>% nrow()
+
+  assert_that(out_nrow == 0)
+
+  ## replace original "species" with new name
+
+  out %>%
+    select(-species) %>%
+    rename(species = species_name)
+}
+

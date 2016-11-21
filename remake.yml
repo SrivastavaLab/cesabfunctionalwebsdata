@@ -163,10 +163,13 @@ targets:
   detritus_wider:
     command: make_detritus_wider(broms_date, detritus_wide, visitnames, diam_brom, fpom_brom)
 
+  detritus_wider_bromeliad_names:
+    command: correct_bromeliad_names(detritus_wider, bromeliad_spp)
+
   ## correcting erroneous measurements in Cardoso -- moving some values to the right
 
   detritus_wider_cardoso_corrected:
-    command: correct_cardoso_detritus_wider(detritus_wider)
+    command: correct_cardoso_detritus_wider(detritus_wider_bromeliad_names)
 
   ## correcting erroneous measurements in french Guiana -- mislabelled columns
   detritus_wider_correct_frenchguiana:
