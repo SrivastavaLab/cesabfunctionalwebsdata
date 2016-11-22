@@ -30,6 +30,7 @@ sources:
   - Rfunctions/03_detritus_interpolation.R
   - Rfunctions/99_mapping_checking.R
   - Rfunctions/find_symbols.R
+  - Rfunctions/03_detritus_equations.R
 
 targets:
   downloads:
@@ -45,7 +46,11 @@ targets:
       - trts_all_filtered
       - abundance
       - detritus_wider
-      - reports
+      - detritus_estimated_with_equation
+      - detritus_equation_plots
+      - detritus_estimated_with_model
+      - detritus_model_plots
+      #- reports
 #  downloads:
 #      -
 ## or should i give the original downloads a "clean" step, so that I could just delete them all and remake it again?
@@ -158,10 +163,13 @@ targets:
   detritus_wider:
     command: make_detritus_wider(broms_date, detritus_wide, visitnames, diam_brom, fpom_brom)
 
+  detritus_wider_bromeliad_names:
+    command: correct_bromeliad_names(detritus_wider, bromeliad_spp)
+
   ## correcting erroneous measurements in Cardoso -- moving some values to the right
 
   detritus_wider_cardoso_corrected:
-    command: correct_cardoso_detritus_wider(detritus_wider)
+    command: correct_cardoso_detritus_wider(detritus_wider_bromeliad_names)
 
   ## correcting erroneous measurements in french Guiana -- mislabelled columns
   detritus_wider_correct_frenchguiana:
@@ -183,9 +191,57 @@ targets:
     command: predict_fpom_g(detritus_wider_FG_g)
 
   ## combine the observed and predicted values (keep se column)
-  detritus_wider_FG_detritus_corrected:
+  detritus_wider_0_150_added:
     command: combine_observed_predicted_0_150_det(detritus_wider_correct_frenchguiana, detritus_wider_fpom_g_predicted)
 
+
+
+# import corrected bromeliad names --------------------------------------------------
+
+  bromeliad_spp:
+    command: import_BromeliadSpecies("data-intermediate/BromeliadSpecies.csv")
+
+
+# estimating missing detritus with equations ----------------------------------
+
+  equation_table:
+    command: create_equation_table()
+
+  detritus_equation_plots:
+    command: plot_data_with_equation_table(equation_table, .detritus_data = detritus_wider_0_150_added)
+
+  detritus_estimate_equation_filt:
+    command: do_filter_dataset_id(equation_table, .detritus_data = detritus_wider_0_150_added)
+
+  detritus_estimated_with_equation:
+    command: do_mutate_new_col(detritus_estimate_equation_filt)
+
+# estimating missing detritus with MODELS --------------------------------------
+
+  detritus_wider_new_variables:
+    command: add_new_columns_for_prediction(detritus_wider_0_150_added)
+
+  model_table:
+    command: create_model_table()
+
+  modelling_information:
+    command: derive_modelling_information(model_table, detritus_wider_new_variables)
+
+  observed_model_fit:
+    command: do_fit_predictive_model(modelling_information)
+
+  plotting_information:
+    command: construct_plotting_information(.observed_model_fit = observed_model_fit,
+                                            .modelling_information = modelling_information)
+
+  detritus_model_plots:
+    command: plot_model_and_supporting_data(.plotting_information = plotting_information,
+                                            .modelling_information = modelling_information)
+
+  detritus_estimated_with_model:
+    command: estimate_missing_detritus_new_site(.observed_model_fit = observed_model_fit,
+                                                .modelling_information = modelling_information,
+                                                .detritus_data = detritus_wider_0_150_added)
 
  # Detritus_missing.html:
 #    command: render("Detritus_missing.Rmd")
@@ -194,11 +250,11 @@ targets:
 
   # get a pretty map
 
-  stamenmap:
-    command: get_map_SA()
+#  stamenmap:
+#    command: get_map_SA()
 
 
-include:
-- remake_sites.yml
+#include:
+#- remake_sites.yml
 
 

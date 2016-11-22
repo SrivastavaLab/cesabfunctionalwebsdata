@@ -59,51 +59,51 @@
 #now french guiana Sinnamary (dataset 211) generate detritus from detritus allometric equations and fns
 #NOTE there is an input error: dead_leaves in Sinnamary was detritus>2cm x 2cm roughly, but in other sites #brown bromeliad leaves!
 
-sinn<-detritus_wider%>%filter(dataset_id==211)
+# sinn<-detritus_wider%>%filter(dataset_id==211)
+#
+# summary(glm(log(cpom_g)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.64
+#
+# plot(log(sinn$cpom_g)~log(sinn$fpom_g))
 
-summary(glm(log(cpom_g)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.64
+# summary(glm(log(dead_leaves)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.36
+#
+# plot((sinn$dead_leaves)~(sinn$fpom_g))
+# sinn$detover150<-sinn$fpom_g+sinn$cpom_g+sinn$dead_leaves
+# summary(glm(log(detover150)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.59
+# plot(log(sinn$detover150)~log(sinn$fpom_g))
 
-plot(log(sinn$cpom_g)~log(sinn$fpom_g))
+# over150_frenchguiana<- function(a){
+#   exp(0.688*(a)+3.075)
+# }
 
-summary(glm(log(dead_leaves)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.36
+# cpom_frenchguiana<- function(FPOMg){
+#   exp(0.858*log(FPOMg)+1.872)
+# }
 
-plot((sinn$dead_leaves)~(sinn$fpom_g))
-sinn$detover150<-sinn$fpom_g+sinn$cpom_g+sinn$dead_leaves
-summary(glm(log(detover150)~log(fpom_g), data=sinn))#sinnamary based eqn has rsq of 0.59
-plot(log(sinn$detover150)~log(sinn$fpom_g))
-
-over150_frenchguiana<- function(a){
-  exp(0.688*(a)+3.075)
-}
-
-cpom_frenchguiana<- function(FPOMg){
-  exp(0.858*log(FPOMg)+1.872)
-}
-
-largedet_frenchguiana<- function(FPOMg){
-  exp(0.582*log(FPOMg)+2.5545)
-}
+# largedet_frenchguiana<- function(FPOMg){
+#   exp(0.582*log(FPOMg)+2.5545)
+# }
 
 
 #next apply sinnamary-based allometric eqns to dataset 186 (petit saut 2007) where we do the rather dangerous thing
 #of converting fpom in ml to fpom in grams to predict detrital grams in another 2 categories
 #we do the same thing for petit saut 2014(dataset 216), but here we at least start with fpom in mg
 
-detritus_wider<-detritus_wider %>%
-  mutate(detritus0_150 = ifelse(dataset_id==186, fpom_convert_ml_into_g(fpom_ml), detritus0_150))%>%
-  mutate(detritus150_20000 = ifelse(dataset_id==186, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
-  mutate(detritus20000_NA= ifelse(dataset_id==186, largedet_frenchguiana(detritus0_150), detritus20000_NA))
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus0_150 = ifelse(dataset_id==186, fpom_convert_ml_into_g(fpom_ml), detritus0_150))%>%
+#   mutate(detritus150_20000 = ifelse(dataset_id==186, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
+#   mutate(detritus20000_NA= ifelse(dataset_id==186, largedet_frenchguiana(detritus0_150), detritus20000_NA))
+#
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus150_20000 = ifelse(dataset_id==216, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
+#   mutate(detritus20000_NA= ifelse(dataset_id==216, largedet_frenchguiana(detritus0_150), detritus20000_NA))
 
-detritus_wider<-detritus_wider %>%
-  mutate(detritus150_20000 = ifelse(dataset_id==216, cpom_frenchguiana(detritus0_150), detritus150_20000))%>%
-  mutate(detritus20000_NA= ifelse(dataset_id==216, largedet_frenchguiana(detritus0_150), detritus20000_NA))
-
-#next, in dataset 201 need to convert fpom_ml to g then make it into detritus0_150,
-
-detritus_wider<-detritus_wider %>%
-  mutate(detritus0_150 = ifelse(dataset_id==201,fpom_convert_ml_into_g(fpom_ml), detritus0_150))
-detritus_wider<-detritus_wider%>%
- mutate(detritus150_NA = ifelse(dataset_id==201, over150_frenchguiana(detritus0_150), detritus150_NA))
+# #next, in dataset 201 need to convert fpom_ml to g then make it into detritus0_150,
+#
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus0_150 = ifelse(dataset_id==201,fpom_convert_ml_into_g(fpom_ml), detritus0_150))
+# detritus_wider<-detritus_wider%>%
+#  mutate(detritus150_NA = ifelse(dataset_id==201, over150_frenchguiana(detritus0_150), detritus150_NA))
 
 #DIANE TO DO: chek after dataset updated: detritus_wider%>%filter(dataset_id%in%c(201, 206, 211, 216, 186))%>%View
 

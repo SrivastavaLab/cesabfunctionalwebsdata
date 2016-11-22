@@ -1,18 +1,7 @@
 
 
-source("Rfunctions/03_detritus_equations.R")
-
-equation_table <- create_equation_table()
-
 ## could easily add an "equation meant to be used on dataset" arguement, which
 ## would convert used_on_dataset to dataset_name, then add to ggtitle
-
-## generate plots & add to data.frame
-equation_plots <- plot_data_with_equation_table(equation_table,
-                                                .detritus_data = detritus_wider_FG_detritus_corrected)
-
-detritus_wider_correct_frenchguiana %>%
-  filter(dataset_id == 6)
 
 # plot
 equation_plots %>%
@@ -22,18 +11,11 @@ equation_plots %>%
 
 # applying functions to data ----------------------------------------------
 
-detritus_estimate_function_filt <- do_filter_dataset_id(equation_table, detritus_wider_FG_detritus_corrected)
+new_detritus <- do_mutate_new_col()
 
-new_detritus <- do_mutate_new_col(detritus_estimate_function_filt)
-
-new_detritus$.out %>% map(select, 36) %>% map(head)
+detritus_estimated_with_equation$.out %>% map(select, 36) %>% map(head)
 
 # what if it is a model tho -----------------------------------------------
-
-# first, create any combinations of detritus values which are needed in later
-# modelling
-
-detritus_wider_new_variables <- add_new_columns_for_prediction(detritus_wider_FG_detritus_corrected)
 
 detritus_wider_new_variables %>%
   filter(!is.na(detritus10_1500_2000_NA)) %>%
@@ -42,10 +24,7 @@ detritus_wider_new_variables %>%
 
 ## first row -- why not 136??
 
-# create the table of formulae
-model_table <- create_model_table()
 
-modelling_information <- derive_modelling_information(model_table, detritus_wider_new_variables)
 
 # demo of bootstrapping a model
 mi <- modelling_information %>%
@@ -53,30 +32,36 @@ mi <- modelling_information %>%
 
 mi$boot_src_dat %>% str(max.level = 4)
 
-observed_model_fit <- do_fit_predictive_model(modelling_information)
 
 # add back in what is needed for plotting
 
-plotting_information <- construct_plotting_information(.observed_model_fit = observed_model_fit,
-                                                       .modelling_information = modelling_information)
-
-
-
-data_plots <- plot_model_and_supporting_data(.plotting_information = plotting_information,
-                                             .modelling_information = modelling_information)
 
 data_plots %>% select(model_fit_plot) %>% walk(print)
 
 
 # add to original data ----------------------------------------------------
 
-fit_to_real_life <- estimate_missing_detritus_new_site(.observed_model_fit = observed_model_fit,
-                                                       .modelling_information = modelling_information,
-                                                       .detritus_data = detritus_wider_FG_detritus_corrected)
-
 
 fit_to_real_life$pred_data %>% map(select, 36) %>% map(head)
 
+
+summary_model_predict
+
+modelr_summaries <- function(m_id, predicting_model, src_df){
+
+  m <- predicting_model[[1]][[1]]
+  list(rmse = rmse, rsquare = rsquare, mae = mae) %>%
+    invoke_map(model = m, data = src_df[[1]])
+}
+
+observed_model_fit %>%
+  select(m_id, predicting_model, src_df) %>%
+  by_row(modelr_summaries %>% lift) %>%
+  mutate(outcol = map(.out, as.data.frame)) %>%
+  unnest(outcol)
+
+
+observed_model_fit$predicting_model %>% flatten %>% map(glance)
 
 #
 # ## for validating

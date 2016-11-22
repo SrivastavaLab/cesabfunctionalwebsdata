@@ -128,7 +128,8 @@ do_mutate_new_col <- function(.filtered_df_table){
 
 add_new_columns_for_prediction <- function(.detritus_data) {
   .detritus_data %>%
-    mutate(detritus10_1500_2000_NA = detritus10_1500 + detritus1500_20000 + detritus20000_NA)
+    mutate(detritus10_1500_2000_NA = detritus10_1500 + detritus1500_20000 + detritus20000_NA) %>%
+    mutate(detritus_over_150       = detritus0_150   + detritus150_20000  + detritus20000_NA)
 }
 
 
@@ -136,7 +137,9 @@ create_model_table <- function(){
   frame_data(
     ~m_id, ~target_dat,      ~src_dat,                       ~xvar,                ~yvar,                           ~.f, ~family,
     "m1",   "116",           c("131", "126", "121", "221"),  "~log(diameter)",     "~log(detritus10_1500_2000_NA)", glm, "gaussian",
-    "m2",   c("186", "216"), c("211"),                       "~log(detritus0_150)","~log(detritus150_20000)",       glm, "gaussian"
+    "m2",   c("186", "216"), c("211"),                       "~log(detritus0_150)","~log(detritus150_20000)",       glm, "gaussian",
+    "m3",   c("186", "216"), c("211"),                       "~log(detritus0_150)","~log(detritus20000_NA)",        glm, "gaussian",
+    "m4",   c("201"),        c("211"),                       "~log(detritus0_150)","~log(detritus_over_150)",       glm, "gaussian"
   ) %>%
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))
