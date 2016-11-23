@@ -4,8 +4,8 @@
 ## would convert used_on_dataset to dataset_name, then add to ggtitle
 
 # plot
-equation_plots %>%
-  select(.out) %>%
+detritus_model_plots %>%
+  select(model_fit_plot) %>%
   walk(print)
 
 
