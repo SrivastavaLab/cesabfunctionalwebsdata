@@ -259,7 +259,7 @@ targets:
   detritus_estimated_with_model:
     command: estimate_missing_detritus_new_site(.observed_model_fit = observed_model_fit,
                                                 .modelling_information = modelling_information,
-                                                .detritus_data = detritus_wider_0_150_added)
+                                                .detritus_data = detritus_wider_new_variables)
 
  # Detritus_missing.html:
 #    command: render("Detritus_missing.Rmd")
