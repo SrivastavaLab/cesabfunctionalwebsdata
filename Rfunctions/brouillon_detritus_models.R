@@ -36,7 +36,7 @@ mi$boot_src_dat %>% str(max.level = 4)
 # add back in what is needed for plotting
 
 
-data_plots %>% select(model_fit_plot) %>% walk(print)
+detritus_model_plots %>% select(model_fit_plot) %>% walk(print)
 
 
 # add to original data ----------------------------------------------------
@@ -61,7 +61,15 @@ observed_model_fit %>%
   unnest(outcol)
 
 
+
 observed_model_fit$predicting_model %>% flatten %>% map(glance)
+
+remake::dump_environment()
+observed_model_fit %>%
+  mutate(predicting_model = flatten(predicting_model)) %>%
+  mutate(mod_tidy = map(predicting_model, tidy)) %>%
+  unnest(mod_tidy)
+
 
 #
 # ## for validating

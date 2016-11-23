@@ -41,6 +41,12 @@ targets:
       - trts_all
       - abds
 
+  outputs:
+    depends:
+      - outputs/bromeliad_observations.csv
+      - outputs/dataset_information.csv
+      - outputs/visit_information.csv
+
   all:
     depends:
       - trts_all_filtered
@@ -50,6 +56,7 @@ targets:
       - detritus_equation_plots
       - detritus_estimated_with_model
       - detritus_model_plots
+      - outputs/bromeliad_observations.csv
       #- reports
 #  downloads:
 #      -
@@ -163,6 +170,11 @@ targets:
   detritus_wider:
     command: make_detritus_wider(broms_date, detritus_wide, visitnames, diam_brom, fpom_brom)
 
+# import corrected bromeliad names --------------------------------------------------
+
+  bromeliad_spp:
+    command: import_BromeliadSpecies("data-intermediate/BromeliadSpecies.csv")
+
   detritus_wider_bromeliad_names:
     command: correct_bromeliad_names(detritus_wider, bromeliad_spp)
 
@@ -196,10 +208,16 @@ targets:
 
 
 
-# import corrected bromeliad names --------------------------------------------------
+# Export corrected bromeliad names --------------------------------------------------
 
-  bromeliad_spp:
-    command: import_BromeliadSpecies("data-intermediate/BromeliadSpecies.csv")
+  outputs/bromeliad_observations.csv:
+    command: write_csv(detritus_wider_0_150_added, path = target_name)
+
+  outputs/dataset_information.csv:
+    command: write_csv(dats_date, path = target_name)
+
+  outputs/visit_information.csv:
+    command: write_csv(visits_date, path = target_name)
 
 
 # estimating missing detritus with equations ----------------------------------
@@ -249,10 +267,6 @@ targets:
 #      - detritus_wider_FG_detritus_corrected
 
   # get a pretty map
-
-#  stamenmap:
-#    command: get_map_SA()
-
 
 #include:
 #- remake_sites.yml
