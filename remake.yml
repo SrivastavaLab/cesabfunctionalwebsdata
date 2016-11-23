@@ -27,7 +27,7 @@ sources:
   #- Rfunctions
   - Rfunctions/01_accessing_cleaning.R
   - Rfunctions/02_detritus_subdividing_error_correction.R
-  - Rfunctions/03_detritus_interpolation.R
+  - Rfunctions/03_detritus_fpom_ml_to_g.R
   - Rfunctions/99_mapping_checking.R
   - Rfunctions/find_symbols.R
   - Rfunctions/03_detritus_equations.R
