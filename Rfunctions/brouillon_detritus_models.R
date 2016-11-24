@@ -35,12 +35,15 @@ mi$boot_src_dat %>% str(max.level = 4)
 
 # add back in what is needed for plotting
 
+remake::dump_environment()
+detritus_model_plots[10] %>% select(model_fit_plot) %>% walk(print)
 
-detritus_model_plots %>% select(model_fit_plot) %>% walk(print)
+detritus_model_plots$model_fit_plot[[10]] +
+  coord_trans()+
+  stat_function(fun = function(x) exp(0.694 * log(x)- 0.468), colour = "forestgreen")
 
 
-
-# #pitilla 2004 dissection visit 66 ---------------------------------------
+c# #pitilla 2004 dissection visit 66 ---------------------------------------
 remake::dump_environment()
 ## creating a dataset for generating a model.
 
@@ -65,10 +68,13 @@ test_2_ways$detritus0_NA_sum %>% all.equal(test_2_ways$detritus0_NA_sum2)
 
 test_2_ways %>%
   filter(dataset_id==56) %>%
-  filter(detritus0_NA_sum != detritus0_NA_sum2)
   select(starts_with("detritus0_NA")) %>%
   vis_miss()
 
+
+detritus_wider_new_variables %>%
+  select(starts_with("detritus")) %>%
+  vis_miss_ly()
 
 # add to original data ----------------------------------------------------
 
@@ -155,3 +161,8 @@ observed_model_fit %>%
 
 
 ## maybe one huge data.frame is not helpful -- try invoke_rows with smaller, function-specific data_frames that can then be gathered
+
+
+## redownload
+require(remake)
+
