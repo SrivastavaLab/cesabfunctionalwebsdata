@@ -1,20 +1,20 @@
 Former name;BromeliadGenera;BromeliadSpecies;Author;Subfamily;functional_group;Proposed name
 Aechmea aquilega;Aechmea;aquilega;(Salisb.) Griseb.;Bromelioideae;Type III;Aechmea_aquilega
-Aechmea distichantha;Aechmea;distichantha ;Lem.;Bromelioideae;Type III;Aechmea_distichantha 
-Aechmea lingulata;Aechmea;lingulata ;(L.) Baker ;Bromelioideae;Type III;Aechmea_lingulata 
+Aechmea distichantha;Aechmea;distichantha;Lem.;Bromelioideae;Type III;Aechmea_distichantha
+Aechmea lingulata;Aechmea;lingulata;(L.) Baker;Bromelioideae;Type III;Aechmea_lingulata
 Aechmea melinoni;Aechmea;melinonii;Hook;Bromelioideae;Type III;Aechmea_melinonii
-Aechmea mertensii;Aechmea;mertensii;(G. Mey.) Schult. & Schult. f. ;Bromelioideae;Type III;Aechmea_mertensii
+Aechmea mertensii;Aechmea;mertensii;(G. Mey.) Schult. & Schult. f.;Bromelioideae;Type III;Aechmea_mertensii
 Aechmea nudicaulis;Aechmea;nudicaulis;(L.) Griseb.;Bromelioideae;Type III;Aechmea_nudicaulis
-Catopsis berteroniana;Catopsis;berteroniana;(Schult. & Schult. f.) Mez ;Tillandsioideae;Type IV;Catopsis_berteroniana
-Guzmania desantsii;Guzmania;desautelsii ;Read & L.B. Sm.;Tillandsioideae;Type IV;Guzmania_desautelsii 
+Catopsis berteroniana;Catopsis;berteroniana;(Schult. & Schult. f.) Mez;Tillandsioideae;Type IV;Catopsis_berteroniana
+Guzmania desantsii;Guzmania;desautelsii;Read & L.B. Sm.;Tillandsioideae;Type IV;Guzmania_desautelsii
 Guzmania donnel-smithii;Guzmania;donnellsmithii;Mez ex Donn. Sm.;Tillandsioideae;Type IV;Guzmania_donnellsmithii
-Guzmania lingulata;Guzmania;lingulata ;(L.) Mez;Tillandsioideae;Type IV;Guzmania_lingulata 
+Guzmania lingulata;Guzmania;lingulata;(L.) Mez;Tillandsioideae;Type IV;Guzmania_lingulata
 Guzmania_megastachya;Guzmania;megastachya;(Baker) Mez;Tillandsioideae;Type IV;Guzmania_megastachya
-Guzmania multiflora;Guzmania;multiflora;(André) André ex Mez;Tillandsioideae;Type IV;Guzmania_multiflora
+Guzmania multiflora;Guzmania;multiflora;(Andrï¿½) Andrï¿½ ex Mez;Tillandsioideae;Type IV;Guzmania_multiflora
 Guzmania plumieri;Guzmania;plumieri;(Griseb.) Mez;Tillandsioideae;Type IV;Guzmania_plumieri
-Guzmania sherzeriana;Guzmania;scherzeriana ;Mez;Tillandsioideae;Type IV;Guzmania_scherzeriana 
+Guzmania sherzeriana;Guzmania;scherzeriana;Mez;Tillandsioideae;Type IV;Guzmania_scherzeriana
 Neoregelia cruenta;Neoregelia;cruenta;(Graham) L.B. Sm.;Bromelioideae;Type III;Neoregelia_cruenta
-Quesnelia_arvensis;Quesnelia;arvensis;(Vell.) Mez ;Bromelioideae;Type III;Quesnelia_arvensis
+Quesnelia_arvensis;Quesnelia;arvensis;(Vell.) Mez;Bromelioideae;Type III;Quesnelia_arvensis
 Tillandsia_complanata;Tillandsia;complanata;Benth.;Tillandsioideae;Type IV;Tillandsia_complanata
 Tillandsia_guatemalensis;Tillandsia;guatemalensis;L.B. Sm.;Tillandsioideae;Type IV;Tillandsia_guatemalensis
 Tillandsia turneri;Tillandsia;turneri;Baker;Tillandsioideae;Type IV;Tillandsia_turneri
@@ -25,25 +25,26 @@ Vriesea gladioliflora;Vriesea;gladioliflora;(H. Wendl.) Antoine;Tillandsioideae;
 Vriesea kupperiana;Vriesea;kupperiana;Suess.;Tillandsioideae;Type IV;Vriesea_kupperiana
 Vriesea neoglutinosa;Vriesea;neoglutinosa;Mez;Tillandsioideae;Type IV;Vriesea_neoglutinosa
 Vriesea pleiosticha;Vriesea;pleiosticha;(Griseb.) Gouda;Tillandsioideae;Type IV;Vriesea_pleiosticha
-Vriesea procera;Vriesea;procera ;Mez;Tillandsioideae;Type IV;Vriesea_procera 
+Vriesea procera;Vriesea;procera;Mez;Tillandsioideae;Type IV;Vriesea_procera
 Vriesea ringens;Vriesea;ringens;(Griseb.) Harms;Tillandsioideae;Type IV;Vriesea_ringens
 Vriesea sanguinolenta;Vriesea;sanguinolenta;Cogn. & Marchal;Tillandsioideae;Type IV;Vriesea_sanguinolenta
 Vriesea_sintenisii;Vriesea;sintenisii;(Baker) L.B. Sm. & Pittendr.;Tillandsioideae;Type IV;Vriesea_sintenisii
-Vriesea splendens;Vriesea;splendens;(Brongn.) Lem. ;Tillandsioideae;Type IV;Vriesea_splendens
+Vriesea splendens;Vriesea;splendens;(Brongn.) Lem.;Tillandsioideae;Type IV;Vriesea_splendens
 Guzmania sp.;Guzmania;NA;NA;Tillandsioideae;Type IV;Guzmania_sp.
 Vriesea sp.;Vriesea;NA;NA;Tillandsioideae;Type IV;Vriesea_sp.
 Guzmania/Vriesea sp.;NA;NA;NA;Tillandsioideae;Type IV;Guzmania_Vriesea_sp.
 Vriesea_or_Guzmania;NA;NA;NA;Tillandsioideae;Type IV;Guzmania_Vriesea_sp.
-Guzmania_berteroniana;Catopsis;berteroniana;(Schult. & Schult. f.) Mez ;Tillandsioideae;Type IV;Catopsis_berteroniana
+Guzmania_berteroniana;Catopsis;berteroniana;(Schult. & Schult. f.) Mez;Tillandsioideae;Type IV;Catopsis_berteroniana
 Guzmania_plumieri;Guzmania;plumieri;(Griseb.) Mez;Tillandsioideae;Type IV;Guzmania_plumieri
 Guzmania_sp;Guzmania;NA;NA;Tillandsioideae;Type IV;Guzmania_sp.
 Tillandsia_turneri;Tillandsia;turneri;Baker;Tillandsioideae;Type IV;Tillandsia_turneri
 Vriesea sp;Vriesea;NA;NA;Tillandsioideae;Type IV;Vriesea_sp.
-Vriesea splendens ;Vriesea;splendens;(Brongn.) Lem. ;Tillandsioideae;Type IV;Vriesea_splendens
-Vriesea_procera;Vriesea;procera ;Mez;Tillandsioideae;Type IV;Vriesea_procera 
+Vriesea splendens;Vriesea;splendens;(Brongn.) Lem.;Tillandsioideae;Type IV;Vriesea_splendens
+Vriesea_procera;Vriesea;procera;Mez;Tillandsioideae;Type IV;Vriesea_procera
 Vriesia sanguinolenta;Vriesea;sanguinolenta;Cogn. & Marchal;Tillandsioideae;Type IV;Vriesea_sanguinolenta
-G.desautsii;Guzmania;desautelsii ;Read & L.B. Sm.;Tillandsioideae;Type IV;Guzmania_desautelsii 
+G.desautsii;Guzmania;desautelsii;Read & L.B. Sm.;Tillandsioideae;Type IV;Guzmania_desautelsii
 Vriesia gladifolia;Vriesea;gladioliflora;(H. Wendl.) Antoine;Tillandsioideae;Type IV;Vriesea_gladioliflora
 Vriesea.gl;Vriesea;gladioliflora;(H. Wendl.) Antoine;Tillandsioideae;Type IV;Vriesea_gladioliflora
 NA;NA;NA;NA;NA;NA;Unidentified_bromspp
-Aechmea_mertensii;Aechmea;mertensii;(G. Mey.) Schult. & Schult. f. ;Bromelioideae;Type III;Aechmea_mertensii
+Aechmea_mertensii;Aechmea;mertensii;(G. Mey.) Schult. & Schult. f.;Bromelioideae;Type III;Aechmea_mertensii
+Neuragelia;Neoregelia;cruenta;(Graham) L.B. Sm.;Bromelioideae;Type III;Neoregelia_cruenta

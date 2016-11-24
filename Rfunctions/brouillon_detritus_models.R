@@ -4,8 +4,8 @@
 ## would convert used_on_dataset to dataset_name, then add to ggtitle
 
 # plot
-equation_plots %>%
-  select(.out) %>%
+detritus_model_plots %>%
+  select(model_fit_plot) %>%
   walk(print)
 
 
@@ -36,10 +36,58 @@ mi$boot_src_dat %>% str(max.level = 4)
 # add back in what is needed for plotting
 
 
-data_plots %>% select(model_fit_plot) %>% walk(print)
+detritus_model_plots %>% select(model_fit_plot) %>% walk(print)
+
+
+
+# #pitilla 2004 dissection visit 66 ---------------------------------------
+remake::dump_environment()
+## creating a dataset for generating a model.
+
+library(visdat)
+detritus_wider_new_variables %>%
+  filter(dataset_id == 56, visit_id != 51) %>%
+  select(starts_with("det")) %>%
+  keep(~ !all(is.na(.x))) %>%
+  vis_dat()
+
+
+test_2_ways <- detritus_wider_new_variables %>%
+  mutate(detritus0_NA_sum = if_else(visit_id == 51,
+                                    true  = detritus0_150 + detritus150_850 + detritus850_20000 + detritus20000_NA,
+                                    false = detritus0_150 + detritus150_850 + detritus850_1500 + detritus1500_20000 + detritus20000_NA),
+         detritus0_NA_sum2 = detritus0_150 + detritus150_850 + detritus850_20000_sum + detritus20000_NA)
+
+test_2_ways$detritus0_NA_sum %>% all.equal(test_2_ways$detritus0_NA_sum2)
+
+# true
+
+
+test_2_ways %>%
+  filter(dataset_id==56) %>%
+  filter(detritus0_NA_sum != detritus0_NA_sum2)
+  select(starts_with("detritus0_NA")) %>%
+  vis_miss()
 
 
 # add to original data ----------------------------------------------------
+
+
+require(prediction)
+
+
+detritus_estimated_with_model %>%
+  mutate(predicting_model = flatten(predicting_model),
+         new_values = map2(predicting_model, incoming_data, prediction)) %>%
+  select(m_id, incoming_data, new_values) %>%
+# %>%
+#   mutate(new_values = map2(predicting_model, incoming_data, ~ prediction(model = .x[[1]],
+  #                                                                          data  = .y))) %>%
+  mutate(add_new = map2(incoming_data, new_values, bind_cols)) %>%
+  unnest(add_new) %>%
+  glimpse
+
+
 
 
 fit_to_real_life$pred_data %>% map(select, 36) %>% map(head)
@@ -61,7 +109,15 @@ observed_model_fit %>%
   unnest(outcol)
 
 
+
 observed_model_fit$predicting_model %>% flatten %>% map(glance)
+
+remake::dump_environment()
+observed_model_fit %>%
+  mutate(predicting_model = flatten(predicting_model)) %>%
+  mutate(mod_tidy = map(predicting_model, tidy)) %>%
+  unnest(mod_tidy)
+
 
 #
 # ## for validating

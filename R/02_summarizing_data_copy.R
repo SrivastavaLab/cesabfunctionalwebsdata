@@ -110,59 +110,59 @@
 #pitilla costa rica 200 all present
 #pitilla costa rica 2002, 2010 are dataset61, 71; pitilla1997 dataset id is 51
 
-fine_pitilla<- function(med, coarse){
-  exp(0.79031 * log(med+coarse) - 0.07033)
-}#R2= 0.8965
-deadleaves_pitilla<- function(med,coarse){
-  exp(1.01680 * log(med+coarse) - 1.09992)
-}#R2= 0.776
-
-detritus_wider<-detritus_wider%>%
-  mutate(detritus0_150 = ifelse(dataset_id%in%c(51,61), fine_pitilla(detritus150_850, detritus850_20000), detritus0_150))
-detritus_wider<-detritus_wider %>%
-  mutate(detritus20000_NA = ifelse(dataset_id==51, deadleaves_pitilla(detritus150_850, detritus850_20000), detritus20000_NA))
-
-
-detritus_wider<-detritus_wider %>%
-  mutate(detritus20000_NA = ifelse(dataset_id==71, deadleaves_pitilla(0,detritus150_20000), detritus20000_NA))%>%
-  mutate(detritus0_150 = ifelse(dataset_id==71, fine_pitilla(0,detritus150_20000), detritus0_150))
-
+# fine_pitilla<- function(med, coarse){
+#   exp(0.79031 * log(med+coarse) - 0.07033)
+# }#R2= 0.8965
+# deadleaves_pitilla<- function(med,coarse){
+#   exp(1.01680 * log(med+coarse) - 1.09992)
+# }#R2= 0.776
+#
+# detritus_wider<-detritus_wider%>%
+#   mutate(detritus0_150 = ifelse(dataset_id%in%c(51,61), fine_pitilla(detritus150_850, detritus850_20000), detritus0_150))
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus20000_NA = ifelse(dataset_id==51, deadleaves_pitilla(detritus150_850, detritus850_20000), detritus20000_NA))
+#
+#
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus20000_NA = ifelse(dataset_id==71, deadleaves_pitilla(0,detritus150_20000), detritus20000_NA))%>%
+#   mutate(detritus0_150 = ifelse(dataset_id==71, fine_pitilla(0,detritus150_20000), detritus0_150))
+#
 
 #pitilla 2004 dissection visit 66
 
-## creating a dataset for generating a model.
-pitilla2000s<-detritus_wider%>%filter(dataset_id==56)
-pitilla2000s<-pitilla2000s%>%mutate(detritus0_NA = ifelse(visit_id==51,
-                                                          pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+
-                                                            pitilla2000s$detritus20000_NA+pitilla2000s$detritus850_20000,
-                                                          pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+
-                                                            pitilla2000s$detritus20000_NA+pitilla2000s$detritus1500_20000+
-                                                            pitilla2000s$detritus850_1500))
-summary(glm((detritus0_NA)~(diameter), family=gaussian, data=pitilla2000s)) #rsq=0.78
-plot((pitilla2000s$detritus0_NA)~(pitilla2000s$diameter))
-
-totaldet_pitilla<- function(dia){
-  (0.7798 * dia - 24.147)
-}
-detritus_wider<-detritus_wider %>%
-  mutate(detritus0_NA = ifelse(dataset_id == 66, totaldet_pitilla(diameter), detritus0_NA))
-
-#Columbia Sisga Guasca datasets 76, 81, and Rio Blanco 2014 (dataset 91) base on pitilla
-pitilla2000s$detritus150_NA<-pitilla2000s$detritus0_NA-pitilla2000s$detritus0_150
-summary(glm((detritus0_150)~(detritus150_NA), family=gaussian, data=pitilla2000s))
-plot((pitilla2000s$detritus0_150)~(pitilla2000s$detritus150_NA))
-
-finealso_pitilla<- function(most){
-  (0.407 *most - 0.36633)} #rsq=0.95
-
-detritus_wider<-detritus_wider%>%
-  mutate(detritus0_150 = ifelse(dataset_id%in%c(76,81, 91), finealso_pitilla(detritus150_NA), detritus0_150))
+# ## creating a dataset for generating a model.
+# pitilla2000s<-detritus_wider%>%filter(dataset_id==56)
+# pitilla2000s<-pitilla2000s%>%mutate(detritus0_NA = ifelse(visit_id==51,
+#                                                           pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+
+#                                                             pitilla2000s$detritus20000_NA+pitilla2000s$detritus850_20000,
+#                                                           pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+
+#                                                             pitilla2000s$detritus20000_NA+pitilla2000s$detritus1500_20000+
+#                                                             pitilla2000s$detritus850_1500))
+# summary(glm((detritus0_NA)~(diameter), family=gaussian, data=pitilla2000s)) #rsq=0.78
+# plot((pitilla2000s$detritus0_NA)~(pitilla2000s$diameter))
+#
+# totaldet_pitilla<- function(dia){
+#   (0.7798 * dia - 24.147)
+# }
+# detritus_wider<-detritus_wider %>%
+# #   mutate(detritus0_NA = ifelse(dataset_id == 66, totaldet_pitilla(diameter), detritus0_NA))
+#
+# #Columbia Sisga Guasca datasets 76, 81, and Rio Blanco 2014 (dataset 91) base on pitilla
+# pitilla2000s$detritus150_NA<-pitilla2000s$detritus0_NA-pitilla2000s$detritus0_150
+# summary(glm((detritus0_150)~(detritus150_NA), family=gaussian, data=pitilla2000s))
+# plot((pitilla2000s$detritus0_150)~(pitilla2000s$detritus150_NA))
+#
+# finealso_pitilla<- function(most){
+# #   (0.407 *most - 0.36633)} #rsq=0.95
+#
+# detritus_wider<-detritus_wider%>%
+#   mutate(detritus0_150 = ifelse(dataset_id%in%c(76,81, 91), finealso_pitilla(detritus150_NA), detritus0_150))
 
 #Colombia RioBlanco2012 dataset86 base it on the 2014 rio blanco data
-rioblanco<-detritus_wider%>%filter(dataset_id==91)
-summary(glm((detritus150_NA)~(num_leaf), family=gaussian, data=rioblanco))
-plot((rioblanco$detritus150_NA)~(rioblanco$num_leaf))
-#the best model here had an rsquared of 0.52 so we decided to exclude the rio blanco 2012 dataset (86)
+# rioblanco<-detritus_wider%>%filter(dataset_id==91)
+# summary(glm((detritus150_NA)~(num_leaf), family=gaussian, data=rioblanco))
+# plot((rioblanco$detritus150_NA)~(rioblanco$num_leaf))
+# #the best model here had an rsquared of 0.52 so we decided to exclude the rio blanco 2012 dataset (86)
 
 #honduras dataset 101 106 has detritus 22- 10000, we could estimate 20000 and greater and ignore the amount missed?
 pitilla2000s$detritus0_20000<-pitilla2000s$detritus0_NA-pitilla2000s$detritus20000_NA

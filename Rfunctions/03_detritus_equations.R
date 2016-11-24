@@ -129,17 +129,30 @@ do_mutate_new_col <- function(.filtered_df_table){
 add_new_columns_for_prediction <- function(.detritus_data) {
   .detritus_data %>%
     mutate(detritus10_1500_2000_NA = detritus10_1500 + detritus1500_20000 + detritus20000_NA) %>%
-    mutate(detritus_over_150       = detritus0_150   + detritus150_20000  + detritus20000_NA)
+    mutate(detritus_over_150       = detritus0_150   + detritus150_20000  + detritus20000_NA) %>%
+    mutate(detritus850_20000_sum   = if_else(is.na(detritus850_20000),
+                                             true = detritus1500_20000 + detritus850_1500,
+                                             false = detritus850_20000)) %>%
+    mutate(detritus0_NA_sum = detritus0_150 + detritus150_850 + detritus850_20000_sum + detritus20000_NA) %>%
+    mutate(detritus150_NA_sum = detritus150_850 + detritus850_20000_sum + detritus20000_NA) %>%
+    mutate(detritus0_20000_sum = detritus0_150 + detritus150_850 + detritus850_20000_sum,
+           detritus20000_NA_na0 = if_else(detritus20000_NA < 0.001, true = NA_real_, false = detritus20000_NA))
 }
 
 
 create_model_table <- function(){
   frame_data(
-    ~m_id, ~target_dat,      ~src_dat,                       ~xvar,                ~yvar,                           ~.f, ~family,
-    "m1",   "116",           c("131", "126", "121", "221"),  "~log(diameter)",     "~log(detritus10_1500_2000_NA)", glm, "gaussian",
-    "m2",   c("186", "216"), c("211"),                       "~log(detritus0_150)","~log(detritus150_20000)",       glm, "gaussian",
-    "m3",   c("186", "216"), c("211"),                       "~log(detritus0_150)","~log(detritus20000_NA)",        glm, "gaussian",
-    "m4",   c("201"),        c("211"),                       "~log(detritus0_150)","~log(detritus_over_150)",       glm, "gaussian"
+    ~m_id, ~target_dat,        ~src_dat,                       ~xvar,                          ~yvar,                           ~.f, ~family,
+    "m01",   "116",              c("131", "126", "121", "221"),  "~log(diameter)",             "~log(detritus10_1500_2000_NA)", glm, "gaussian",
+    "m02",   c("186", "216"),    c("211"),                       "~log(detritus0_150)",        "~log(detritus150_20000)",       glm, "gaussian",
+    "m03",   c("186", "216"),    c("211"),                       "~log(detritus0_150)",        "~log(detritus20000_NA)",        glm, "gaussian",
+    "m04",   c("201"),           c("211"),                       "~log(detritus0_150)",        "~log(detritus_over_150)",       glm, "gaussian",
+    "m05",   c("71", "51", "61"),c("56"),                        "~log(detritus850_20000_sum)","~log(detritus0_150)",           glm, "gaussian",
+    "m06",   c("71", "51"),      c("61"),                        "~log(detritus850_20000_sum)","~log(detritus20000_NA)",        glm, "gaussian",
+    "m07",   c("66"),            c("56"),                        "~diameter",                  "~detritus0_NA_sum",             glm, "gaussian",
+    "m08",   c("76", "81", "91"),c("56"),                        "~detritus150_NA_sum",        "~detritus0_150",                glm, "gaussian",
+    "m09",   c("86"),            c("91"),                        "~num_leaf",                  "~detritus150_NA",               glm, "gaussian",   # too weak to use??
+    "m10",   c("101", "206"),    c("56"),                        "~log(detritus0_20000_sum)",  "~log(detritus20000_NA_na0)",        glm, "gaussian"
   ) %>%
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))
@@ -147,6 +160,7 @@ create_model_table <- function(){
 
 derive_modelling_information <- function(.model_table, .detritus_data){
   # create a dataframe that holds everything we need to run the models:
+
   .model_table %>%
     # select the required input rows
     mutate(src_df = map(src_dat,
@@ -158,9 +172,9 @@ derive_modelling_information <- function(.model_table, .detritus_data){
            fml = flatten(fml)) %>%
     mutate(x_symb = xvar %>% map(find_symbols),
            y_symb = yvar %>% map(find_symbols),
-           x_funs = x_symb %>% map_chr("functions"),
+           x_funs = x_symb %>% map("functions") %>% map_if(is_empty, ~ "") %>% flatten_chr(),
            x_vars = x_symb %>% map_chr("variables"),
-           y_funs = y_symb %>% map_chr("functions"),
+           y_funs = y_symb %>% map("functions") %>% map_if(is_empty, ~ "") %>% flatten_chr(),
            y_vars = y_symb %>% map_chr("variables"))
 }
 

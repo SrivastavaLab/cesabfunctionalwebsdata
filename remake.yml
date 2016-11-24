@@ -22,12 +22,13 @@ packages:
   - assertthat
   - lazyeval
   - assertr
+  - prediction
 
 sources:
   #- Rfunctions
   - Rfunctions/01_accessing_cleaning.R
   - Rfunctions/02_detritus_subdividing_error_correction.R
-  - Rfunctions/03_detritus_interpolation.R
+  - Rfunctions/03_detritus_fpom_ml_to_g.R
   - Rfunctions/99_mapping_checking.R
   - Rfunctions/find_symbols.R
   - Rfunctions/03_detritus_equations.R
@@ -41,6 +42,12 @@ targets:
       - trts_all
       - abds
 
+  outputs:
+    depends:
+      - outputs/bromeliad_observations.csv
+      - outputs/dataset_information.csv
+      - outputs/visit_information.csv
+
   all:
     depends:
       - trts_all_filtered
@@ -50,6 +57,7 @@ targets:
       - detritus_equation_plots
       - detritus_estimated_with_model
       - detritus_model_plots
+      - outputs/bromeliad_observations.csv
       #- reports
 #  downloads:
 #      -
@@ -118,29 +126,26 @@ targets:
     command: coerce_values_abundance(abundance_filtered)
 
   trts_all_values:
-    command: coerce_values_trts_all_filtered(trts_all_filtered)
+    command: parse_column_types_reader(trts_all_filtered)
 
   visits_values:
-    command: coerce_values_visits(visits_filtered)
+    command: parse_column_types_reader(visits_filtered)
 
   visits_date:
-    command: coerce_visits_date(visits_values)
+    command: parse_column_types_reader(visits_values)
 
   dats_values:
-    command: coerce_values_dats(dats_filtered)
+    command: parse_column_types_reader(dats_filtered)
 
   dats_date:
-    command: coerce_dats_date(dats_values)
+    command: parse_column_types_reader(dats_values)
 
   ## drop a bad column name
   brom_clean_name:
     command: drop_bad_name(brom_rename_unnest_filtered)
 
-  broms_values:
-    command: coerce_values_brom_r_u(brom_clean_name)
-
   broms_date:
-    command: coerce_broms_date(broms_values)
+    command: parse_column_types_reader(brom_clean_name)
 
 ## summarizing datasets
 
@@ -163,6 +168,11 @@ targets:
   detritus_wider:
     command: make_detritus_wider(broms_date, detritus_wide, visitnames, diam_brom, fpom_brom)
 
+# import corrected bromeliad names --------------------------------------------------
+
+  bromeliad_spp:
+    command: import_BromeliadSpecies("data-intermediate/BromeliadSpecies.csv")
+
   detritus_wider_bromeliad_names:
     command: correct_bromeliad_names(detritus_wider, bromeliad_spp)
 
@@ -183,23 +193,25 @@ targets:
     command: fit_fpom_g_ml(fpom_fg_data)
 
   ## then use both model and data to create the new predictions
-  detritus_wider_FG_g:
-    command: estimate_fpom_g_from_ml(detritus_wider_correct_frenchguiana, model_fpom_g_ml)
-
-  ## in a separate step, extract the model predictions into a column
-  detritus_wider_fpom_g_predicted:
-    command: predict_fpom_g(detritus_wider_FG_g)
+  detritus_wider_fpom_g_pred:
+    command: add_predictions_to_data(detritus_wider_correct_frenchguiana, model_fpom_g_ml)
 
   ## combine the observed and predicted values (keep se column)
   detritus_wider_0_150_added:
-    command: combine_observed_predicted_0_150_det(detritus_wider_correct_frenchguiana, detritus_wider_fpom_g_predicted)
+    command: combine_observed_predicted_0_150_det(detritus_wider_fpom_g_pred)
 
 
 
-# import corrected bromeliad names --------------------------------------------------
+# Export corrected bromeliad names --------------------------------------------------
 
-  bromeliad_spp:
-    command: import_BromeliadSpecies("data-intermediate/BromeliadSpecies.csv")
+  outputs/bromeliad_observations.csv:
+    command: write_csv(detritus_wider_0_150_added, path = target_name)
+
+  outputs/dataset_information.csv:
+    command: write_csv(dats_date, path = target_name)
+
+  outputs/visit_information.csv:
+    command: write_csv(visits_date, path = target_name)
 
 
 # estimating missing detritus with equations ----------------------------------
@@ -241,7 +253,7 @@ targets:
   detritus_estimated_with_model:
     command: estimate_missing_detritus_new_site(.observed_model_fit = observed_model_fit,
                                                 .modelling_information = modelling_information,
-                                                .detritus_data = detritus_wider_0_150_added)
+                                                .detritus_data = detritus_wider_new_variables)
 
  # Detritus_missing.html:
 #    command: render("Detritus_missing.Rmd")
@@ -249,10 +261,6 @@ targets:
 #      - detritus_wider_FG_detritus_corrected
 
   # get a pretty map
-
-#  stamenmap:
-#    command: get_map_SA()
-
 
 #include:
 #- remake_sites.yml
