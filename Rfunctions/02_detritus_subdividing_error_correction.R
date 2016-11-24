@@ -273,6 +273,7 @@ drop_bad_name <- function(.broms_rename_unnest){
 
   names(.broms_rename_unnest) <- str_replace_all(names(.broms_rename_unnest), "canopy openess", "canopy_openess_chr")
   names(.broms_rename_unnest) <-str_replace_all(names(.broms_rename_unnest), "cpom_g ", "cpom_g")
+  names(.broms_rename_unnest) <-str_replace_all(names(.broms_rename_unnest), "canopy cover", "canopy_cover")
   .broms_rename_unnest
 }
 
@@ -281,7 +282,6 @@ coerce_values_brom_r_u <- function(.brom_clean_name){
   names_chr <- c("bromeliad_id", "visit_id", "original_id", "species", "collection_date", "utme",
                  "utmn", "canopy_openess_chr",
                  "ant","host_tree_label", "substrate", "min", "max") ## note that min / max is here because these represent the extreme sizes of the sieve
-
 
 
   names_num <- c("actual_water", "spider",
