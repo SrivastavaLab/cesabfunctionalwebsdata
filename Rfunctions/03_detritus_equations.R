@@ -141,14 +141,16 @@ add_new_columns_for_prediction <- function(.detritus_data) {
 create_model_table <- function(){
   frame_data(
     ~m_id, ~target_dat,        ~src_dat,                       ~xvar,                          ~yvar,                           ~.f, ~family,
-    "m1",   "116",              c("131", "126", "121", "221"),  "~log(diameter)",             "~log(detritus10_1500_2000_NA)", glm, "gaussian",
-    "m2",   c("186", "216"),    c("211"),                       "~log(detritus0_150)",        "~log(detritus150_20000)",       glm, "gaussian",
-    "m3",   c("186", "216"),    c("211"),                       "~log(detritus0_150)",        "~log(detritus20000_NA)",        glm, "gaussian",
-    "m4",   c("201"),           c("211"),                       "~log(detritus0_150)",        "~log(detritus_over_150)",       glm, "gaussian",
-    "m5",   c("71", "51", "61"),c("56"),                        "~log(detritus850_20000_sum)","~log(detritus0_150)",           glm, "gaussian",
-    "m6",   c("71", "51"),      c("61"),                        "~log(detritus850_20000_sum)","~log(detritus20000_NA)",        glm, "gaussian",
-    "m7",   c("66"),            c("56"),                        "~diameter",                  "~detritus0_NA_sum",             glm, "gaussian",
-    "m8",   c("76", "81", "91"),c("56"),                        "~detritus150_NA_sum",        "~detritus0_150",                glm, "gaussian"
+    "m01",   "116",              c("131", "126", "121", "221"),  "~log(diameter)",             "~log(detritus10_1500_2000_NA)", glm, "gaussian",
+    "m02",   c("186", "216"),    c("211"),                       "~log(detritus0_150)",        "~log(detritus150_20000)",       glm, "gaussian",
+    "m03",   c("186", "216"),    c("211"),                       "~log(detritus0_150)",        "~log(detritus20000_NA)",        glm, "gaussian",
+    "m04",   c("201"),           c("211"),                       "~log(detritus0_150)",        "~log(detritus_over_150)",       glm, "gaussian",
+    "m05",   c("71", "51", "61"),c("56"),                        "~log(detritus850_20000_sum)","~log(detritus0_150)",           glm, "gaussian",
+    "m06",   c("71", "51"),      c("61"),                        "~log(detritus850_20000_sum)","~log(detritus20000_NA)",        glm, "gaussian",
+    "m07",   c("66"),            c("56"),                        "~diameter",                  "~detritus0_NA_sum",             glm, "gaussian",
+    "m08",   c("76", "81", "91"),c("56"),                        "~detritus150_NA_sum",        "~detritus0_150",                glm, "gaussian",
+    "m09",   c("86"),            c("91"),                        "~num_leaf",                  "~detritus150_NA",               glm, "gaussian",
+    "m19"
   ) %>%
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))
