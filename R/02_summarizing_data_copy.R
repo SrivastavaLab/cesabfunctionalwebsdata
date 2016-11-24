@@ -145,15 +145,15 @@
 #   (0.7798 * dia - 24.147)
 # }
 # detritus_wider<-detritus_wider %>%
-#   mutate(detritus0_NA = ifelse(dataset_id == 66, totaldet_pitilla(diameter), detritus0_NA))
-
-#Columbia Sisga Guasca datasets 76, 81, and Rio Blanco 2014 (dataset 91) base on pitilla
-pitilla2000s$detritus150_NA<-pitilla2000s$detritus0_NA-pitilla2000s$detritus0_150
-summary(glm((detritus0_150)~(detritus150_NA), family=gaussian, data=pitilla2000s))
-plot((pitilla2000s$detritus0_150)~(pitilla2000s$detritus150_NA))
-
-finealso_pitilla<- function(most){
-  (0.407 *most - 0.36633)} #rsq=0.95
+# #   mutate(detritus0_NA = ifelse(dataset_id == 66, totaldet_pitilla(diameter), detritus0_NA))
+#
+# #Columbia Sisga Guasca datasets 76, 81, and Rio Blanco 2014 (dataset 91) base on pitilla
+# pitilla2000s$detritus150_NA<-pitilla2000s$detritus0_NA-pitilla2000s$detritus0_150
+# summary(glm((detritus0_150)~(detritus150_NA), family=gaussian, data=pitilla2000s))
+# plot((pitilla2000s$detritus0_150)~(pitilla2000s$detritus150_NA))
+#
+# finealso_pitilla<- function(most){
+#   (0.407 *most - 0.36633)} #rsq=0.95
 
 detritus_wider<-detritus_wider%>%
   mutate(detritus0_150 = ifelse(dataset_id%in%c(76,81, 91), finealso_pitilla(detritus150_NA), detritus0_150))

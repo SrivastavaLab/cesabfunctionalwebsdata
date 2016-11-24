@@ -133,7 +133,8 @@ add_new_columns_for_prediction <- function(.detritus_data) {
     mutate(detritus850_20000_sum   = if_else(is.na(detritus850_20000),
                                              true = detritus1500_20000 + detritus850_1500,
                                              false = detritus850_20000)) %>%
-    mutate(detritus0_NA_sum = detritus0_150 + detritus150_850 + detritus850_20000_sum + detritus20000_NA)
+    mutate(detritus0_NA_sum = detritus0_150 + detritus150_850 + detritus850_20000_sum + detritus20000_NA) %>%
+    mutate(detritus150_NA_sum = detritus150_850 + detritus850_20000_sum + detritus20000_NA)
 }
 
 
@@ -146,7 +147,8 @@ create_model_table <- function(){
     "m4",   c("201"),           c("211"),                       "~log(detritus0_150)",        "~log(detritus_over_150)",       glm, "gaussian",
     "m5",   c("71", "51", "61"),c("56"),                        "~log(detritus850_20000_sum)","~log(detritus0_150)",           glm, "gaussian",
     "m6",   c("71", "51"),      c("61"),                        "~log(detritus850_20000_sum)","~log(detritus20000_NA)",        glm, "gaussian",
-    "m7",   c("66"),            c("56"),                        "~diameter",                  "~detritus0_NA_sum",             glm, "gaussian"
+    "m7",   c("66"),            c("56"),                        "~diameter",                  "~detritus0_NA_sum",             glm, "gaussian",
+    "m8",   c("76", "81", "91"),c("56"),                        "~detritus150_NA_sum",        "~detritus0_150",                glm, "gaussian"
   ) %>%
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))
