@@ -125,29 +125,26 @@ targets:
     command: coerce_values_abundance(abundance_filtered)
 
   trts_all_values:
-    command: coerce_values_trts_all_filtered(trts_all_filtered)
+    command: parse_column_types_reader(trts_all_filtered)
 
   visits_values:
-    command: coerce_values_visits(visits_filtered)
+    command: parse_column_types_reader(visits_filtered)
 
   visits_date:
-    command: coerce_visits_date(visits_values)
+    command: parse_column_types_reader(visits_values)
 
   dats_values:
-    command: coerce_values_dats(dats_filtered)
+    command: parse_column_types_reader(dats_filtered)
 
   dats_date:
-    command: coerce_dats_date(dats_values)
+    command: parse_column_types_reader(dats_values)
 
   ## drop a bad column name
   brom_clean_name:
     command: drop_bad_name(brom_rename_unnest_filtered)
 
-  broms_values:
-    command: coerce_values_brom_r_u(brom_clean_name)
-
   broms_date:
-    command: coerce_broms_date(broms_values)
+    command: parse_column_types_reader(brom_clean_name)
 
 ## summarizing datasets
 
