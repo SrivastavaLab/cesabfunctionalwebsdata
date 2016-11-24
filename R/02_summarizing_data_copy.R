@@ -130,22 +130,22 @@
 
 #pitilla 2004 dissection visit 66
 
-## creating a dataset for generating a model.
-pitilla2000s<-detritus_wider%>%filter(dataset_id==56)
-pitilla2000s<-pitilla2000s%>%mutate(detritus0_NA = ifelse(visit_id==51,
-                                                          pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+
-                                                            pitilla2000s$detritus20000_NA+pitilla2000s$detritus850_20000,
-                                                          pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+
-                                                            pitilla2000s$detritus20000_NA+pitilla2000s$detritus1500_20000+
-                                                            pitilla2000s$detritus850_1500))
-summary(glm((detritus0_NA)~(diameter), family=gaussian, data=pitilla2000s)) #rsq=0.78
-plot((pitilla2000s$detritus0_NA)~(pitilla2000s$diameter))
-
-totaldet_pitilla<- function(dia){
-  (0.7798 * dia - 24.147)
-}
-detritus_wider<-detritus_wider %>%
-  mutate(detritus0_NA = ifelse(dataset_id == 66, totaldet_pitilla(diameter), detritus0_NA))
+# ## creating a dataset for generating a model.
+# pitilla2000s<-detritus_wider%>%filter(dataset_id==56)
+# pitilla2000s<-pitilla2000s%>%mutate(detritus0_NA = ifelse(visit_id==51,
+#                                                           pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+
+#                                                             pitilla2000s$detritus20000_NA+pitilla2000s$detritus850_20000,
+#                                                           pitilla2000s$detritus0_150+pitilla2000s$detritus150_850+
+#                                                             pitilla2000s$detritus20000_NA+pitilla2000s$detritus1500_20000+
+#                                                             pitilla2000s$detritus850_1500))
+# summary(glm((detritus0_NA)~(diameter), family=gaussian, data=pitilla2000s)) #rsq=0.78
+# plot((pitilla2000s$detritus0_NA)~(pitilla2000s$diameter))
+#
+# totaldet_pitilla<- function(dia){
+#   (0.7798 * dia - 24.147)
+# }
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus0_NA = ifelse(dataset_id == 66, totaldet_pitilla(diameter), detritus0_NA))
 
 #Columbia Sisga Guasca datasets 76, 81, and Rio Blanco 2014 (dataset 91) base on pitilla
 pitilla2000s$detritus150_NA<-pitilla2000s$detritus0_NA-pitilla2000s$detritus0_150
