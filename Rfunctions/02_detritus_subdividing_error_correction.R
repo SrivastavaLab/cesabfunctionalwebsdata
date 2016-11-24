@@ -210,6 +210,7 @@ correct_bromeliad_names <- function(.detritus_wider, .bromeliad_spp){
 
   out_nrow <- filter(out, is.na(species_name)) %>% nrow()
 
+  # browser()
   assert_that(out_nrow == 0)
 
   ## replace original "species" with new name
