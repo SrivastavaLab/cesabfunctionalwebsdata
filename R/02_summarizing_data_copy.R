@@ -110,23 +110,23 @@
 #pitilla costa rica 200 all present
 #pitilla costa rica 2002, 2010 are dataset61, 71; pitilla1997 dataset id is 51
 
-fine_pitilla<- function(med, coarse){
-  exp(0.79031 * log(med+coarse) - 0.07033)
-}#R2= 0.8965
-deadleaves_pitilla<- function(med,coarse){
-  exp(1.01680 * log(med+coarse) - 1.09992)
-}#R2= 0.776
-
-detritus_wider<-detritus_wider%>%
-  mutate(detritus0_150 = ifelse(dataset_id%in%c(51,61), fine_pitilla(detritus150_850, detritus850_20000), detritus0_150))
-detritus_wider<-detritus_wider %>%
-  mutate(detritus20000_NA = ifelse(dataset_id==51, deadleaves_pitilla(detritus150_850, detritus850_20000), detritus20000_NA))
-
-
-detritus_wider<-detritus_wider %>%
-  mutate(detritus20000_NA = ifelse(dataset_id==71, deadleaves_pitilla(0,detritus150_20000), detritus20000_NA))%>%
-  mutate(detritus0_150 = ifelse(dataset_id==71, fine_pitilla(0,detritus150_20000), detritus0_150))
-
+# fine_pitilla<- function(med, coarse){
+#   exp(0.79031 * log(med+coarse) - 0.07033)
+# }#R2= 0.8965
+# deadleaves_pitilla<- function(med,coarse){
+#   exp(1.01680 * log(med+coarse) - 1.09992)
+# }#R2= 0.776
+#
+# detritus_wider<-detritus_wider%>%
+#   mutate(detritus0_150 = ifelse(dataset_id%in%c(51,61), fine_pitilla(detritus150_850, detritus850_20000), detritus0_150))
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus20000_NA = ifelse(dataset_id==51, deadleaves_pitilla(detritus150_850, detritus850_20000), detritus20000_NA))
+#
+#
+# detritus_wider<-detritus_wider %>%
+#   mutate(detritus20000_NA = ifelse(dataset_id==71, deadleaves_pitilla(0,detritus150_20000), detritus20000_NA))%>%
+#   mutate(detritus0_150 = ifelse(dataset_id==71, fine_pitilla(0,detritus150_20000), detritus0_150))
+#
 
 #pitilla 2004 dissection visit 66
 

@@ -130,7 +130,9 @@ add_new_columns_for_prediction <- function(.detritus_data) {
   .detritus_data %>%
     mutate(detritus10_1500_2000_NA = detritus10_1500 + detritus1500_20000 + detritus20000_NA) %>%
     mutate(detritus_over_150       = detritus0_150   + detritus150_20000  + detritus20000_NA) %>%
-    mutate(detritus850_20000_sum   = if_else(is.na(detritus850_20000), true = detritus1500_20000 + detritus850_1500, false = detritus850_20000))
+    mutate(detritus850_20000_sum   = if_else(is.na(detritus850_20000),
+                                             true = detritus1500_20000 + detritus850_1500,
+                                             false = detritus850_20000))
 }
 
 
