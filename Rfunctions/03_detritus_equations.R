@@ -129,7 +129,12 @@ do_mutate_new_col <- function(.filtered_df_table){
 add_new_columns_for_prediction <- function(.detritus_data) {
   .detritus_data %>%
     # not sure what to call this -- a combination of predictions and real values!
-    mutate(detritus0_150_combo = if_else(is.na(detritus0_150), fpom_g_fitted, detritus0_150)) %>%
+    mutate(detritus0_150_combo = if_else(is.na(detritus0_150), fpom_g_fitted, detritus0_150),
+           detritus0_150_src   = if_else(!is.na(detritus0_150),
+                                         "observed",
+                                         if_else(!is.na(fpom_g_fitted),
+                                                 "estimated",
+                                                 NA_character_))) %>%
     mutate(detritus10_1500_2000_NA = detritus10_1500 + detritus1500_20000 + detritus20000_NA) %>%
     mutate(detritus_over_150       = detritus0_150   + detritus150_20000  + detritus20000_NA) %>%
     mutate(detritus850_20000_sum   = if_else(is.na(detritus850_20000),
