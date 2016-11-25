@@ -84,8 +84,3 @@ combine_observed_predicted_0_150_det <- function(.detritus_wider_fpom_g_pred) {
     mutate_at(vars(ends_with("fitted")), as.numeric)
 }
 
-## OK an implicit assumption in the above is that all sites can and should
-## receive the new data -- whether it is observed, measured, or whatever. In
-## other words, even bromeliads which have no predictions, or for which the
-## bromeliads in question were actually measured for detritus in that range, are
-## given a brand new column.
