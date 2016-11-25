@@ -164,40 +164,40 @@
 # plot((rioblanco$detritus150_NA)~(rioblanco$num_leaf))
 # #the best model here had an rsquared of 0.52 so we decided to exclude the rio blanco 2012 dataset (86)
 
-#honduras dataset 101 106 has detritus 22- 10000, we could estimate 20000 and greater and ignore the amount missed?
-pitilla2000s$detritus0_20000<-pitilla2000s$detritus0_NA-pitilla2000s$detritus20000_NA
-summary(glm((detritus20000_NA)~log(detritus0_20000), family=poisson, data=pitilla2000s))#rsq=0.67
-plot((pitilla2000s$detritus20000_NA)~(pitilla2000s$detritus0_20000))
+# #honduras dataset 101 106 has detritus 22- 10000, we could estimate 20000 and greater and ignore the amount missed?
+# pitilla2000s$detritus0_20000<-pitilla2000s$detritus0_NA-pitilla2000s$detritus20000_NA
+# summary(glm((detritus20000_NA)~log(detritus0_20000), family=poisson, data=pitilla2000s))#rsq=0.67
+# plot((pitilla2000s$detritus20000_NA)~(pitilla2000s$detritus0_20000))
+#
+# deadleavesalso_pitilla<- function(almost){
+#   exp(0.694 *log(almost) - 0.468)
+# }
+#
+# detritus_wider<-detritus_wider%>%
+#   mutate(detritus10000_NA = ifelse(dataset_id%in%c(101,106), deadleavesalso_pitilla(detritus22_10000), NA))
 
-deadleavesalso_pitilla<- function(almost){
-  exp(0.694 *log(almost) - 0.468)
-}
 
-detritus_wider<-detritus_wider%>%
-  mutate(detritus10000_NA = ifelse(dataset_id%in%c(101,106), deadleavesalso_pitilla(detritus22_10000), NA))
-
-
-### Cardoso 2011
-vis_46 <- detritus_wider %>%
-  filter(visit_id==46)
-
-cardoso2011<-detritus_wider %>%
-  filter(visit_id==231)
-
-plot(log(vis_46$detritus0_150),log(vis_46$detritus150_850+vis_46$detritus850_1500))
-
-# plot(log(cardoso2011$detritus0_150),log(cardoso2011$detritus150_NA))
-
-summary(lm(log(detritus0_150)~log(vis_46$detritus150_850+vis_46$detritus850_1500),data=vis_46 ))
-
-### assumption, we considered 150_850 + 850_1500 equivalent to 150_NA; sample size = 11
-
-fine_cardoso2011<- function(coarse){
-  exp(0.66648 * log(coarse) + 0.80186)
-}
-
-detritus_wider <- detritus_wider %>%
-  mutate(detritus0_150 = ifelse(visit_id == 231, fine_cardoso2011(detritus150_NA), detritus0_150))
+# ### Cardoso 2011
+# vis_46 <- detritus_wider %>%
+#   filter(visit_id==46)
+#
+# cardoso2011<-detritus_wider %>%
+#   filter(visit_id==231)
+#
+# plot(log(vis_46$detritus0_150),log(vis_46$detritus150_850+vis_46$detritus850_1500))
+#
+# # plot(log(cardoso2011$detritus0_150),log(cardoso2011$detritus150_NA))
+#
+# summary(lm(log(detritus0_150)~log(vis_46$detritus150_850+vis_46$detritus850_1500),data=vis_46 ))
+#
+# ### assumption, we considered 150_850 + 850_1500 equivalent to 150_NA; sample size = 11
+#
+# fine_cardoso2011<- function(coarse){
+#   exp(0.66648 * log(coarse) + 0.80186)
+# }
+#
+# detritus_wider <- detritus_wider %>%
+#   mutate(detritus0_150 = ifelse(visit_id == 231, fine_cardoso2011(detritus150_NA), detritus0_150))
 
 ### Picinguaba2011 - detritus125_NA is actually total detritus0_NA. It must be corrected in the database.
 
