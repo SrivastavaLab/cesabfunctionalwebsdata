@@ -78,7 +78,10 @@ add_predictions_to_data <- function(.df, .model) {
 ## also observed detritus
 combine_observed_predicted_0_150_det <- function(.detritus_wider_fpom_g_pred) {
 
-  .detritus_wider_fpom_g_pred[["data_with_prediction"]]
+  outdf <- .detritus_wider_fpom_g_pred[["data_with_prediction"]]
+
+  outdf %>%
+    mutate_at(vars(ends_with("fitted")), as.numeric)
 }
 
 ## OK an implicit assumption in the above is that all sites can and should
