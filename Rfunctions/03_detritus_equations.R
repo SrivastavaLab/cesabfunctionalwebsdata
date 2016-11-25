@@ -143,7 +143,11 @@ add_new_columns_for_prediction <- function(.detritus_data) {
     mutate(detritus0_NA_sum = detritus0_150 + detritus150_850 + detritus850_20000_sum + detritus20000_NA) %>%
     mutate(detritus150_NA_sum = detritus150_850 + detritus850_20000_sum + detritus20000_NA) %>%
     mutate(detritus0_20000_sum = detritus0_150 + detritus150_850 + detritus850_20000_sum,
-           detritus20000_NA_na0 = if_else(detritus20000_NA < 0.001, true = NA_real_, false = detritus20000_NA))
+           detritus20000_NA_na0 = if_else(detritus20000_NA < 0.001, true = NA_real_, false = detritus20000_NA)) %>%
+    mutate(detritus150_1500 = detritus150_850 + detritus850_1500,
+           detritus150_1500_plus = if_else(is.na(detritus150_1500),
+                                           true = detritus150_NA,
+                                           false = detritus150_1500))
 }
 
 
@@ -159,7 +163,8 @@ create_model_table <- function(){
     "m07",   c("66"),            c("56"),                        "~diameter",                  "~detritus0_NA_sum",             glm, "gaussian",
     "m08",   c("76", "81", "91"),c("56"),                        "~detritus150_NA_sum",        "~detritus0_150_combo",          glm, "gaussian",
     "m09",   c("86"),            c("91"),                        "~num_leaf",                  "~detritus150_NA",               glm, "gaussian",   # too weak to use??
-    "m10",   c("101", "206"),    c("56"),                        "~log(detritus0_20000_sum)",  "~log(detritus20000_NA_na0)",    glm, "gaussian"
+    "m10",   c("101", "206"),    c("56"),                        "~log(detritus0_20000_sum)",  "~log(detritus20000_NA_na0)",    glm, "gaussian",   # can't get coefficients or r2 to match Diane's notes
+    "m11",   c("146"),           c("56"),                        "~log(detritus150_1500_plus)","~log(detritus0_150)",           glm, "gaussian"
   ) %>%
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))
