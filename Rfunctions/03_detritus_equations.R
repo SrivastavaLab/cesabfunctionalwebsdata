@@ -147,24 +147,30 @@ add_new_columns_for_prediction <- function(.detritus_data) {
     mutate(detritus150_1500 = detritus150_850 + detritus850_1500,
            detritus150_1500_plus = if_else(is.na(detritus150_1500),
                                            true = detritus150_NA,
-                                           false = detritus150_1500))
+                                           false = detritus150_1500)) %>%
+    mutate(detritus150_NA_sum_Japi = detritus150_850 + detritus850_1500 + detritus1500_20000 + detritus20000_NA,
+           detritus150_NA_sum_Japi = if_else(is.na(detritus150_NA_sum_Japi),
+                                             true = detritus125_NA,
+                                             false = detritus150_NA_sum_Japi)
+)
 }
 
 
 create_model_table <- function(){
   frame_data(
-    ~m_id, ~target_dat,        ~src_dat,                       ~xvar,                          ~yvar,                           ~.f, ~family,
-    "m01",   "116",              c("131", "126", "121", "221"),  "~log(diameter)",             "~log(detritus10_1500_2000_NA)", glm, "gaussian",
-    "m02",   c("186", "216"),    c("211"),                       "~log(detritus0_150_combo)",  "~log(detritus150_20000)",       glm, "gaussian",
-    "m03",   c("186", "216"),    c("211"),                       "~log(detritus0_150_combo)",  "~log(detritus20000_NA)",        glm, "gaussian",
-    "m04",   c("201"),           c("211"),                       "~log(detritus0_150_combo)",  "~log(detritus_over_150)",       glm, "gaussian",
-    "m05",   c("71", "51", "61"),c("56"),                        "~log(detritus850_20000_sum)","~log(detritus0_150_combo)",     glm, "gaussian",
-    "m06",   c("71", "51"),      c("61"),                        "~log(detritus850_20000_sum)","~log(detritus20000_NA)",        glm, "gaussian",
-    "m07",   c("66"),            c("56"),                        "~diameter",                  "~detritus0_NA_sum",             glm, "gaussian",
-    "m08",   c("76", "81", "91"),c("56"),                        "~detritus150_NA_sum",        "~detritus0_150_combo",          glm, "gaussian",
-    "m09",   c("86"),            c("91"),                        "~num_leaf",                  "~detritus150_NA",               glm, "gaussian",   # too weak to use??
-    "m10",   c("101", "106"),    c("56"),                        "~log(detritus0_20000_sum)",  "~log(detritus20000_NA_na0)",    glm, "gaussian",   # can't get coefficients or r2 to match Diane's notes
-    "m11",   c("146"),           c("56"),                        "~log(detritus150_1500_plus)","~log(detritus0_150)",           glm, "gaussian"
+    ~m_id, ~target_dat,        ~src_dat,                       ~xvar,                            ~yvar,                           ~.f, ~family,
+    "m01",   "116",              c("131", "126", "121", "221"),  "~log(diameter)",               "~log(detritus10_1500_2000_NA)", glm, "gaussian",
+    "m02",   c("186", "216"),    c("211"),                       "~log(detritus0_150_combo)",    "~log(detritus150_20000)",       glm, "gaussian",
+    "m03",   c("186", "216"),    c("211"),                       "~log(detritus0_150_combo)",    "~log(detritus20000_NA)",        glm, "gaussian",
+    "m04",   c("201"),           c("211"),                       "~log(detritus0_150_combo)",    "~log(detritus_over_150)",       glm, "gaussian",
+    "m05",   c("71", "51", "61"),c("56"),                        "~log(detritus850_20000_sum)",  "~log(detritus0_150_combo)",     glm, "gaussian",
+    "m06",   c("71", "51"),      c("61"),                        "~log(detritus850_20000_sum)",  "~log(detritus20000_NA)",        glm, "gaussian",
+    "m07",   c("66"),            c("56"),                        "~diameter",                    "~detritus0_NA_sum",             glm, "gaussian",
+    "m08",   c("76", "81", "91"),c("56"),                        "~detritus150_NA_sum",          "~detritus0_150_combo",          glm, "gaussian",
+    "m09",   c("86"),            c("91"),                        "~num_leaf",                    "~detritus150_NA",               glm, "gaussian",   # too weak to use??
+    "m10",   c("101", "106"),    c("56"),                        "~log(detritus0_20000_sum)",    "~log(detritus20000_NA_na0)",    glm, "gaussian",   # can't get coefficients or r2 to match Diane's notes
+    "m11",   c("146"),           c("56"),                        "~log(detritus150_1500_plus)",  "~log(detritus0_150)",           glm, "gaussian",
+    "m12",   c("251", "346"),    c("56"),                        "~log(detritus150_NA_sum_Japi)","~log(detritus0_150)",           glm, "gaussian"
   ) %>%
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))

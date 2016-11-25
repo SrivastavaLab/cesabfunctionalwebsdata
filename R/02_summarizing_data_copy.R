@@ -201,77 +201,77 @@
 
 ### Picinguaba2011 - detritus125_NA is actually total detritus0_NA. It must be corrected in the database.
 
-P2011 <- detritus_wider %>%
-  filter(visit_id==241)
-
-correctedP2011<-P2011$detritus125_NA
-correct125_NA<-rep(NA,20)
-length(correctedP2011)
-detritus_wider <- detritus_wider %>%
-  mutate(detritus0_NA = ifelse(visit_id == 241, correctedP2011, detritus0_NA)) %>%
-  mutate(detritus125_NA = ifelse(visit_id == 241, correct125_NA, detritus125_NA))
+# P2011 <- detritus_wider %>%
+#   filter(visit_id==241)
+#
+# correctedP2011<-P2011$detritus125_NA
+# correct125_NA<-rep(NA,20)
+# length(correctedP2011)
+# detritus_wider <- detritus_wider %>%
+#   mutate(detritus0_NA = ifelse(visit_id == 241, correctedP2011, detritus0_NA)) %>%
+#   mutate(detritus125_NA = ifelse(visit_id == 241, correct125_NA, detritus125_NA))
 
 
 ### Jureia2013 - detritus125_800 is total detritus0_NA. It must be corrected in the database.
-
-J2013 <- detritus_wider %>%
-  filter(visit_id==246)
-
-correctedJ2013<-J2013$detritus125_800
-correct125_800<-rep(NA,20)
-
-detritus_wider <- detritus_wider %>%
-  mutate(detritus0_NA = ifelse(visit_id == 246, correctedJ2013, detritus0_NA)) %>%
-  mutate(detritus125_800 = ifelse(visit_id == 246, correct125_800, detritus125_800))
-
+#
+# J2013 <- detritus_wider %>%
+#   filter(visit_id==246)
+#
+# correctedJ2013<-J2013$detritus125_800
+# correct125_800<-rep(NA,20)
+#
+# detritus_wider <- detritus_wider %>%
+#   mutate(detritus0_NA = ifelse(visit_id == 246, correctedJ2013, detritus0_NA)) %>%
+#   mutate(detritus125_800 = ifelse(visit_id == 246, correct125_800, detritus125_800))
+#
 
 #### Serra do Japi
 ### we have detritus125_NA, need detritus0_125
 
-Japi2013 <- detritus_wider %>%
-  filter(visit_id==251|visit_id==346)
-vis_46 <- detritus_wider %>%
-  filter(visit_id==46)
+# # Japi2013 <- detritus_wider %>%
+# #   filter(visit_id==251|visit_id==346)
+# vis_46 <- detritus_wider %>%
+#   filter(visit_id==46)
+#
+# plot(log(vis_46$detritus0_150),log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA))
+# summary(lm(log(detritus0_150)~log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA),data=vis_46 ))
+#
+# fine_SJ2013<- function(coarse){
+#   exp(0.70297 * log(coarse) -0.13327)
+# }
+#
+# ### assumption, we considered 150_850 + 850_1500 + 1550-20000 + 20000_NA equivalent to 125_NA; sample size = 11
+#
+# detritus_wider <- detritus_wider %>%
+#   mutate(detritus0_150 = ifelse(visit_id == 251|visit_id==346, fine_SJ2013(detritus125_NA), detritus0_150))
 
-plot(log(vis_46$detritus0_150),log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA))
-summary(lm(log(detritus0_150)~log(vis_46$detritus150_850+vis_46$detritus850_1500+vis_46$detritus1500_20000+vis_46$detritus20000_NA),data=vis_46 ))
-
-fine_SJ2013<- function(coarse){
-  exp(0.70297 * log(coarse) -0.13327)
-}
-
-### assumption, we considered 150_850 + 850_1500 + 1550-20000 + 20000_NA equivalent to 125_NA; sample size = 11
-
-detritus_wider <- detritus_wider %>%
-  mutate(detritus0_150 = ifelse(visit_id == 251|visit_id==346, fine_SJ2013(detritus125_NA), detritus0_150))
-
-x<-c(2,3,4,5,NA,7)
-y<-c(2,3,4,5,6,7)
-z<-c(NA, NA, NA)
-
-na.checker<-function(a){
-  ifelse((mean(a, na.rm=TRUE)*length(a)-sum(a, na.rm=TRUE))>0,
-         1,
-         ifelse(mean(a,na.rm=TRUE)>0,
-                2,
-                NA_real_))
-}
-
-### Function identified missing data that was not necessarily correct.
-
-na.checker(x)
-na.checker(y)
-na.checker(z)
-
-visitdatanames<- visits %>%
-  select(visit_id, dataset_name)
-
-detrital_tableNA <- detritus_wider %>%
-  select(-bromeliad_id, -dataset_name) %>%  #-bromeliad_id, -dataset_name
-  group_by(visit_id) %>%
-  #summarize(check = na.checker(detritus0_NA))%>%
-  summarise_each(funs(nas = "na.checker"(.)))%>%
-  left_join(visitdatanames)
+# x<-c(2,3,4,5,NA,7)
+# y<-c(2,3,4,5,6,7)
+# z<-c(NA, NA, NA)
+#
+# na.checker<-function(a){
+#   ifelse((mean(a, na.rm=TRUE)*length(a)-sum(a, na.rm=TRUE))>0,
+#          1,
+#          ifelse(mean(a,na.rm=TRUE)>0,
+#                 2,
+#                 NA_real_))
+# }
+#
+# ### Function identified missing data that was not necessarily correct.
+#
+# na.checker(x)
+# na.checker(y)
+# na.checker(z)
+#
+# visitdatanames<- visits %>%
+#   select(visit_id, dataset_name)
+#
+# detrital_tableNA <- detritus_wider %>%
+#   select(-bromeliad_id, -dataset_name) %>%  #-bromeliad_id, -dataset_name
+#   group_by(visit_id) %>%
+#   #summarize(check = na.checker(detritus0_NA))%>%
+#   summarise_each(funs(nas = "na.checker"(.)))%>%
+#   left_join(visitdatanames)
 
 
 #write.csv(detrital_tableNA, "data-intermediate/detrital_table_NA.csv")
