@@ -163,7 +163,7 @@ create_model_table <- function(){
     "m07",   c("66"),            c("56"),                        "~diameter",                  "~detritus0_NA_sum",             glm, "gaussian",
     "m08",   c("76", "81", "91"),c("56"),                        "~detritus150_NA_sum",        "~detritus0_150_combo",          glm, "gaussian",
     "m09",   c("86"),            c("91"),                        "~num_leaf",                  "~detritus150_NA",               glm, "gaussian",   # too weak to use??
-    "m10",   c("101", "206"),    c("56"),                        "~log(detritus0_20000_sum)",  "~log(detritus20000_NA_na0)",    glm, "gaussian",   # can't get coefficients or r2 to match Diane's notes
+    "m10",   c("101", "106"),    c("56"),                        "~log(detritus0_20000_sum)",  "~log(detritus20000_NA_na0)",    glm, "gaussian",   # can't get coefficients or r2 to match Diane's notes
     "m11",   c("146"),           c("56"),                        "~log(detritus150_1500_plus)","~log(detritus0_150)",           glm, "gaussian"
   ) %>%
     mutate(xvar = xvar %>% map(as.formula),
