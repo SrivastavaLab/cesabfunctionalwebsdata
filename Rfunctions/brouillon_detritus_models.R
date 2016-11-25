@@ -1,20 +1,5 @@
 
 
-## could easily add an "equation meant to be used on dataset" arguement, which
-## would convert used_on_dataset to dataset_name, then add to ggtitle
-
-# plot
-detritus_model_plots %>%
-  select(model_fit_plot) %>%
-  walk(print)
-
-
-# applying functions to data ----------------------------------------------
-
-new_detritus <- do_mutate_new_col()
-
-detritus_estimated_with_equation$.out %>% map(select, 36) %>% map(head)
-
 # what if it is a model tho -----------------------------------------------
 
 detritus_wider_new_variables %>%
@@ -24,11 +9,6 @@ detritus_wider_new_variables %>%
 
 ## first row -- why not 136??
 
-
-
-# demo of bootstrapping a model
-mi <- modelling_information %>%
-  mutate(boot_src_dat = map(src_df, modelr::bootstrap, n = 10))
 
 mi$boot_src_dat %>% str(max.level = 4)
 
@@ -122,7 +102,7 @@ remake::dump_environment()
 observed_model_fit %>%
   mutate(predicting_model = flatten(predicting_model)) %>%
   mutate(mod_tidy = map(predicting_model, tidy)) %>%
-  unnest(mod_tidy)
+  unnest(mod_tidy) %>% tail
 
 
 #
@@ -165,4 +145,62 @@ observed_model_fit %>%
 
 ## redownload
 require(remake)
+
+
+# guessing cardoso --------------------------------------------------------
+
+detritus_wider_new_variables %>%
+  filter_(.dots = list("!is.na(detritus150_850)")) %>%
+  ggplot(aes(x = detritus150_850, y = detritus0_150_combo, colour = dataset_name)) +
+  geom_missing_point(size = 2) +
+  scale_color_viridis(discrete = TRUE) +
+  theme_dark()
+
+
+detritus_wider_new_variables %>%
+  filter_(.dots = list("!is.na(detritus150_850)")) %>%
+  ggplot(aes(x = detritus150_850, y = detritus0_150_combo, colour = dataset_name)) +
+  geom_missing_point(size = 2) +
+  scale_color_viridis(discrete = TRUE) +
+  theme_dark() #+
+  # coord_trans(x = "log")
+
+library(visdat)
+df <- detritus_wider_new_variables %>%
+  mutate(detritus150_1500 = detritus150_850 + detritus850_1500,
+         detritus150_1500_plus = if_else(is.na(detritus150_1500),
+                                         true = detritus150_NA,
+                                         false = detritus150_1500)) %>%
+  select(dataset_id, visit_id, detritus150_850, detritus850_1500, detritus150_1500,detritus150_NA, detritus150_1500_plus) %>%
+  filter(dataset_id %in% c("146", "56"))
+
+df %>%
+  filter(dataset_id == "56") %>%
+  vis_dat()
+
+# you can see the difference -- only some of the pitilla data have detritus in
+# the 850 to 1500 data. This is actually different visits
+
+df %>% vis_dat()
+# + facet_wrap(~dataset_id)
+
+plotly::ggplotly()
+
+# what variables are present in Cardoso2011
+
+
+detritus_wider_new_variables %>%
+  filter(visit_id == 231) %>%
+  keep(~ !all(is.na(.x)))
+
+
+
+
+
+# misc for later ----------------------------------------------------------
+
+
+# demo of bootstrapping a model
+mi <- modelling_information %>%
+  mutate(boot_src_dat = map(src_df, modelr::bootstrap, n = 10))
 
