@@ -128,17 +128,11 @@ targets:
   trts_all_values:
     command: parse_column_types_reader(trts_all_filtered)
 
-  visits_values:
+  visits_date:
     command: parse_column_types_reader(visits_filtered)
 
-  visits_date:
-    command: parse_column_types_reader(visits_values)
-
-  dats_values:
-    command: parse_column_types_reader(dats_filtered)
-
   dats_date:
-    command: parse_column_types_reader(dats_values)
+    command: parse_column_types_reader(dats_filtered)
 
   ## drop a bad column name
   brom_clean_name:
