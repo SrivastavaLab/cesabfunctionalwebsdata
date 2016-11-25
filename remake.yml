@@ -181,6 +181,9 @@ targets:
   detritus_wider_correct_frenchguiana:
     command: correct_frenchguiana_detritus(detritus_wider_cardoso_corrected)
 
+  detritus_wider_correct_brazil:
+    command: correct_picin_juraea(detritus_wider_correct_frenchguiana)
+
   # inferring FPOM mass from FPOM volume
 
   ## First step: create model
@@ -190,7 +193,7 @@ targets:
 
   ## then use both model and data to create the new predictions
   detritus_wider_fpom_g_pred:
-    command: add_predictions_to_data(detritus_wider_correct_frenchguiana, model_fpom_g_ml)
+    command: add_predictions_to_data(detritus_wider_correct_brazil, model_fpom_g_ml)
 
   ## combine the observed and predicted values (keep se column)
   detritus_wider_0_150_added:

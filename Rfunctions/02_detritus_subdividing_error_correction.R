@@ -169,6 +169,43 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
 
 }
 
+correct_picin_juraea <- function(.detritus_wider_correct_frenchguiana){
+  # suppose we start with a very clear description of what problem is where:
+
+  prob_table <- frame_data(
+    ~visit_id,     ~wrong_col,
+    "241",         "detritus125_NA",
+    "246",         "detritus125_800"
+  )
+  # what are these sites?
+
+  rows_with_incorrect_names <- .detritus_wider_correct_frenchguiana %>%
+    semi_join(prob_table, by = "visit_id")
+
+  # this column may not exist!
+  assert_that(negate(has_name)(rows_with_incorrect_names, "detritus0_NA"))
+
+  incorrect_data_list <- rows_with_incorrect_names %>%
+    split(.$visit_id)
+
+  incorrect_cols <- prob_table$wrong_col %>% split(prob_table$visit_id)
+
+  corrected_names <- map2_df(incorrect_data_list,
+                             incorrect_cols, ~ set_names(.x, str_replace(names(.x), .y, "detritus0_NA")))
+
+  output <- .detritus_wider_correct_frenchguiana %>%
+    anti_join(corrected_names %>%
+                select(visit_id, bromeliad_id, detritus0_NA)) %>%
+    bind_rows(corrected_names)
+  # VERY USEFUL
+  # daff::render_diff(daff::diff_data(arrange(detritus_wider_correct_frenchguiana, bromeliad_id),
+  # arrange(output, bromeliad_id)))
+
+
+  return(output)
+
+}
+
 ## finally, coerce the data types to be correct -- usually either numeric or character
 
 # names(abundance)
