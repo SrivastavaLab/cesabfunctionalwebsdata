@@ -47,6 +47,8 @@ targets:
       - outputs/bromeliad_observations.csv
       - outputs/dataset_information.csv
       - outputs/visit_information.csv
+      - outputs/detritus.csv
+      - outputs/fpom_fg_data.csv
 
   all:
     depends:
@@ -206,6 +208,12 @@ targets:
 
   outputs/visit_information.csv:
     command: write_csv(visits_date, path = target_name)
+
+  outputs/detritus.csv:
+    command: write_csv(detritus_wider_new_variables, path = target_name)
+
+  outputs/fpom_fg_data.csv:
+    command: write_csv(fpom_fg_data, path = target_name)
 
 
 # estimating missing detritus with equations ----------------------------------
