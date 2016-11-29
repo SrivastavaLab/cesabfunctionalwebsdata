@@ -50,7 +50,8 @@ targets:
       - outputs/visit_information.csv
       - outputs/detritus.csv
       - outputs/fpom_fg_data.csv
-      - outputs/spp_dictonary.csv
+      - outputs/spp_dictionary.csv
+      - outputs/detritus_models.rds
 
   all:
     depends:
@@ -225,6 +226,9 @@ targets:
 
   outputs/spp_dictionary.csv:
     command: write_csv(spp_dictonary, path = target_name)
+
+  outputs/detritus_models.rds:
+    command: write_rds(detritus_estimated_with_model, path = target_name)
 
 
 # estimating missing detritus with equations ----------------------------------

@@ -344,7 +344,7 @@ estimate_missing_detritus_new_site <- function(.observed_model_fit, .modelling_i
     select(m_id, y_vars, y_funs)
 
   # join these, add filtered dataset to model
-  fit_data_needed %>%
+  output <- fit_data_needed %>%
     left_join(model_info) %>%
     mutate(target_df = target_dat %>%
              map(~ .detritus_data %>%
@@ -354,5 +354,9 @@ estimate_missing_detritus_new_site <- function(.observed_model_fit, .modelling_i
     # get the precise variables we need to add predictions
     select(m_id, incoming_data = target_df, predicting_model, y_vars, y_funs) %>%
     by_row(make_prediction_df %>% lift, .to = "pred_data")
+
+  # polish the output a bit, and flatten the predicting_model
+  output %>%
+    mutate(predicting_model = flatten(predicting_model))
 
 }
