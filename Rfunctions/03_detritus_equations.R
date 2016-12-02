@@ -221,6 +221,16 @@ do_fit_predictive_model <- function(.modelling_information){
 }
 
 
+#' make the predictor range (and name it appropriately)
+#'
+#' given a data.frame and a variable name, find that variable name and use
+#' seq_range to make 30 points in its range
+#'
+#' @param m_id model.id, for housekeeping
+#' @param src_df source data.frame
+#' @param x_vars x variable name
+#'
+#' @return a data.frame with one column only (the new sequence)
 make_prediction_xs <- function(m_id, src_df, x_vars) {
   dd <- src_df[[1]]
 
@@ -236,22 +246,28 @@ make_prediction_xs <- function(m_id, src_df, x_vars) {
 
 make_prediction_df <- function(m_id, incoming_data, predicting_model, y_vars, y_funs){
 
-  # browser()
   dd <- incoming_data[[1]]
 
-  y_vars <- paste0(y_vars, "_pred")
-
-  predict_dat <- partial(add_predictions, data = dd, var = y_vars)
-
-  # back transformation function for y axis (x not necessary because it is in the function?)
-  back_trans <- switch(y_funs, log = exp, I)
+  # type response means that we will get back the answer on the scale of the
+  # response (which might have been transformed!!)
+  # NOTE PLEASE: that `prediction()` gives these **BY DEFAULT**. see ?prediction
 
   modlist <- predicting_model[[1]] # just because it is a list-column, get the first element (which is a list lol)
-  out <- map_df(modlist, predict_dat)
+  # note that this list will normall be length 1, but I'm doing it this way just
+  # in case multiple models are ever fit to the data
+  out <- map_df(modlist, ~ prediction(.x, data = dd))
 
-  out[[y_vars]] <- back_trans(out[[y_vars]])
+  names(out) <- paste0(y_vars, "_", names(out))
 
-  return(out)
+  # back transformation function for y axis (x not necessary because it is in the function?) >> that's correct
+  back_trans <- switch(y_funs, log = exp, I)
+  # REASONABLY CERTAIN this is correct since iirc SEs are in the same units as
+  # the values they are associate with
+  out <- back_trans(out)
+
+  obs_pred <- bind_cols(dd, out)
+
+  return(obs_pred)
 }
 
 
@@ -281,8 +297,8 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
     select_(xs = x_vars,
             ys = y_vars)
 
-  # tweak the name - predicted values have "pred" on the side
-  y_vars <- paste0(y_vars, "_pred")
+  # tweak the name - predicted values have "_fitted" on the side
+  y_vars <- paste0(y_vars, "_fitted")
 
   ld <- curve_data[[1]] %>%
     select_(xs = x_vars,
@@ -304,6 +320,7 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
 
 plot_model_and_supporting_data <- function(.plotting_information, .modelling_information) {
 
+  # browser()
   # create the x range over which all the models should be predicted.
   data_for_drawing_line <- .plotting_information %>%
     select(m_id, src_df, x_vars) %>%
