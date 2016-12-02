@@ -170,7 +170,7 @@ create_model_table <- function(){
     "m09",   c("86"),            c("91"),                        "~num_leaf",                    "~detritus150_NA",               glm, "gaussian",   # too weak to use??
     "m10",   c("101", "106"),    c("56"),                        "~log(detritus0_20000_sum)",    "~log(detritus20000_NA_na0)",    glm, "gaussian",   # can't get coefficients or r2 to match Diane's notes
     "m11",   c("146"),           c("56"),                        "~log(detritus150_1500_plus)",  "~log(detritus0_150)",           glm, "gaussian",
-    "m12",   c("251", "346"),    c("56"),                        "~log(detritus150_NA_sum_Japi)","~log(detritus0_150)",           glm, "gaussian"
+    "m12",   c("161"),    c("56"),                        "~log(detritus150_NA_sum_Japi)","~log(detritus0_150)",           glm, "gaussian"
   ) %>%
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))
@@ -359,7 +359,7 @@ estimate_missing_detritus_new_site <- function(.observed_model_fit, .modelling_i
   # about the y variable and transformations if any
   model_info <- .modelling_information %>%
     select(m_id, y_vars, y_funs)
-
+# browser()
   # join these, add filtered dataset to model
   output <- fit_data_needed %>%
     left_join(model_info) %>%
