@@ -9,6 +9,9 @@ predicted_detritus <- detritus_estimated_with_model$pred_data %>% bind_rows()
 glimpse(predicted_detritus)
 # no you'll just have to split it right up again.
 
+detritus_estimated_with_model$pred_data %>%
+  map(~ select(.x, bromeliad_id) %>% group_by(bromeliad_id) %>% tally)
+
 
 detritus_category_df <- detritus_estimated_with_model$pred_data[[2]] %>%
   tbl_df() %>%
@@ -24,7 +27,9 @@ detritus_category_df <- detritus_estimated_with_model$pred_data[[2]] %>%
 
 # drop the ones that are all empty
 categories_ses <- detritus_category_df %>%
-  # need to get rid of the detritus0_150 and detritus0_150_combo columns -- deal with this earlier?
+  # need to get rid of the detritus0_150 and detritus0_150_combo columns -- deal
+  # with this earlier? if the SE here is used as a weight, then that will
+  # "filter through" to later estimates and be caught below
   filter(!detritus_category %in% c("detritus0_150", "detritus0_150_src")) %>%
   mutate(is_empty = map_lgl(data, ~ all(is.na(.x$detritus_amount)))) %>%
   filter(!is_empty) %>%
@@ -65,10 +70,43 @@ find_range <- function(x){
 detritus_total <- get_det_vals %>%
   mutate(detritus_max = map(detritus_broken_up, find_range)) %>%
   unnest(detritus_max) %>%
+  # tests here?
   # can ditch the broken_up col
-  select(-detritus_broken_up) %>%
-  unnest(data)
+  select(-detritus_broken_up)
 
-# test
+# test if they are consecutive
+
+consec_test_vec <- detritus_total %>%
+  # by using lead we can be cunning: skipping the final maximum size (which may be Inf)
+  mutate(is_consec = lead(min_detritus) == max_detritus) %>%
+  .[["is_consec"]]
+# should all be true except the last (which is NA)
+all(consec_test_vec[-length(consec_test_vec)])
+
+# if that passed, add em together.There are two things to add -- the column "obs_or_fit" and the data itself
+det_by_bromeliad <- detritus_total %>%
+  select(-detritus_category) %>%
+  unnest(data) %>%
+  group_by(bromeliad_id) %>%
+  nest
+
+det_by_bromeliad$data[[1]]
+
+det_by_bromeliad %>%
+  mutate(summary_df = map(data, ~data_frame(min_det = min(.x$min_detritus),
+                                           max_det = max(.x$max_detritus),
+                                           obs_or_fit = paste0(.x$obs_or_fit, collapse = "_"),
+                                           total_detritus = sum(as.numeric(.x$detritus_amount))))) %>%
+  unnest(summary_df)
+
+detritus_total %>%
+  select(-detritus_category) %>%
+  .[["data"]]
+
+  summarize(,
+            data2 = bind_rows(data))
+
 
 # here join on the se column, (what if there is two?). also can rename or drop detritus_category
+
+
