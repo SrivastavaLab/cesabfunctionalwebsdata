@@ -81,6 +81,13 @@ combine_observed_predicted_0_150_det <- function(.detritus_wider_fpom_g_pred) {
   outdf <- .detritus_wider_fpom_g_pred[["data_with_prediction"]]
 
   outdf %>%
-    mutate_at(vars(ends_with("fitted")), as.numeric)
+    mutate_at(vars(ends_with("fitted")), as.numeric) %>%
+    # not sure what to call this -- a combination of predictions and real values!
+    mutate(detritus0_150_combo = if_else(is.na(detritus0_150), fpom_g_fitted, detritus0_150),
+           detritus0_150_src   = if_else(!is.na(detritus0_150),
+                                         "observed",
+                                         if_else(!is.na(fpom_g_fitted),
+                                                 "estimated",
+                                                 NA_character_)))
 }
 

@@ -128,13 +128,6 @@ do_mutate_new_col <- function(.filtered_df_table){
 
 add_new_columns_for_prediction <- function(.detritus_data) {
   .detritus_data %>%
-    # not sure what to call this -- a combination of predictions and real values!
-    mutate(detritus0_150_combo = if_else(is.na(detritus0_150), fpom_g_fitted, detritus0_150),
-           detritus0_150_src   = if_else(!is.na(detritus0_150),
-                                         "observed",
-                                         if_else(!is.na(fpom_g_fitted),
-                                                 "estimated",
-                                                 NA_character_))) %>%
     mutate(detritus10_1500_2000_NA = detritus10_1500 + detritus1500_20000 + detritus20000_NA) %>%
     mutate(detritus_over_150       = detritus0_150   + detritus150_20000  + detritus20000_NA) %>%
     mutate(detritus850_20000_sum   = if_else(is.na(detritus850_20000),
@@ -170,7 +163,7 @@ create_model_table <- function(){
     "m09",   c("86"),            c("91"),                        "~num_leaf",                    "~detritus150_NA",               glm, "gaussian",   # too weak to use??
     "m10",   c("101", "106"),    c("56"),                        "~log(detritus0_20000_sum)",    "~log(detritus20000_NA_na0)",    glm, "gaussian",   # can't get coefficients or r2 to match Diane's notes
     "m11",   c("146"),           c("56"),                        "~log(detritus150_1500_plus)",  "~log(detritus0_150)",           glm, "gaussian",
-    "m12",   c("161"),    c("56"),                        "~log(detritus150_NA_sum_Japi)","~log(detritus0_150)",           glm, "gaussian"
+    "m12",   c("161"),           c("56"),                        "~log(detritus150_NA_sum_Japi)","~log(detritus0_150)",           glm, "gaussian"
   ) %>%
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))
