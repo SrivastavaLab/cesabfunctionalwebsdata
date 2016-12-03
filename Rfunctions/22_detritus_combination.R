@@ -3,39 +3,53 @@
 # to say if the answer was observed, or partly predicted, and over what exact
 # range the predictions apply
 
-combine_all_detritus_values <- function(.detritus_estimated_with_model,
-                                        .detritus_wider_new_variables,
-                                        .broms_date){
+combine_detritus_predictions <- function(.detritus_estimated_with_model){
   # begin with just the detritus that has been predicted:
   detritus_all_predictions <- .detritus_estimated_with_model %>%
     select(pred_data) %>% as.list() %>% flatten %>%
-    reduce(left_join, by = "bromeliad_id", .init = select(.detritus_wider_new_variables, bromeliad_id))
+    # get rid of anything not about detritus
+    map(~ select(.x, bromeliad_id, dplyr::contains("fitted"), -starts_with("fpom"))) %>%
+    reduce(full_join, by = "bromeliad_id")
 
-  count_of_each_brom <- .detritus_wider_new_variables %>% group_by(bromeliad_id) %>% tally %>% .[["n"]]
+  # make sure that this process did NOT DOUBLE ANY BROMELIADS
+  detritus_all_predictions %>% group_by(bromeliad_id) %>% tally %>% .[["n"]]
+  count_of_each_brom <- detritus_all_predictions %>% group_by(bromeliad_id) %>% tally %>% .[["n"]]
   assert_that(all(count_of_each_brom == 1))
 
-  # then get the bromeliads which were never estimated for anything:
-  detritus_all_observations <- .detritus_wider_new_variables %>%
-    anti_join(detritus_all_predictions, by = "bromeliad_id") %>%
+  return(detritus_all_predictions)
+
+}
+
+detritus_all_preds <- combine_detritus_predictions(detritus_estimated_with_model)
+
+visdat::vis_dat(detritus_all_preds)
+
+combine_all_detritus_values <- function(.detritus_wider_new_variables, .detritus_all_preds, .broms_date){  # then get the bromeliads which were never estimated for anything:
+   detritus_all_observations <- .detritus_wider_new_variables %>%
+     anti_join(.detritus_all_preds, by = "bromeliad_id") %>%
     select(bromeliad_id, starts_with("detritus"))
 
   # nothing in common
-  common_broms <- intersect(detritus_all_observations$bromeliad_id, detritus_all_predictions$bromeliad_id)
+  common_broms <- intersect(detritus_all_observations$bromeliad_id,
+                            .detritus_all_preds$bromeliad_id)
 
   assert_that(length(common_broms) == 0)
 
   # nothing left out
-  missing_broms <- setdiff(.broms_date$bromeliad_id, c(detritus_all_observations$bromeliad_id, detritus_all_predictions$bromeliad_id))
+  missing_broms <- setdiff(.broms_date$bromeliad_id, c(detritus_all_observations$bromeliad_id,
+                                                       .detritus_all_preds$bromeliad_id))
 
   assert_that(length(missing_broms) == 0)
 
   # gather each then put them on top of each other
-  det_all_pred_long <- detritus_all_predictions %>%
+  det_all_pred_long <- .detritus_all_preds %>%
     gather(detritus_category, detritus_amount, starts_with("detritus")) %>%
     # we can filter out NAs directly since we are doing this at the bromeliad level:
     filter(!is.na(detritus_amount))
 
   det_all_obs_long <- detritus_all_observations %>%
+    # there is only one column with character. drop that one!
+    select(-detritus0_150_src) %>%
     gather(detritus_category, detritus_amount, starts_with("detritus")) %>%
     # we can filter out NAs directly since we are doing this at the bromeliad level:
     filter(!is.na(detritus_amount))
@@ -45,15 +59,36 @@ combine_all_detritus_values <- function(.detritus_estimated_with_model,
   return(all_detritus)
 }
 
-detritus_long_categories <- combine_all_detritus_values(detritus_estimated_with_model, detritus_wider_new_variables, broms_date)
+detritus_long_categories <- combine_all_detritus_values(detritus_wider_new_variables, detritus_all_preds, broms_date)
 
 detritus_long_categories %>% select(detritus_category) %>% distinct %>% View
+
+# are .x and .y versions of the same variable actually different?!
+
+split_cats <- detritus_long_categories %>%
+  filter(!str_detect(detritus_category, "_se")) %>%
+  separate(detritus_category, c("category", "xy"), sep = "\\.", fill = "right") %>%
+  filter(!is.na(xy))
+split_cats %>%
+  group_by(bromeliad_id, category) %>%
+  nest %>%
+  filter(map_dbl(data, nrow) > 2) %>%
+  verify(nrow(.) == 0)
+split_cats %>%
+  select(-xy) %>%
+  spread(category, detritus_amount) %>%
+  visdat::vis_miss()
 
 # many categories of detritus are the result of summation for the purposes of
 # regression -- they should be dropped! So keep only those columns which either
 # were there at the start or have "fitted" in the name.
 
 filter_just_orig_fitted <- function(.detritus_wider_0_150_added, .detritus_long_categories) {
+
+  # First, clear the x and y thing away
+  detritus_long_clean_cats <- .detritus_long_categories %>%
+    mutate(detritus_category = str_replace(detritus_category, "\\.[xy]", ""))
+
   # get the names of the last version of the data before these "extra" names were added.
   starting_names <- .detritus_wider_0_150_added %>%
     names %>%
@@ -63,15 +98,12 @@ filter_just_orig_fitted <- function(.detritus_wider_0_150_added, .detritus_long_
     discard(~ str_detect(.x, "detritus0_150$"))
 
   # find the ones which are estimated from models (i.e. "fitted")
-  all_fitted <- .detritus_long_categories$detritus_category %>%
+  all_fitted <- detritus_long_clean_cats$detritus_category %>%
     unique %>%
     keep(~ str_detect(.x, "fitted"))
 
-
-  .detritus_long_categories %>%
+  detritus_long_clean_cats %>%
     filter(detritus_category %in% c(starting_names, all_fitted))
-
-
 }
 
 
@@ -118,6 +150,8 @@ cats_in_brom <- det_long_min_max %>%
   mutate(nr = map_dbl(data, nrow))
 
 cats_in_brom %>% filter(nr > 1) %>% unnest(data)
+
+detritus_long_categories %>% group_by(bromeliad_id) %>% tally %>% filter(n>1)
 
 detritus_wider_0_150_added %>% filter(bromeliad_id == "1036")
 
