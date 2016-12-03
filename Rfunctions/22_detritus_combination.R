@@ -3,15 +3,6 @@
 # to say if the answer was observed, or partly predicted, and over what exact
 # range the predictions apply
 
-# for the moment, this is the dataset that holds the predicitons:
-predicted_detritus <- detritus_estimated_with_model$pred_data %>% bind_rows()
-
-glimpse(predicted_detritus)
-# no you'll just have to split it right up again.
-
-detritus_estimated_with_model$pred_data %>%
-  map(~ select(.x, bromeliad_id) %>% group_by(bromeliad_id) %>% tally)
-
 
 detritus_category_df <- detritus_estimated_with_model$pred_data[[2]] %>%
   tbl_df() %>%
@@ -98,13 +89,6 @@ det_by_bromeliad %>%
                                            obs_or_fit = paste0(.x$obs_or_fit, collapse = "_"),
                                            total_detritus = sum(as.numeric(.x$detritus_amount))))) %>%
   unnest(summary_df)
-
-detritus_total %>%
-  select(-detritus_category) %>%
-  .[["data"]]
-
-  summarize(,
-            data2 = bind_rows(data))
 
 
 # here join on the se column, (what if there is two?). also can rename or drop detritus_category
