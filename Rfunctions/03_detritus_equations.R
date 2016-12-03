@@ -361,13 +361,15 @@ estimate_missing_detritus_new_site <- function(.observed_model_fit, .modelling_i
     select(m_id, y_vars, y_funs)
 # browser()
   # join these, add filtered dataset to model
-  output <- fit_data_needed %>%
+  prediction_raw_material <- fit_data_needed %>%
     left_join(model_info) %>%
     mutate(target_df = target_dat %>%
              map(~ .detritus_data %>%
                    # TODO: ? add select() to contain only some variables??
                    filter(dataset_id %in% .x))
-    ) %>%
+    )
+
+  output <- prediction_raw_material %>%
     # get the precise variables we need to add predictions
     select(m_id, incoming_data = target_df, predicting_model, y_vars, y_funs) %>%
     by_row(make_prediction_df %>% lift, .to = "pred_data")
