@@ -240,20 +240,28 @@ correct_bromeliad_names <- function(.detritus_wider, .bromeliad_spp){
   detritus_wider_clean <- .detritus_wider %>%
     mutate(species = species %>% str_trim(side = "both"))
 
-  out <- detritus_wider_clean %>%
-    left_join(.bromeliad_spp %>%
-                select(species = `Former name`,
-                       species_name = `Proposed name`))
+  out <- detritus_wider_clean #%>%
+    # left_join(.bromeliad_spp %>%
+    #             select(species = `Former name`,
+    #                    species_name = `Proposed name`))
 
-  out_nrow <- filter(out, is.na(species_name)) %>% nrow()
+  # out_nrow <- filter(out, is.na(species_name)) %>% nrow()
+  #
+  # # browser()
+  # assert_that(out_nrow == 0)
 
-  # browser()
-  assert_that(out_nrow == 0)
+# NO duplications of bromeliads!!
+  out %>%
+    group_by(bromeliad_id) %>%
+    tally %>%
+    assert(in_set(1), n)
 
   ## replace original "species" with new name
-
-  out %>%
-    select(-species) %>%
-    rename(species = species_name)
+#
+#   out <- out %>%
+#     select(-species) %>%
+#     rename(species = species_name)
+#
+  return(out)
 }
 
