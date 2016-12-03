@@ -80,7 +80,7 @@ combine_observed_predicted_0_150_det <- function(.detritus_wider_fpom_g_pred) {
 
   outdf <- .detritus_wider_fpom_g_pred[["data_with_prediction"]]
 
-  outdf %>%
+  output <- outdf %>%
     mutate_at(vars(ends_with("fitted")), as.numeric) %>%
     # not sure what to call this -- a combination of predictions and real values!
     mutate(detritus0_150_combo = if_else(is.na(detritus0_150), fpom_g_fitted, detritus0_150),
@@ -89,5 +89,14 @@ combine_observed_predicted_0_150_det <- function(.detritus_wider_fpom_g_pred) {
                                          if_else(!is.na(fpom_g_fitted),
                                                  "estimated",
                                                  NA_character_)))
+
+  # TODO tests? it might make sense to keep the name of the variable the same --
+  # not to track metadata in a column name like that
+
+  # output %>%
+  #   select(-detritus0_150) %>%
+  #   rename(detritus0_150 = detritus0_150_combo)
+
+  return(output)
 }
 
