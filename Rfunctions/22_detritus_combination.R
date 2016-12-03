@@ -8,9 +8,11 @@ combine_all_detritus_values <- function(.detritus_estimated_with_model,
                                         .broms_date){
   # begin with just the detritus that has been predicted:
   detritus_all_predictions <- .detritus_estimated_with_model %>%
-    select(pred_data) %>%
-    unnest %>%
-    select(bromeliad_id, starts_with("detritus"))
+    select(pred_data) %>% as.list() %>% flatten %>%
+    reduce(left_join, by = "bromeliad_id", .init = select(.detritus_wider_new_variables, bromeliad_id))
+
+  count_of_each_brom <- .detritus_wider_new_variables %>% group_by(bromeliad_id) %>% tally %>% .[["n"]]
+  assert_that(all(count_of_each_brom == 1))
 
   # then get the bromeliads which were never estimated for anything:
   detritus_all_observations <- .detritus_wider_new_variables %>%
@@ -116,6 +118,8 @@ cats_in_brom <- det_long_min_max %>%
   mutate(nr = map_dbl(data, nrow))
 
 cats_in_brom %>% filter(nr > 1) %>% unnest(data)
+
+detritus_wider_0_150_added %>% filter(bromeliad_id == "1036")
 
 library(visdat)
 detritus_wider_0_150_added %>%
