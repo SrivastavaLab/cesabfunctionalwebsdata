@@ -114,8 +114,10 @@ det_long_just_fitted <- detritus_long_filtered %>%
 
 det_long_broken_up <- det_long_just_fitted %>%
   mutate(obs_or_fit = if_else(str_detect(detritus_category, "_fitted"), true = "fit", false = "obs")) %>%
-  mutate(detritus_broken_up = str_split(detritus_category, "_"))
+  mutate(detritus_broken_up = str_split(detritus_category, "_")) %>%
+  tbl_df
 
+det_long_broken_up
 
 find_range <- function(x){
   # NA at the end of a string (or near the end) indicates that that sieve
@@ -149,17 +151,31 @@ cats_in_brom <- det_long_min_max %>%
   nest %>%
   mutate(nr = map_dbl(data, nrow))
 
-cats_in_brom %>% filter(nr > 1) %>% unnest(data)
+# check -- there should be no duplicates
+cats_in_brom %>% filter(nr > 1) %>% verify(nrow(.)==0)
 
-detritus_long_categories %>% group_by(bromeliad_id) %>% tally %>% filter(n>1)
+# within each bromeliad, check to make sure that sequence is consecutive
+tested <- det_long_min_max %>%
+  group_by(bromeliad_id) %>%
+  arrange(min_detritus, max_detritus) %>%
+  nest %>%
+  filter(map_dbl(data, nrow) > 1) %>%
+  mutate(is_consec = map_lgl(data, ~ all(lead(.x$min_detritus, default = Inf) == .x$max_detritus)))
 
-detritus_wider_0_150_added %>% filter(bromeliad_id == "1036")
+tested[1,"is_consec"][[1]]
 
-library(visdat)
-detritus_wider_0_150_added %>%
-  select(starts_with("detritus0_150")) %>% vis_miss(cluster = TRUE)
+tested %>% filter(is_consec)
 
-# OK its time for a better naming convention for the new variable names
+
+# what's missing??
+det_long_min_max %>%
+  select(bromeliad_id, detritus_category, detritus_amount) %>%
+  spread(detritus_category, detritus_amount) %>%
+  visdat::vis_miss(cluster = TRUE)
+
+# what's happening is tha some detritus_category names are not parsing, so we
+# are getting the wrong min and max. Either go back and re-change the offending names, or do this over.
+
 
 summarize_detritus <- function(det_df){
 
