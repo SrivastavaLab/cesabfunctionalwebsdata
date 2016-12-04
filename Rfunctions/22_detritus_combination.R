@@ -26,28 +26,20 @@ detritus_all_preds <- combine_detritus_predictions(detritus_estimated_with_model
 
 visdat::vis_dat(detritus_all_preds)
 
-combine_all_detritus_values <- function(.detritus_wider_new_variables, .detritus_all_preds, .broms_date){  # then get the bromeliads which were never estimated for anything:
-   detritus_all_observations <- .detritus_wider_new_variables %>%
-     anti_join(.detritus_all_preds, by = "bromeliad_id") %>%
+
+
+combine_all_detritus_values <- function(.detritus_wider_new_variables, .detritus_all_preds, .broms_date){
+  # before combining observed and fitted values, check that they have no columns
+  # in common
+  # should be 0
+  commonnames <- intersect(names(.detritus_all_preds) %>% discard(str_detect, "bromeliad_id"),
+                           names(.detritus_wider_new_variables) %>% discard(str_detect, "bromeliad_id"))
+  assert_that(length(commonnames) == 0)
+
+
+  detritus_all_observations <- .detritus_wider_new_variables %>%
+    left_join(.detritus_all_preds, by = "bromeliad_id") %>%
     select(bromeliad_id, starts_with("detritus"))
-
-  # nothing in common
-  common_broms <- intersect(detritus_all_observations$bromeliad_id,
-                            .detritus_all_preds$bromeliad_id)
-
-  assert_that(length(common_broms) == 0)
-
-  # nothing left out
-  missing_broms <- setdiff(.broms_date$bromeliad_id, c(detritus_all_observations$bromeliad_id,
-                                                       .detritus_all_preds$bromeliad_id))
-
-  assert_that(length(missing_broms) == 0)
-
-  # gather each then put them on top of each other
-  det_all_pred_long <- .detritus_all_preds %>%
-    gather(detritus_category, detritus_amount, starts_with("detritus")) %>%
-    # we can filter out NAs directly since we are doing this at the bromeliad level:
-    filter(!is.na(detritus_amount))
 
   det_all_obs_long <- detritus_all_observations %>%
     # there is only one column with character. drop that one!
@@ -56,14 +48,18 @@ combine_all_detritus_values <- function(.detritus_wider_new_variables, .detritus
     # we can filter out NAs directly since we are doing this at the bromeliad level:
     filter(!is.na(detritus_amount))
 
-  all_detritus <- bind_rows(det_all_pred_long, det_all_obs_long)
-
-  return(all_detritus)
+  return(det_all_obs_long)
 }
 
 detritus_long_categories <- combine_all_detritus_values(detritus_wider_new_variables, detritus_all_preds, broms_date)
 
 detritus_long_categories %>% select(detritus_category) %>% distinct %>% View
+
+# is150_850 missing here?!
+detritus_long_categories %>%
+  filter(detritus_category %>% str_detect("150_850")) %>%
+  filter(bromeliad_id == "5181")
+# that's a problem!!! where did that bromeliad go?!
 
 # are .x and .y versions of the same variable actually different?!
 
@@ -108,8 +104,8 @@ filter_just_orig_fitted <- function(.detritus_wider_df, .detritus_long_categorie
     filter(detritus_category %in% c(starting_names, all_fitted))
 }
 
-
 detritus_long_filtered <- filter_just_orig_fitted(detritus_wider_150_name_changed, detritus_long_categories)
+
 
 det_long_just_fitted <- detritus_long_filtered %>%
   filter(!str_detect(detritus_category, "_se.fitted"))
