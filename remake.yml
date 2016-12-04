@@ -23,6 +23,7 @@ packages:
   - lazyeval
   - assertr
   - prediction
+  - visdat
 
 sources:
   #- Rfunctions
@@ -34,6 +35,7 @@ sources:
   - Rfunctions/03_detritus_equations.R
   - Rfunctions/output_spp_dictionary.R
   - Rfunctions/22_detritus_combination.R
+  - Rfunctions/07_traits_checking.R
 
 targets:
   downloads:
@@ -57,11 +59,11 @@ targets:
 
   all:
     depends:
-      - trts_all_filtered
       - abundance
       - detritus_model_plots
       - outputs/bromeliad_observations.csv
       - bromeliad_detritus
+      - traits_all_renamed
       #- reports
 #  downloads:
 #      -
@@ -303,3 +305,8 @@ targets:
 
   bromeliad_detritus:
     command: add_detritus_summary(detritus_wider_150_name_changed, detritus_summary)
+
+# Traits -------------------------------------------------------------------------------------
+
+  traits_all_renamed:
+    command: rename_check_traits(trts_all_filtered)
