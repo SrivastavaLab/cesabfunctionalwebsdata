@@ -3,6 +3,8 @@
 # to say if the answer was observed, or partly predicted, and over what exact
 # range the predictions apply
 
+remake::dump_environment()
+
 combine_detritus_predictions <- function(.detritus_estimated_with_model){
   # begin with just the detritus that has been predicted:
   detritus_all_predictions <- .detritus_estimated_with_model %>%
@@ -67,13 +69,14 @@ detritus_long_categories %>% select(detritus_category) %>% distinct %>% View
 
 split_cats <- detritus_long_categories %>%
   filter(!str_detect(detritus_category, "_se")) %>%
-  separate(detritus_category, c("category", "xy"), sep = "\\.", fill = "right") %>%
+  separate(detritus_category, c("category", "xy"), sep = "\\.", fill = "right", extra = "merge") %>%
   filter(!is.na(xy))
 split_cats %>%
   group_by(bromeliad_id, category) %>%
   nest %>%
   filter(map_dbl(data, nrow) > 2) %>%
   verify(nrow(.) == 0)
+# note that this is only for the dublicates (.x and .x.x etc) -- another way of generating
 split_cats %>%
   select(-xy) %>%
   spread(category, detritus_amount) %>%
@@ -83,19 +86,18 @@ split_cats %>%
 # regression -- they should be dropped! So keep only those columns which either
 # were there at the start or have "fitted" in the name.
 
-filter_just_orig_fitted <- function(.detritus_wider_0_150_added, .detritus_long_categories) {
+filter_just_orig_fitted <- function(.detritus_wider_df, .detritus_long_categories) {
 
   # First, clear the x and y thing away
   detritus_long_clean_cats <- .detritus_long_categories %>%
-    mutate(detritus_category = str_replace(detritus_category, "\\.[xy]", ""))
+    mutate(detritus_category = str_replace_all(detritus_category, "\\.[xy]", ""))
 
   # get the names of the last version of the data before these "extra" names were added.
-  starting_names <- .detritus_wider_0_150_added %>%
+  starting_names <- .detritus_wider_df %>%
     names %>%
     # extra
     keep(~ str_detect(.x, "^detritus")) %>%
-    discard(~ str_detect(.x, "src")) %>%
-    discard(~ str_detect(.x, "detritus0_150$"))
+    discard(~ str_detect(.x, "detritus0_150_src"))
 
   # find the ones which are estimated from models (i.e. "fitted")
   all_fitted <- detritus_long_clean_cats$detritus_category %>%
@@ -107,10 +109,10 @@ filter_just_orig_fitted <- function(.detritus_wider_0_150_added, .detritus_long_
 }
 
 
-detritus_long_filtered <- filter_just_orig_fitted(detritus_wider_0_150_added, detritus_long_categories)
+detritus_long_filtered <- filter_just_orig_fitted(detritus_wider_150_name_changed, detritus_long_categories)
 
 det_long_just_fitted <- detritus_long_filtered %>%
-  filter(!str_detect(detritus_category, "_se.fitted$"))
+  filter(!str_detect(detritus_category, "_se.fitted"))
 
 det_long_broken_up <- det_long_just_fitted %>%
   mutate(obs_or_fit = if_else(str_detect(detritus_category, "_fitted"), true = "fit", false = "obs")) %>%
@@ -153,19 +155,25 @@ cats_in_brom <- det_long_min_max %>%
 
 # check -- there should be no duplicates
 cats_in_brom %>% filter(nr > 1) %>% verify(nrow(.)==0)
+cats_in_brom %>% filter(nr > 1) %>% .[["data"]]
+
 
 # within each bromeliad, check to make sure that sequence is consecutive
-tested <- det_long_min_max %>%
+for_testing <- det_long_min_max %>%
   group_by(bromeliad_id) %>%
   arrange(min_detritus, max_detritus) %>%
   nest %>%
   filter(map_dbl(data, nrow) > 1) %>%
-  mutate(is_consec = map_lgl(data, ~ all(lead(.x$min_detritus, default = Inf) == .x$max_detritus)))
+  mutate(is_consec = map_lgl(data, ~ identical(c(.x$min_detritus[-1],Inf), .x$max_detritus)))
 
-tested[1,"is_consec"][[1]]
+for_testing$is_consec[[1]]
 
-tested %>% filter(is_consec)
+for_testing[1,"is_consec"][[1]]
 
+for_testing %>% filter(!is_consec) %>% .[1,]
+
+## oh crap, there are some detritus values missing!
+broms_date %>% filter(bromeliad_id == "5181")
 
 # what's missing??
 det_long_min_max %>%
@@ -175,7 +183,9 @@ det_long_min_max %>%
 
 # what's happening is tha some detritus_category names are not parsing, so we
 # are getting the wrong min and max. Either go back and re-change the offending names, or do this over.
-
+det_long_min_max %>%
+  select(detritus_category) %>%
+  distinct
 
 summarize_detritus <- function(det_df){
 
