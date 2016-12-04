@@ -183,11 +183,8 @@ detritus_summary <- det_long_check_consec %>%
   mutate(summary_df = map(data, ~data_frame(min_det = min(.x$min_detritus),
                                             max_det = max(.x$max_detritus),
                                             obs_or_fit = paste0(unique(.x$obs_or_fit), collapse = "_"),
-                                            total_detritus = sum(.x$detritus_amount))))
-
-detritus_summary %>%
+                                            total_detritus = sum(.x$detritus_amount)))) %>%
   unnest(summary_df)
 
 # we don't have every bromeliad here?
-broms_date %>% anti_join(detritus_summary, by = "bromeliad_id") %>% visdat::vis_miss(cluster = TRUE)
 detritus_wider_150_name_changed %>% anti_join(detritus_summary, by = "bromeliad_id") %>% visdat::vis_miss(cluster = TRUE)
