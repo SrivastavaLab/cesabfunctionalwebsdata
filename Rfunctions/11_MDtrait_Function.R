@@ -34,7 +34,7 @@
 ### MD8 (case/tube) (0 or 3)
 
 
-add_MD_trait <- function(.traits_all_rnmed){
+add_MD_trait <- function(.traits_all_renamed){
   #### Here I create the new trait columns filled by "NA"
   trait.1 <- .traits_all_renamed %>%
     select(species_id, bwg_name, domain:subspecies) %>%
@@ -2181,7 +2181,8 @@ add_MD_trait <- function(.traits_all_rnmed){
 
 
   stopifnot(nrow(trait.1) == nrow(trait.2))
+
+  return(trait.2)
 }
 # write.csv(trait.3, "data-intermediate/11MD_trait.csv", row.names = FALSE)
-
 

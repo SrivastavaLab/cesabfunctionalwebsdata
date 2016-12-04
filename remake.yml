@@ -63,7 +63,7 @@ targets:
       - detritus_model_plots
       - outputs/bromeliad_observations.csv
       - bromeliad_detritus
-      - traits_all_renamed
+      - traits_all_MD_added
       #- reports
 #  downloads:
 #      -
@@ -310,3 +310,8 @@ targets:
 
   traits_all_renamed:
     command: rename_check_traits(trts_all_filtered)
+
+
+  traits_all_MD_added:
+    command: add_MD_trait(traits_all_renamed)
+
