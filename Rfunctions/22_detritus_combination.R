@@ -3,8 +3,6 @@
 # to say if the answer was observed, or partly predicted, and over what exact
 # range the predictions apply
 
-remake::dump_environment()
-
 combine_detritus_predictions <- function(.detritus_estimated_with_model){
   # begin with just the detritus that has been predicted:
   detritus_all_predictions <- .detritus_estimated_with_model %>%
@@ -22,9 +20,7 @@ combine_detritus_predictions <- function(.detritus_estimated_with_model){
 
 }
 
-detritus_all_preds <- combine_detritus_predictions(detritus_estimated_with_model)
-
-visdat::vis_dat(detritus_all_preds)
+# visdat::vis_dat(detritus_all_preds)
 
 combine_all_detritus_values <- function(.detritus_wider_new_variables, .detritus_all_preds, .broms_date){
   # before combining observed and fitted values, check that they have no columns
@@ -46,39 +42,27 @@ combine_all_detritus_values <- function(.detritus_wider_new_variables, .detritus
     # we can filter out NAs directly since we are doing this at the bromeliad level:
     filter(!is.na(detritus_amount))
 
+  # a quick test:
+  split_cats <- det_all_obs_long %>%
+    filter(!str_detect(detritus_category, "_se")) %>%
+    separate(detritus_category, c("category", "xy"), sep = "\\.", fill = "right", extra = "merge") %>%
+    filter(!is.na(xy))
+  split_cats %>%
+    group_by(bromeliad_id, category) %>%
+    nest %>%
+    filter(map_dbl(data, nrow) > 2) %>%
+    verify(nrow(.) == 0)
   return(det_all_obs_long)
 }
 
-detritus_long_categories <- combine_all_detritus_values(detritus_wider_new_variables, detritus_all_preds, broms_date)
+# maybe print this as a table
+# detritus_long_categories %>% select(detritus_category) %>% distinct %>% View
 
-detritus_long_categories %>% select(detritus_category) %>% distinct %>% View
-
-# is150_850 missing here?!
-detritus_long_categories %>%
-  filter(detritus_category %>% str_detect("150_850")) %>%
-  filter(bromeliad_id == "5181")
-# that's a problem!!! where did that bromeliad go?!
-
-# are .x and .y versions of the same variable actually different?!
-
-split_cats <- detritus_long_categories %>%
-  filter(!str_detect(detritus_category, "_se")) %>%
-  separate(detritus_category, c("category", "xy"), sep = "\\.", fill = "right", extra = "merge") %>%
-  filter(!is.na(xy))
-split_cats %>%
-  group_by(bromeliad_id, category) %>%
-  nest %>%
-  filter(map_dbl(data, nrow) > 2) %>%
-  verify(nrow(.) == 0)
-# note that this is only for the dublicates (.x and .x.x etc) -- another way of generating
-split_cats %>%
-  select(-xy) %>%
-  spread(category, detritus_amount) %>%
-  visdat::vis_miss()
-
-# many categories of detritus are the result of summation for the purposes of
-# regression -- they should be dropped! So keep only those columns which either
-# were there at the start or have "fitted" in the name.
+# # note that this is only for the dublicates (.x and .x.x etc) -- another way of generating
+# split_cats %>%
+#   select(-xy) %>%
+#   spread(category, detritus_amount) %>%
+#   visdat::vis_miss()
 
 filter_just_orig_fitted <- function(.detritus_wider_df, .detritus_long_categories) {
 
@@ -102,89 +86,95 @@ filter_just_orig_fitted <- function(.detritus_wider_df, .detritus_long_categorie
     filter(detritus_category %in% c(starting_names, all_fitted))
 }
 
-detritus_long_filtered <- filter_just_orig_fitted(detritus_wider_150_name_changed, detritus_long_categories)
+split_detritus_categories <- function(.detritus_long_filtered) {
 
+  det_long_just_fitted <- .detritus_long_filtered %>%
+    filter(!str_detect(detritus_category, "_se.fitted"))
 
-det_long_just_fitted <- detritus_long_filtered %>%
-  filter(!str_detect(detritus_category, "_se.fitted"))
+  det_long_broken_up <- det_long_just_fitted %>%
+    mutate(obs_or_fit = if_else(str_detect(detritus_category, "_fitted"), true = "fit", false = "obs")) %>%
+    mutate(detritus_broken_up = str_split(detritus_category, "_")) %>%
+    tbl_df
 
-det_long_broken_up <- det_long_just_fitted %>%
-  mutate(obs_or_fit = if_else(str_detect(detritus_category, "_fitted"), true = "fit", false = "obs")) %>%
-  mutate(detritus_broken_up = str_split(detritus_category, "_")) %>%
-  tbl_df
-
-det_long_broken_up
-
-find_range <- function(x){
-  # NA at the end of a string (or near the end) indicates that that sieve
-  # included detritus up to the biggest size present
-  is_NA_present <- any(str_detect(x, "NA"))
-  # use readr functions to parse it to numbers
-
-  numeric_detritus <- quietly(parse_number)(x)[["result"]]
-
-  if(is_NA_present){
-    maxval <- Inf
-  } else {
-    maxval <- max(numeric_detritus, na.rm = TRUE)
-  }
-
-  minval <- min(numeric_detritus, na.rm = TRUE)
-
-  data.frame(min_detritus = minval, max_detritus = maxval)
+  return(det_long_broken_up)
 }
 
-det_long_min_max <- det_long_broken_up %>%
-  mutate(detritus_max = map(detritus_broken_up, find_range)) %>%
-  unnest(detritus_max) %>%
-  # tests here?
-  # can ditch the broken_up col
-  select(-detritus_broken_up)
+extract_numeric_min_max <- function(.det_long_broken_up){
+  find_range <- function(x){
+    # NA at the end of a string (or near the end) indicates that that sieve
+    # included detritus up to the biggest size present
+    is_NA_present <- any(str_detect(x, "NA"))
+    # use readr functions to parse it to numbers
 
-# do the values of the range and the range itself together make sense?
-det_long_min_max %>%
-  select(detritus_category, min_detritus, max_detritus) %>%
-  distinct()
+    numeric_detritus <- quietly(parse_number)(x)[["result"]]
 
-# check -- are the ranges unique?
-cats_in_brom <- det_long_min_max %>%
-  group_by(min_detritus, max_detritus, bromeliad_id) %>%
-  nest %>%
-  mutate(nr = map_dbl(data, nrow))
+    if(is_NA_present){
+      maxval <- Inf
+    } else {
+      maxval <- max(numeric_detritus, na.rm = TRUE)
+    }
 
-# check -- there should be no duplicates
-cats_in_brom %>% filter(nr > 1) %>% verify(nrow(.)==0)
-cats_in_brom %>% filter(nr > 1) %>% .[["data"]]
+    minval <- min(numeric_detritus, na.rm = TRUE)
 
-detect_consecutive <- function(df){
-  # single-row dataframes don't have anything to worry about
-  if (nrow(df) == 1){
-    answer <- TRUE
-  } else {
-    answer <- identical(c(df$min_detritus[-1], Inf),
-                        df$max_detritus)
+    data.frame(min_detritus = minval, max_detritus = maxval)
   }
-  return(answer)
+
+  output <- det_long_broken_up %>%
+    mutate(detritus_max = map(detritus_broken_up, find_range)) %>%
+    unnest(detritus_max) %>%
+    # tests here?
+    # can ditch the broken_up col
+    select(-detritus_broken_up)
+
+  # check -- are the ranges unique?
+  output %>%
+    group_by(min_detritus, max_detritus, bromeliad_id) %>%
+    nest %>%
+    mutate(nr = map_dbl(data, nrow)) %>%
+    # check -- there should be no duplicates
+    filter(nr > 1) %>% verify(nrow(.)==0)
+
+  return(output)
 }
 
-# within each bromeliad, check to make sure that sequence is consecutive
-det_long_check_consec <- det_long_min_max %>%
-  group_by(bromeliad_id) %>%
-  # arrange in ascending order
-  arrange(min_detritus, max_detritus) %>%
-  nest %>%
-  # "each interval should begin where the last one ended"
-  mutate(is_consec = map_lgl(data, detect_consecutive))
 
-det_long_check_consec$data %>% .[1:5]
+# # do the values of the range and the range itself together make sense?
+# det_long_min_max %>%
+#   select(detritus_category, min_detritus, max_detritus) %>%
+#   distinct()
 
+add_consecutive_detritus_col <- function(.det_long_min_max) {
+  detect_consecutive <- function(df){
+    # single-row dataframes don't have anything to worry about
+    if (nrow(df) == 1){
+      answer <- TRUE
+    } else {
+      answer <- identical(c(df$min_detritus[-1], Inf),
+                          df$max_detritus)
+    }
+    return(answer)
+  }
 
-detritus_summary <- det_long_check_consec %>%
-  mutate(summary_df = map(data, ~data_frame(min_det = min(.x$min_detritus),
-                                            max_det = max(.x$max_detritus),
-                                            obs_or_fit = paste0(unique(.x$obs_or_fit), collapse = "_"),
-                                            total_detritus = sum(.x$detritus_amount)))) %>%
-  unnest(summary_df)
+  # within each bromeliad, check to make sure that sequence is consecutive
+  .det_long_min_max %>%
+    group_by(bromeliad_id) %>%
+    # arrange in ascending order
+    arrange(min_detritus, max_detritus) %>%
+    nest %>%
+    # "each interval should begin where the last one ended"
+    mutate(is_consec = map_lgl(data, detect_consecutive))
+
+}
+
+create_detritus_summary <- function(.det_long_check_consec){
+  det_long_check_consec %>%
+    mutate(summary_df = map(data, ~data_frame(min_det = min(.x$min_detritus),
+                                              max_det = max(.x$max_detritus),
+                                              obs_or_fit = paste0(unique(.x$obs_or_fit), collapse = "_"),
+                                              total_detritus = sum(.x$detritus_amount)))) %>%
+    unnest(summary_df)
+
+}
 
 # we don't have every bromeliad here?
-detritus_wider_150_name_changed %>% anti_join(detritus_summary, by = "bromeliad_id") %>% visdat::vis_miss(cluster = TRUE)
+# detritus_wider_150_name_changed %>% anti_join(detritus_summary, by = "bromeliad_id") %>% visdat::vis_miss(cluster = TRUE)

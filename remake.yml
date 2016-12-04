@@ -33,6 +33,7 @@ sources:
   - Rfunctions/find_symbols.R
   - Rfunctions/03_detritus_equations.R
   - Rfunctions/output_spp_dictionary.R
+  - Rfunctions/22_detritus_combination.R
 
 targets:
   downloads:
@@ -58,12 +59,9 @@ targets:
     depends:
       - trts_all_filtered
       - abundance
-      - detritus_wider
-      - detritus_estimated_with_equation
-      - detritus_equation_plots
-      - detritus_estimated_with_model
       - detritus_model_plots
       - outputs/bromeliad_observations.csv
+      - detritus_summary
       #- reports
 #  downloads:
 #      -
@@ -279,3 +277,26 @@ targets:
                                                 .detritus_data = detritus_wider_new_variables)
 
 
+# add that data together ---------------------------------------------------
+
+
+  detritus_all_preds:
+    command: combine_detritus_predictions(detritus_estimated_with_model)
+
+  detritus_long_categories:
+    command: combine_all_detritus_values(detritus_wider_new_variables, detritus_all_preds, broms_date)
+
+  detritus_long_filtered:
+    command: filter_just_orig_fitted(detritus_wider_150_name_changed, detritus_long_categories)
+
+  det_long_broken_up:
+    command: split_detritus_categories(detritus_long_filtered)
+
+  det_long_min_max:
+    command: extract_numeric_min_max(det_long_broken_up)
+
+  det_long_check_consec:
+    command: add_consecutive_detritus_col(det_long_min_max)
+
+  detritus_summary:
+    command: create_detritus_summary(det_long_check_consec)
