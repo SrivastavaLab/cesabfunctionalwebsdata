@@ -26,5 +26,7 @@ rename_check_traits <- function(.trts_all_filtered){
     mutate(combotrait2 = as.numeric(combotrait)) %>%
     select(-tachet, -traits, -combotrait) %>%
     spread(traitmode, combotrait2) %>%
-    assertr::verify(nrow(.) == nrow(rename_check_traits))
+    assertr::verify(nrow(.) == nrow(rename_check_traits)) %>%
+    # refining output by making "NA" into a true NA
+    mutate_if(is.character, readr::parse_character)
 }
