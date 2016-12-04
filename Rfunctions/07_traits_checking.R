@@ -39,6 +39,11 @@ join_check_by_tax <- function(Alltraits, newtraits, tax_grp){
     verify(nrow(.) == nrow(Alltraits))
 }
 
+read_trait_data <- function(filename){
+  read_csv2(filename, col_types = "_cnnn")
+}
+
+
 put_traits_together <- function(.traits_all_MD_added, .genus, .family, prefix){
   by_genus <- join_check_by_tax(.traits_all_MD_added, .genus, "genus")
 
@@ -65,5 +70,3 @@ put_traits_together <- function(.traits_all_MD_added, .genus, .family, prefix){
 
   return(by_family)
 }
-
-put_traits_together(traits_all_MD_added, CP_genus, CP_family, "CP")
