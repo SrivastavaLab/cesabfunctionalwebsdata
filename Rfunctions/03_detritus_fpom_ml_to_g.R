@@ -93,10 +93,13 @@ combine_observed_predicted_0_150_det <- function(.detritus_wider_fpom_g_pred) {
   # TODO tests? it might make sense to keep the name of the variable the same --
   # not to track metadata in a column name like that
 
-  # output %>%
-  #   select(-detritus0_150) %>%
-  #   rename(detritus0_150 = detritus0_150_combo)
+
 
   return(output)
 }
 
+change_name_150_combo <- function(.detritus_wider_0_150_added){
+  .detritus_wider_0_150_added %>%
+    select(-detritus0_150) %>%
+    rename(detritus0_150 = detritus0_150_combo)
+}

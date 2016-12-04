@@ -203,12 +203,14 @@ targets:
   detritus_wider_0_150_added:
     command: combine_observed_predicted_0_150_det(detritus_wider_fpom_g_pred)
 
+  detritus_wider_150_name_changed:
+    command: change_name_150_combo(detritus_wider_0_150_added)
 
 
 # Export corrected bromeliad names --------------------------------------------------
 
   outputs/bromeliad_observations.csv:
-    command: write_csv(detritus_wider_0_150_added, path = target_name)
+    command: write_csv(detritus_wider_150_name_changed, path = target_name)
 
   outputs/dataset_information.csv:
     command: write_csv(dats_date, path = target_name)
@@ -241,10 +243,10 @@ targets:
     command: create_equation_table()
 
   detritus_equation_plots:
-    command: plot_data_with_equation_table(equation_table, .detritus_data = detritus_wider_0_150_added)
+    command: plot_data_with_equation_table(equation_table, .detritus_data = detritus_wider_150_name_changed)
 
   detritus_estimate_equation_filt:
-    command: do_filter_dataset_id(equation_table, .detritus_data = detritus_wider_0_150_added)
+    command: do_filter_dataset_id(equation_table, .detritus_data = detritus_wider_150_name_changed)
 
   detritus_estimated_with_equation:
     command: do_mutate_new_col(detritus_estimate_equation_filt)
@@ -252,7 +254,7 @@ targets:
 # estimating missing detritus with MODELS --------------------------------------
 
   detritus_wider_new_variables:
-    command: add_new_columns_for_prediction(detritus_wider_0_150_added)
+    command: add_new_columns_for_prediction(detritus_wider_150_name_changed)
 
   model_table:
     command: create_model_table()
