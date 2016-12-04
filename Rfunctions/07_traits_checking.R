@@ -30,3 +30,40 @@ rename_check_traits <- function(.trts_all_filtered){
     # refining output by making "NA" into a true NA
     mutate_if(is.character, readr::parse_character)
 }
+
+
+# adding those new traits
+
+join_check_by_tax <- function(Alltraits, newtraits, tax_grp){
+  left_join(Alltraits, newtraits, by = tax_grp) %>%
+    verify(nrow(.) == nrow(Alltraits))
+}
+
+put_traits_together <- function(.traits_all_MD_added, .genus, .family, prefix){
+  by_genus <- join_check_by_tax(.traits_all_MD_added, .genus, "genus")
+
+  # add trait by family
+  by_family <- join_check_by_tax(by_genus, .family, "family")
+
+  # newly added traits -- would end in ".x" because present in both of these. TODO
+  # add a check for these -- that names are the same -- making this last part
+  # safe.
+
+  newnames.x <- names(by_family) %>% keep(.p = ~ str_detect(.x, "\\.x"))
+  newnames.y <- names(by_family) %>% keep(.p = ~ str_detect(.x, "\\.y"))
+
+  assert_that(length(newnames.x) > 0)
+  assert_that(length(newnames.y) > 0)
+
+  outnames <- paste0(prefix, parse_number(newnames.x))
+
+  for(nn in seq_along(newnames.x)){
+    by_family[[outnames[nn]]] <- if_else(is.na(by_family[[newnames.x[nn]]]),
+                                         true = by_family[[newnames.y[nn]]],
+                                         false = by_family[[newnames.x[nn]]])
+  }
+
+  return(by_family)
+}
+
+put_traits_together(traits_all_MD_added, CP_genus, CP_family, "CP")
