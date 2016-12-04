@@ -172,9 +172,18 @@ create_detritus_summary <- function(.det_long_check_consec){
                                               max_det = max(.x$max_detritus),
                                               obs_or_fit = paste0(unique(.x$obs_or_fit), collapse = "_"),
                                               total_detritus = sum(.x$detritus_amount)))) %>%
+    select(-data) %>%
     unnest(summary_df)
 
 }
+
+add_detritus_summary <- function(.detritus_wider_150_name_changed, .detritus_summary){
+  .detritus_wider_150_name_changed %>%
+    select(-starts_with("detritus"), -starts_with("fpom")) %>%
+    left_join(.detritus_summary, by = "bromeliad_id")
+}
+
+
 
 # we don't have every bromeliad here?
 # detritus_wider_150_name_changed %>% anti_join(detritus_summary, by = "bromeliad_id") %>% visdat::vis_miss(cluster = TRUE)

@@ -61,7 +61,7 @@ targets:
       - abundance
       - detritus_model_plots
       - outputs/bromeliad_observations.csv
-      - detritus_summary
+      - bromeliad_detritus
       #- reports
 #  downloads:
 #      -
@@ -300,3 +300,6 @@ targets:
 
   detritus_summary:
     command: create_detritus_summary(det_long_check_consec)
+
+  bromeliad_detritus:
+    command: add_detritus_summary(detritus_wider_150_name_changed, detritus_summary)
