@@ -26,8 +26,6 @@ detritus_all_preds <- combine_detritus_predictions(detritus_estimated_with_model
 
 visdat::vis_dat(detritus_all_preds)
 
-
-
 combine_all_detritus_values <- function(.detritus_wider_new_variables, .detritus_all_preds, .broms_date){
   # before combining observed and fitted values, check that they have no columns
   # in common
@@ -143,6 +141,11 @@ det_long_min_max <- det_long_broken_up %>%
   # can ditch the broken_up col
   select(-detritus_broken_up)
 
+# do the values of the range and the range itself together make sense?
+det_long_min_max %>%
+  select(detritus_category, min_detritus, max_detritus) %>%
+  distinct()
+
 # check -- are the ranges unique?
 cats_in_brom <- det_long_min_max %>%
   group_by(min_detritus, max_detritus, bromeliad_id) %>%
@@ -153,128 +156,38 @@ cats_in_brom <- det_long_min_max %>%
 cats_in_brom %>% filter(nr > 1) %>% verify(nrow(.)==0)
 cats_in_brom %>% filter(nr > 1) %>% .[["data"]]
 
-
-# within each bromeliad, check to make sure that sequence is consecutive
-for_testing <- det_long_min_max %>%
-  group_by(bromeliad_id) %>%
-  arrange(min_detritus, max_detritus) %>%
-  nest %>%
-  filter(map_dbl(data, nrow) > 1) %>%
-  mutate(is_consec = map_lgl(data, ~ identical(c(.x$min_detritus[-1],Inf), .x$max_detritus)))
-
-for_testing$is_consec[[1]]
-
-for_testing[1,"is_consec"][[1]]
-
-for_testing %>% filter(!is_consec) %>% .[1,]
-
-## oh crap, there are some detritus values missing!
-broms_date %>% filter(bromeliad_id == "5181")
-
-# what's missing??
-det_long_min_max %>%
-  select(bromeliad_id, detritus_category, detritus_amount) %>%
-  spread(detritus_category, detritus_amount) %>%
-  visdat::vis_miss(cluster = TRUE)
-
-# what's happening is tha some detritus_category names are not parsing, so we
-# are getting the wrong min and max. Either go back and re-change the offending names, or do this over.
-det_long_min_max %>%
-  select(detritus_category) %>%
-  distinct
-
-summarize_detritus <- function(det_df){
-
-  # drop the ones that are all empty
-  categories_ses <- detritus_category_df %>%
-    # need to get rid of the detritus0_150 and detritus0_150_combo columns -- deal
-    # with this earlier? if the SE here is used as a weight, then that will
-    # "filter through" to later estimates and be caught below
-    filter(!detritus_category %in% c("detritus0_150", "detritus0_150_src")) %>%
-    mutate(is_empty = map_lgl(data, ~ all(is.na(.x$detritus_amount)))) %>%
-    filter(!is_empty) %>%
-    select(-is_empty)
-
-  # we need to split up _fitted values (to get the range) but I want to leave the
-  # _se.fitted alone. so just filter out the _se
-
-  # get the unfiltered things
-  categories_ses %>% anti_join(fitted_and_obs_vals, by = "detritus_category")
-
-  get_det_vals <- fitted_and_obs_vals %>%
-    mutate(obs_or_fit = if_else(str_detect(detritus_category, "_fitted"), true = "fit", false = "obs")) %>%
-    mutate(detritus_broken_up = str_split(detritus_category, "_"))
-
-  find_range <- function(x){
-    # NA at the end of a string (or near the end) indicates that that sieve
-    # included detritus up to the biggest size present
-    is_NA_present <- any(str_detect(x, "NA"))
-    # use readr functions to parse it to numbers
-
-    numeric_detritus <- parse_number(x)
-
-    if(is_NA_present){
-      maxval <- Inf
-    } else {
-      maxval <- max(numeric_detritus, na.rm = TRUE)
-    }
-
-    minval <- min(numeric_detritus, na.rm = TRUE)
-
-    data.frame(min_detritus = minval, max_detritus = maxval)
+detect_consecutive <- function(df){
+  # single-row dataframes don't have anything to worry about
+  if (nrow(df) == 1){
+    answer <- TRUE
+  } else {
+    answer <- identical(c(df$min_detritus[-1], Inf),
+                        df$max_detritus)
   }
-
-  detritus_total <- get_det_vals %>%
-    mutate(detritus_max = map(detritus_broken_up, find_range)) %>%
-    unnest(detritus_max) %>%
-    # tests here?
-    # can ditch the broken_up col
-    select(-detritus_broken_up)
-
-  # test if they are consecutive
-
-  consec_test_vec <- detritus_total %>%
-    # by using lead we can be cunning: skipping the final maximum size (which may be Inf)
-    mutate(is_consec = lead(min_detritus) == max_detritus) %>%
-    .[["is_consec"]]
-  # should all be true except the last (which is NA)
-  all(consec_test_vec[-length(consec_test_vec)])
-
-  # if that passed, add em together.There are two things to add -- the column "obs_or_fit" and the data itself
-  det_by_bromeliad <- detritus_total %>%
-    select(-detritus_category) %>%
-    unnest(data) %>%
-    group_by(bromeliad_id) %>%
-    nest
-
-  det_by_bromeliad$data[[1]]
-
-  det_by_bromeliad %>%
-    mutate(summary_df = map(data, ~data_frame(min_det = min(.x$min_detritus),
-                                              max_det = max(.x$max_detritus),
-                                              obs_or_fit = paste0(.x$obs_or_fit, collapse = "_"),
-                                              total_detritus = sum(as.numeric(.x$detritus_amount))))) %>%
-    unnest(summary_df) %>%
-    select(-data)
+  return(answer)
 }
 
-detritus_total_model <- detritus_estimated_with_model %>%
-  mutate(det_sum = map(pred_data, summarize_detritus)) %>%
-  select(det_sum) %>%
-  unnest
-
-detritus_total_model
-
-
-detritus_total_obs <- detritus_wider_new_variables %>%
-  anti_join(detritus_total_model, by = "bromeliad_id") %>%
-  group_by(dataset_id, visit_id) %>%
+# within each bromeliad, check to make sure that sequence is consecutive
+det_long_check_consec <- det_long_min_max %>%
+  group_by(bromeliad_id) %>%
+  # arrange in ascending order
+  arrange(min_detritus, max_detritus) %>%
   nest %>%
-  mutate(det_sum = map(data, summarize_detritus))
+  # "each interval should begin where the last one ended"
+  mutate(is_consec = map_lgl(data, detect_consecutive))
+
+det_long_check_consec$data %>% .[1:5]
 
 
-detritus_total_obs %>% View
+detritus_summary <- det_long_check_consec %>%
+  mutate(summary_df = map(data, ~data_frame(min_det = min(.x$min_detritus),
+                                            max_det = max(.x$max_detritus),
+                                            obs_or_fit = paste0(unique(.x$obs_or_fit), collapse = "_"),
+                                            total_detritus = sum(.x$detritus_amount))))
 
-# here join on the se column, (what if there is two?). also can rename or drop detritus_category
+detritus_summary %>%
+  unnest(summary_df)
 
-
+# we don't have every bromeliad here?
+broms_date %>% anti_join(detritus_summary, by = "bromeliad_id") %>% visdat::vis_miss(cluster = TRUE)
+detritus_wider_150_name_changed %>% anti_join(detritus_summary, by = "bromeliad_id") %>% visdat::vis_miss(cluster = TRUE)
