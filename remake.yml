@@ -63,7 +63,7 @@ targets:
       - detritus_model_plots
       - outputs/bromeliad_observations.csv
       - bromeliad_detritus
-      - traits_all_CP_added
+      - traits_all_BF_added
       #- reports
 #  downloads:
 #      -
@@ -316,16 +316,16 @@ targets:
     command: add_MD_trait(traits_all_renamed)
 
   CP_genus:
-    command: read_trait_data("data-intermediate/CPgenus_updated.csv")
+    command: read_trait_data("data-intermediate/CPgenus_updated.csv", I("_cnnn"))
 
   CP_family:
-    command: read_trait_data("data-intermediate/CPfamily_updated.csv")
+    command: read_trait_data("data-intermediate/CPfamily_updated.csv", I("_cnnn"))
 
   BF_genus:
-    command: read_trait_data("data-intermediate/BFgenus_updated.csv")
+    command: read_trait_data("data-intermediate/BFgenus_updated.csv", I("_ciiii"))
 
   BF_family:
-    command: read_trait_data("data-intermediate/BFfamily_updated.csv")
+    command: read_trait_data("data-intermediate/BFfamily_updated.csv", I("_ciiii"))
 
   traits_all_CP_added:
     command: put_traits_together(traits_all_MD_added, CP_genus, CP_family, I("CP"))

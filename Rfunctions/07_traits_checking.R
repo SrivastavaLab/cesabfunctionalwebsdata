@@ -39,8 +39,10 @@ join_check_by_tax <- function(Alltraits, newtraits, tax_grp){
     verify(nrow(.) == nrow(Alltraits))
 }
 
-read_trait_data <- function(filename){
-  read_csv2(filename, col_types = "_cnnn")
+read_trait_data <- function(filename, pattern){
+  cts <- as.character(pattern)
+
+  read_csv2(filename, col_types = cts)
 }
 
 
