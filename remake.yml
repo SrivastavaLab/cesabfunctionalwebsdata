@@ -23,6 +23,7 @@ packages:
   - lazyeval
   - assertr
   - prediction
+  - visdat
 
 sources:
   #- Rfunctions
@@ -32,6 +33,10 @@ sources:
   - Rfunctions/99_mapping_checking.R
   - Rfunctions/find_symbols.R
   - Rfunctions/03_detritus_equations.R
+  - Rfunctions/output_spp_dictionary.R
+  - Rfunctions/22_detritus_combination.R
+  - Rfunctions/07_traits_checking.R
+  - Rfunctions/preparing_supp_data.R
 
 targets:
   downloads:
@@ -47,17 +52,21 @@ targets:
       - outputs/bromeliad_observations.csv
       - outputs/dataset_information.csv
       - outputs/visit_information.csv
+      - outputs/detritus.csv
+      - outputs/fpom_fg_data.csv
+      - outputs/spp_dictionary.csv
+      - outputs/detritus_models.rds
+      - outputs/detritus_plots.rds
 
   all:
     depends:
-      - trts_all_filtered
       - abundance
-      - detritus_wider
-      - detritus_estimated_with_equation
-      - detritus_equation_plots
-      - detritus_estimated_with_model
       - detritus_model_plots
       - outputs/bromeliad_observations.csv
+      - bromeliad_detritus
+      - traits_all_BF_added
+      - seeking_volume_equations.md
+      - supp_data_additional
       #- reports
 #  downloads:
 #      -
@@ -128,17 +137,11 @@ targets:
   trts_all_values:
     command: parse_column_types_reader(trts_all_filtered)
 
-  visits_values:
+  visits_date:
     command: parse_column_types_reader(visits_filtered)
 
-  visits_date:
-    command: parse_column_types_reader(visits_values)
-
-  dats_values:
-    command: parse_column_types_reader(dats_filtered)
-
   dats_date:
-    command: parse_column_types_reader(dats_values)
+    command: parse_column_types_reader(dats_filtered)
 
   ## drop a bad column name
   brom_clean_name:
@@ -185,6 +188,9 @@ targets:
   detritus_wider_correct_frenchguiana:
     command: correct_frenchguiana_detritus(detritus_wider_cardoso_corrected)
 
+  detritus_wider_correct_brazil:
+    command: correct_picin_juraea(detritus_wider_correct_frenchguiana)
+
   # inferring FPOM mass from FPOM volume
 
   ## First step: create model
@@ -194,24 +200,44 @@ targets:
 
   ## then use both model and data to create the new predictions
   detritus_wider_fpom_g_pred:
-    command: add_predictions_to_data(detritus_wider_correct_frenchguiana, model_fpom_g_ml)
+    command: add_predictions_to_data(detritus_wider_correct_brazil, model_fpom_g_ml)
 
   ## combine the observed and predicted values (keep se column)
   detritus_wider_0_150_added:
     command: combine_observed_predicted_0_150_det(detritus_wider_fpom_g_pred)
 
+  detritus_wider_150_name_changed:
+    command: change_name_150_combo(detritus_wider_0_150_added)
 
 
 # Export corrected bromeliad names --------------------------------------------------
 
   outputs/bromeliad_observations.csv:
-    command: write_csv(detritus_wider_0_150_added, path = target_name)
+    command: write_csv(detritus_wider_150_name_changed, path = target_name)
 
   outputs/dataset_information.csv:
     command: write_csv(dats_date, path = target_name)
 
   outputs/visit_information.csv:
     command: write_csv(visits_date, path = target_name)
+
+  outputs/detritus.csv:
+    command: write_csv(detritus_wider_new_variables, path = target_name)
+
+  outputs/fpom_fg_data.csv:
+    command: write_csv(fpom_fg_data, path = target_name)
+
+  spp_dictonary:
+    command: output_spp_dictionary(abundance_filtered, broms_date, visits_date, trts_all_values)
+
+  outputs/spp_dictionary.csv:
+    command: write_csv(spp_dictonary, path = target_name)
+
+  outputs/detritus_models.rds:
+    command: write_rds(detritus_estimated_with_model, path = target_name)
+
+  outputs/detritus_plots.rds:
+    command: write_rds(detritus_model_plots, path = target_name)
 
 
 # estimating missing detritus with equations ----------------------------------
@@ -220,10 +246,10 @@ targets:
     command: create_equation_table()
 
   detritus_equation_plots:
-    command: plot_data_with_equation_table(equation_table, .detritus_data = detritus_wider_0_150_added)
+    command: plot_data_with_equation_table(equation_table, .detritus_data = detritus_wider_150_name_changed)
 
   detritus_estimate_equation_filt:
-    command: do_filter_dataset_id(equation_table, .detritus_data = detritus_wider_0_150_added)
+    command: do_filter_dataset_id(equation_table, .detritus_data = detritus_wider_150_name_changed)
 
   detritus_estimated_with_equation:
     command: do_mutate_new_col(detritus_estimate_equation_filt)
@@ -231,7 +257,7 @@ targets:
 # estimating missing detritus with MODELS --------------------------------------
 
   detritus_wider_new_variables:
-    command: add_new_columns_for_prediction(detritus_wider_0_150_added)
+    command: add_new_columns_for_prediction(detritus_wider_150_name_changed)
 
   model_table:
     command: create_model_table()
@@ -255,14 +281,92 @@ targets:
                                                 .modelling_information = modelling_information,
                                                 .detritus_data = detritus_wider_new_variables)
 
- # Detritus_missing.html:
-#    command: render("Detritus_missing.Rmd")
-#    depends:
-#      - detritus_wider_FG_detritus_corrected
 
-  # get a pretty map
+## add that data together ----------------------------------------------------------------
 
-#include:
-#- remake_sites.yml
 
+  detritus_all_preds:
+    command: combine_detritus_predictions(detritus_estimated_with_model)
+
+  detritus_long_categories:
+    command: combine_all_detritus_values(detritus_wider_new_variables, detritus_all_preds, broms_date)
+
+  detritus_long_filtered:
+    command: filter_just_orig_fitted(detritus_wider_150_name_changed, detritus_long_categories)
+
+  det_long_broken_up:
+    command: split_detritus_categories(detritus_long_filtered)
+
+  det_long_min_max:
+    command: extract_numeric_min_max(det_long_broken_up)
+
+  det_long_check_consec:
+    command: add_consecutive_detritus_col(det_long_min_max)
+
+  detritus_summary:
+    command: create_detritus_summary(det_long_check_consec)
+
+  bromeliad_detritus:
+    command: add_detritus_summary(detritus_wider_150_name_changed, detritus_summary)
+
+# Traits -------------------------------------------------------------------------------------
+
+  traits_all_renamed:
+    command: rename_check_traits(trts_all_filtered)
+
+
+  traits_all_MD_added:
+    command: add_MD_trait(traits_all_renamed)
+
+  CP_genus:
+    command: read_trait_data("data-intermediate/CPgenus_updated.csv", I("_cnnn"))
+
+  CP_family:
+    command: read_trait_data("data-intermediate/CPfamily_updated.csv", I("_cnnn"))
+
+  BF_genus:
+    command: read_trait_data("data-intermediate/BFgenus_updated.csv", I("_ciiii"))
+
+  BF_family:
+    command: read_trait_data("data-intermediate/BFfamily_updated.csv", I("_ciiii"))
+
+  traits_all_CP_added:
+    command: put_traits_together(traits_all_MD_added, CP_genus, CP_family, I("CP"))
+
+  traits_all_BF_added:
+    command: put_traits_together(traits_all_CP_added, BF_genus, BF_family, I("BF"))
+
+# Volume equations -------------------------------------------------------------------------------------
+
+  aquilega_biog:
+    command: read_size_aquilega("data-intermediate/size_aquilega_Biog.csv")
+
+  aquilegaKT:
+    command: read_size_aquilega("data-intermediate/size_aquilegaKT.csv")
+
+  guzmania:
+    command: read_size_Guzmania_mertensii("data-intermediate/size_Guzmania_PR.csv")
+
+  mertensii:
+    command: read_size_Guzmania_mertensii("data-intermediate/size_mertensii.csv")
+
+  vriesea:
+    command: read_size_vriesea("data-intermediate/size_vriesea.csv")
+
+  vriesea_prod:
+    command: read_size_vriesea("data-intermediate/size_vriesea_prod.csv")
+
+  supplementary_size_data:
+    command: >
+      bind_rows(aquilega_biog = aquilega_biog, aquilegaKT = aquilegaKT,
+      guzmania = guzmania, mertensii = mertensii, vriesea = vriesea, vriesea_prod = vriesea_prod, .id = I("filename"))
+
+  supp_data_additional:
+    command: add_more_info_to_supp(supplementary_size_data)
+
+  seeking_volume_equations.md:
+    knitr: true
+    depends:
+      - bromeliad_detritus
+      - dats_date
 

@@ -78,11 +78,28 @@ add_predictions_to_data <- function(.df, .model) {
 ## also observed detritus
 combine_observed_predicted_0_150_det <- function(.detritus_wider_fpom_g_pred) {
 
-  .detritus_wider_fpom_g_pred[["data_with_prediction"]]
+  outdf <- .detritus_wider_fpom_g_pred[["data_with_prediction"]]
+
+  output <- outdf %>%
+    mutate_at(vars(ends_with("fitted")), as.numeric) %>%
+    # not sure what to call this -- a combination of predictions and real values!
+    mutate(detritus0_150_combo = if_else(is.na(detritus0_150), fpom_g_fitted, detritus0_150),
+           detritus0_150_src   = if_else(!is.na(detritus0_150),
+                                         "observed",
+                                         if_else(!is.na(fpom_g_fitted),
+                                                 "estimated",
+                                                 NA_character_)))
+
+  # TODO tests? it might make sense to keep the name of the variable the same --
+  # not to track metadata in a column name like that
+
+
+
+  return(output)
 }
 
-## OK an implicit assumption in the above is that all sites can and should
-## receive the new data -- whether it is observed, measured, or whatever. In
-## other words, even bromeliads which have no predictions, or for which the
-## bromeliads in question were actually measured for detritus in that range, are
-## given a brand new column.
+change_name_150_combo <- function(.detritus_wider_0_150_added){
+  .detritus_wider_0_150_added %>%
+    select(-detritus0_150) %>%
+    rename(detritus0_150 = detritus0_150_combo)
+}

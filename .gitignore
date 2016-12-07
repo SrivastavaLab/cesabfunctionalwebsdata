@@ -28,8 +28,7 @@ vignettes/*.pdf
 releases
 data-raw/
 data-intermediate/1*
-*.csv
-
+size_Vmax.xlsx
 
 *.html
 *.md
@@ -40,3 +39,5 @@ data-intermediate/detrital*
 
 
 .remake
+
+outputs/*

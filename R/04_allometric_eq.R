@@ -50,8 +50,14 @@ names(visits)
 visitnames<-select(visits,visit_id,dataset_name)
 broms$plant_height_cm<-as.numeric(broms$plant_height_cm)
 broms$num_leaf<-as.numeric(broms$num_leaf)
-vol_table<-broms%>%group_by(visit_id)%>%summarise(max_water=mean(max_water,na.rm=TRUE), species=first(species),extended_diameter=mean(extended_diameter,na.rm=TRUE), diameter=mean(diameter, na.rm=TRUE),
-                                                  longest_leaf=mean(longest_leaf, na.rm=TRUE), num_leaf=mean(num_leaf, na.rm=TRUE), leaf_width=mean(leaf_width, na.rm=TRUE), plant_height_cm=mean(plant_height_cm, na.rm=TRUE))%>%
+vol_table<-broms%>%group_by(visit_id)%>%summarise(max_water=mean(max_water,na.rm=TRUE),
+                                                  species=first(species),
+                                                  extended_diameter=mean(extended_diameter,na.rm=TRUE),
+                                                  diameter=mean(diameter, na.rm=TRUE),
+                                                  longest_leaf=mean(longest_leaf, na.rm=TRUE),
+                                                  num_leaf=mean(num_leaf, na.rm=TRUE),
+                                                  leaf_width=mean(leaf_width, na.rm=TRUE),
+                                                  plant_height_cm=mean(plant_height_cm, na.rm=TRUE))%>%
   left_join(visitnames)
 
 broms$num_leaf[broms$visit_id==111]

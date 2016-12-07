@@ -136,23 +136,34 @@ add_new_columns_for_prediction <- function(.detritus_data) {
     mutate(detritus0_NA_sum = detritus0_150 + detritus150_850 + detritus850_20000_sum + detritus20000_NA) %>%
     mutate(detritus150_NA_sum = detritus150_850 + detritus850_20000_sum + detritus20000_NA) %>%
     mutate(detritus0_20000_sum = detritus0_150 + detritus150_850 + detritus850_20000_sum,
-           detritus20000_NA_na0 = if_else(detritus20000_NA < 0.001, true = NA_real_, false = detritus20000_NA))
+           detritus20000_NA_na0 = if_else(detritus20000_NA < 0.001, true = NA_real_, false = detritus20000_NA)) %>%
+    mutate(detritus150_1500 = detritus150_850 + detritus850_1500,
+           detritus150_1500_plus = if_else(is.na(detritus150_1500),
+                                           true = detritus150_NA,
+                                           false = detritus150_1500)) %>%
+    mutate(detritus150_NA_sum_Japi = detritus150_850 + detritus850_1500 + detritus1500_20000 + detritus20000_NA,
+           detritus150_NA_sum_Japi = if_else(is.na(detritus150_NA_sum_Japi),
+                                             true = detritus125_NA,
+                                             false = detritus150_NA_sum_Japi)
+)
 }
 
 
 create_model_table <- function(){
   frame_data(
-    ~m_id, ~target_dat,        ~src_dat,                       ~xvar,                          ~yvar,                           ~.f, ~family,
-    "m01",   "116",              c("131", "126", "121", "221"),  "~log(diameter)",             "~log(detritus10_1500_2000_NA)", glm, "gaussian",
-    "m02",   c("186", "216"),    c("211"),                       "~log(detritus0_150)",        "~log(detritus150_20000)",       glm, "gaussian",
-    "m03",   c("186", "216"),    c("211"),                       "~log(detritus0_150)",        "~log(detritus20000_NA)",        glm, "gaussian",
-    "m04",   c("201"),           c("211"),                       "~log(detritus0_150)",        "~log(detritus_over_150)",       glm, "gaussian",
-    "m05",   c("71", "51", "61"),c("56"),                        "~log(detritus850_20000_sum)","~log(detritus0_150)",           glm, "gaussian",
-    "m06",   c("71", "51"),      c("61"),                        "~log(detritus850_20000_sum)","~log(detritus20000_NA)",        glm, "gaussian",
-    "m07",   c("66"),            c("56"),                        "~diameter",                  "~detritus0_NA_sum",             glm, "gaussian",
-    "m08",   c("76", "81", "91"),c("56"),                        "~detritus150_NA_sum",        "~detritus0_150",                glm, "gaussian",
-    "m09",   c("86"),            c("91"),                        "~num_leaf",                  "~detritus150_NA",               glm, "gaussian",   # too weak to use??
-    "m10",   c("101", "206"),    c("56"),                        "~log(detritus0_20000_sum)",  "~log(detritus20000_NA_na0)",        glm, "gaussian"
+    ~m_id, ~target_dat,        ~src_dat,                       ~xvar,                            ~yvar,                           ~.f, ~family,
+    "m01",   "116",              c("131", "126", "121", "221"),  "~log(diameter)",               "~log(detritus10_1500_2000_NA)", glm, "gaussian",
+    "m02",   c("186", "216"),    c("211"),                       "~log(detritus0_150)",    "~log(detritus150_20000)",       glm, "gaussian",
+    "m03",   c("186", "216"),    c("211"),                       "~log(detritus0_150)",    "~log(detritus20000_NA)",        glm, "gaussian",
+    "m04",   c("201"),           c("211"),                       "~log(detritus0_150)",    "~log(detritus_over_150)",       glm, "gaussian",
+    "m05",   c("71", "51", "61"),c("56"),                        "~log(detritus850_20000_sum)",  "~log(detritus0_150)",     glm, "gaussian",
+    "m06",   c("71", "51"),      c("61"),                        "~log(detritus850_20000_sum)",  "~log(detritus20000_NA)",        glm, "gaussian",
+    "m07",   c("66"),            c("56"),                        "~diameter",                    "~detritus0_NA_sum",             glm, "gaussian",
+    "m08",   c("76", "81", "91"),c("56"),                        "~detritus150_NA_sum",          "~detritus0_150",          glm, "gaussian",
+    "m09",   c("86"),            c("91"),                        "~num_leaf",                    "~detritus150_NA",               glm, "gaussian",   # too weak to use??
+    "m10",   c("101", "106"),    c("56"),                        "~log(detritus0_20000_sum)",    "~log(detritus20000_NA_na0)",    glm, "gaussian",   # can't get coefficients or r2 to match Diane's notes
+    "m11",   c("146"),           c("56"),                        "~log(detritus150_1500_plus)",  "~log(detritus0_150)",           glm, "gaussian",
+    "m12",   c("161"),           c("56"),                        "~log(detritus150_NA_sum_Japi)","~log(detritus0_150)",           glm, "gaussian"
   ) %>%
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))
@@ -203,6 +214,16 @@ do_fit_predictive_model <- function(.modelling_information){
 }
 
 
+#' make the predictor range (and name it appropriately)
+#'
+#' given a data.frame and a variable name, find that variable name and use
+#' seq_range to make 30 points in its range
+#'
+#' @param m_id model.id, for housekeeping
+#' @param src_df source data.frame
+#' @param x_vars x variable name
+#'
+#' @return a data.frame with one column only (the new sequence)
 make_prediction_xs <- function(m_id, src_df, x_vars) {
   dd <- src_df[[1]]
 
@@ -218,29 +239,35 @@ make_prediction_xs <- function(m_id, src_df, x_vars) {
 
 make_prediction_df <- function(m_id, incoming_data, predicting_model, y_vars, y_funs){
 
-  # browser()
   dd <- incoming_data[[1]]
 
-  y_vars <- paste0(y_vars, "_pred")
-
-  predict_dat <- partial(add_predictions, data = dd, var = y_vars)
-
-  # back transformation function for y axis (x not necessary because it is in the function?)
-  back_trans <- switch(y_funs, log = exp, I)
+  # type response means that we will get back the answer on the scale of the
+  # response (which might have been transformed!!)
+  # NOTE PLEASE: that `prediction()` gives these **BY DEFAULT**. see ?prediction
 
   modlist <- predicting_model[[1]] # just because it is a list-column, get the first element (which is a list lol)
-  out <- map_df(modlist, predict_dat)
+  # note that this list will normall be length 1, but I'm doing it this way just
+  # in case multiple models are ever fit to the data
+  out <- map_df(modlist, ~ prediction(.x, data = dd))
 
-  out[[y_vars]] <- back_trans(out[[y_vars]])
+  names(out) <- paste0(y_vars, "_", names(out))
 
-  return(out)
+  # back transformation function for y axis (x not necessary because it is in the function?) >> that's correct
+  back_trans <- switch(y_funs, log = exp, I)
+  # REASONABLY CERTAIN this is correct since iirc SEs are in the same units as
+  # the values they are associate with
+  out <- back_trans(out)
+
+  obs_pred <- bind_cols(dd, out)
+
+  return(obs_pred)
 }
 
 
 
 construct_plotting_information <- function(.observed_model_fit, .modelling_information) {
   .observed_model_fit %>%
-    select(m_id, src_df, predicting_model) %>%
+    select(-.f) %>%
     left_join(.modelling_information %>%
                 select(m_id, target_dat, x_funs, y_funs, x_vars, y_vars),
               by = "m_id")
@@ -263,8 +290,8 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
     select_(xs = x_vars,
             ys = y_vars)
 
-  # tweak the name - predicted values have "pred" on the side
-  y_vars <- paste0(y_vars, "_pred")
+  # tweak the name - predicted values have "_fitted" on the side
+  y_vars <- paste0(y_vars, "_fitted")
 
   ld <- curve_data[[1]] %>%
     select_(xs = x_vars,
@@ -286,6 +313,7 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
 
 plot_model_and_supporting_data <- function(.plotting_information, .modelling_information) {
 
+  # browser()
   # create the x range over which all the models should be predicted.
   data_for_drawing_line <- .plotting_information %>%
     select(m_id, src_df, x_vars) %>%
@@ -324,17 +352,23 @@ estimate_missing_detritus_new_site <- function(.observed_model_fit, .modelling_i
   # about the y variable and transformations if any
   model_info <- .modelling_information %>%
     select(m_id, y_vars, y_funs)
-
+# browser()
   # join these, add filtered dataset to model
-  fit_data_needed %>%
+  prediction_raw_material <- fit_data_needed %>%
     left_join(model_info) %>%
     mutate(target_df = target_dat %>%
              map(~ .detritus_data %>%
                    # TODO: ? add select() to contain only some variables??
                    filter(dataset_id %in% .x))
-    ) %>%
+    )
+
+  output <- prediction_raw_material %>%
     # get the precise variables we need to add predictions
     select(m_id, incoming_data = target_df, predicting_model, y_vars, y_funs) %>%
     by_row(make_prediction_df %>% lift, .to = "pred_data")
+
+  # polish the output a bit, and flatten the predicting_model
+  output %>%
+    mutate(predicting_model = flatten(predicting_model))
 
 }

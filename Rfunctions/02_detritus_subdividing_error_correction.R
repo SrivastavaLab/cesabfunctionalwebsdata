@@ -169,6 +169,43 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
 
 }
 
+correct_picin_juraea <- function(.detritus_wider_correct_frenchguiana){
+  # suppose we start with a very clear description of what problem is where:
+
+  prob_table <- frame_data(
+    ~visit_id,     ~wrong_col,
+    "241",         "detritus125_NA",
+    "246",         "detritus125_800"
+  )
+  # what are these sites?
+
+  rows_with_incorrect_names <- .detritus_wider_correct_frenchguiana %>%
+    semi_join(prob_table, by = "visit_id")
+
+  # this column may not exist!
+  assert_that(negate(has_name)(rows_with_incorrect_names, "detritus0_NA"))
+
+  incorrect_data_list <- rows_with_incorrect_names %>%
+    split(.$visit_id)
+
+  incorrect_cols <- prob_table$wrong_col %>% split(prob_table$visit_id)
+
+  corrected_names <- map2_df(incorrect_data_list,
+                             incorrect_cols, ~ set_names(.x, str_replace(names(.x), .y, "detritus0_NA")))
+
+  output <- .detritus_wider_correct_frenchguiana %>%
+    anti_join(corrected_names %>%
+                select(visit_id, bromeliad_id, detritus0_NA)) %>%
+    bind_rows(corrected_names)
+  # VERY USEFUL
+  # daff::render_diff(daff::diff_data(arrange(detritus_wider_correct_frenchguiana, bromeliad_id),
+  # arrange(output, bromeliad_id)))
+
+
+  return(output)
+
+}
+
 ## finally, coerce the data types to be correct -- usually either numeric or character
 
 # names(abundance)
@@ -203,20 +240,28 @@ correct_bromeliad_names <- function(.detritus_wider, .bromeliad_spp){
   detritus_wider_clean <- .detritus_wider %>%
     mutate(species = species %>% str_trim(side = "both"))
 
-  out <- detritus_wider_clean %>%
-    left_join(.bromeliad_spp %>%
-                select(species = `Former name`,
-                       species_name = `Proposed name`))
+  out <- detritus_wider_clean #%>%
+    # left_join(.bromeliad_spp %>%
+    #             select(species = `Former name`,
+    #                    species_name = `Proposed name`))
 
-  out_nrow <- filter(out, is.na(species_name)) %>% nrow()
+  # out_nrow <- filter(out, is.na(species_name)) %>% nrow()
+  #
+  # # browser()
+  # assert_that(out_nrow == 0)
 
-  # browser()
-  assert_that(out_nrow == 0)
+# NO duplications of bromeliads!!
+  out %>%
+    group_by(bromeliad_id) %>%
+    tally %>%
+    assert(in_set(1), n)
 
   ## replace original "species" with new name
-
-  out %>%
-    select(-species) %>%
-    rename(species = species_name)
+#
+#   out <- out %>%
+#     select(-species) %>%
+#     rename(species = species_name)
+#
+  return(out)
 }
 
