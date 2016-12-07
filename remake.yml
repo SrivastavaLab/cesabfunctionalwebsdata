@@ -36,6 +36,7 @@ sources:
   - Rfunctions/output_spp_dictionary.R
   - Rfunctions/22_detritus_combination.R
   - Rfunctions/07_traits_checking.R
+  - Rfunctions/preparing_supp_data.R
 
 targets:
   downloads:
@@ -65,6 +66,7 @@ targets:
       - bromeliad_detritus
       - traits_all_BF_added
       - seeking_volume_equations.md
+      - supplementary_size_data
       #- reports
 #  downloads:
 #      -
@@ -280,7 +282,7 @@ targets:
                                                 .detritus_data = detritus_wider_new_variables)
 
 
-# add that data together ---------------------------------------------------
+## add that data together ----------------------------------------------------------------
 
 
   detritus_all_preds:
@@ -333,6 +335,29 @@ targets:
 
   traits_all_BF_added:
     command: put_traits_together(traits_all_CP_added, BF_genus, BF_family, I("BF"))
+
+# Volume equations -------------------------------------------------------------------------------------
+
+  aquilega_biog:
+    command: read_size_aquilega("data-intermediate/size_aquilega_Biog.csv")
+
+  aquilegaKT:
+    command: read_size_aquilega("data-intermediate/size_aquilegaKT.csv")
+
+  guzmania:
+    command: read_size_Guzmania_mertensii("data-intermediate/size_Guzmania_PR.csv")
+
+  mertensii:
+    command: read_size_Guzmania_mertensii("data-intermediate/size_mertensii.csv")
+
+  vriesea:
+    command: read_size_vriesea("data-intermediate/size_vriesea.csv")
+
+  vriesea_prod:
+    command: read_size_vriesea("data-intermediate/size_vriesea_prod.csv")
+
+  supplementary_size_data:
+    command: bind_rows(aquilega_biog = aquilega_biog, aquilegaKT = aquilegaKT, guzmania = guzmania, vriesea = vriesea, vriesea_prod = vriesea_prod)
 
   seeking_volume_equations.md:
     knitr: true
