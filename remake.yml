@@ -67,6 +67,7 @@ targets:
       - traits_all_BF_added
       - seeking_volume_equations.md
       - supp_data_additional
+      - maxvol_model.md
       #- reports
 #  downloads:
 #      -
@@ -364,9 +365,22 @@ targets:
   supp_data_additional:
     command: add_more_info_to_supp(supplementary_size_data)
 
+  maxvol_model.md:
+    knitr:
+      auto_figure_prefix: true
+    depends:
+      - aquilega_biog
+      - aquilegaKT
+      - guzmania
+      - mertensii
+      - vriesea
+      - vriesea_prod
+
   seeking_volume_equations.md:
-    knitr: true
+    knitr:
+      auto_figure_prefix: true
     depends:
       - bromeliad_detritus
       - dats_date
+      - supp_data_additional
 
