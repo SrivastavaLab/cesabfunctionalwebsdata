@@ -42,17 +42,21 @@ create_all_size_data <- function(.size_data) {
 more_information <- function() {
   frame_data(
     ~ filename,       ~species,              # collected_year
-    "aquilega_Biog",  "Aechmaea_aquilega",
+    "aquilega_biog",  "Aechmaea_aquilega",
     "aquilegaKT",     "Aechmaea_aquilega",
-    "Guzmania_PR",    "Guzmania_sp",
+    "guzmania",    "Guzmania_sp",
     "mertensii",      "Aechmaea_mertensii",
     "vriesea_prod",   "Vrisea_splendens",
     "vriesea",        "Vrisea_splendens"
 )
 }
 
-# # write data out
-# all_size_data %>%
-#   left_join(more_information) %>%
+#  combine data
+
+add_more_info_to_supp <- function(.all_size_data){
+  .all_size_data %>%
+    left_join(more_information())
+}
+
 #   write_csv("data-intermediate/size_all_data.csv")
 

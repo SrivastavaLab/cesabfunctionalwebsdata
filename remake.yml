@@ -66,7 +66,7 @@ targets:
       - bromeliad_detritus
       - traits_all_BF_added
       - seeking_volume_equations.md
-      - supplementary_size_data
+      - supp_data_additional
       #- reports
 #  downloads:
 #      -
@@ -357,7 +357,12 @@ targets:
     command: read_size_vriesea("data-intermediate/size_vriesea_prod.csv")
 
   supplementary_size_data:
-    command: bind_rows(aquilega_biog = aquilega_biog, aquilegaKT = aquilegaKT, guzmania = guzmania, vriesea = vriesea, vriesea_prod = vriesea_prod)
+    command: >
+      bind_rows(aquilega_biog = aquilega_biog, aquilegaKT = aquilegaKT,
+      guzmania = guzmania, mertensii = mertensii, vriesea = vriesea, vriesea_prod = vriesea_prod, .id = I("filename"))
+
+  supp_data_additional:
+    command: add_more_info_to_supp(supplementary_size_data)
 
   seeking_volume_equations.md:
     knitr: true
