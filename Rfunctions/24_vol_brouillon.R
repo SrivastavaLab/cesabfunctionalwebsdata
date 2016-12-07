@@ -2,9 +2,6 @@
 remake::dump_environment()
 size_dat <- read_csv("data-intermediate/size_all_data.csv")
 
-size_dat %>% glimpse
-size_dat$filename %>% unique()
-
 make_model_data <- function(){
   frame_data(
     ~m_id, ~src_dat,                             ~xvar,                   ~yvar,          ~.f,     ~target_dat,      ~family,
@@ -37,7 +34,8 @@ mod_info <- derive_modelling_information_simpler(.model_table = mods, .obs_data 
 
 mod_info %>% glimpse
 
-
 fit_models <- mod_info %>% do_fit_predictive_model()
 
 fit_models$predicting_model[[2]][[1]] %>% tidy
+# try looking in some various FrenchGuianaAechmea2007
+

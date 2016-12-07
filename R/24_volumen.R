@@ -36,11 +36,11 @@ volFrench2008_2<- function(a,b){exp(0.0292 +0.339*log(a) + 1.3563*log(b))}
 summ_broms <- summ_broms%>%
   mutate(max_water= ifelse(visit_id == 296, volFrench2008_2(diameter,num_leaf), max_water))
 
-#Nouragues2009,Sinnamary2011, Aechmea aquilega Vmax= exp(-0.4368 +0.735*log(fg1$diameter)+ 1.4260*log(fg1$num_leaf))
-volNouragues2009<- function(a,b){exp(-0.4368 +0.735*log(a)+ 1.4260*log(b))}
-summ_broms <- summ_broms%>%
-  mutate(max_water= ifelse(visit_id == 336|visit_id==331, volNouragues2009(diameter,num_leaf), max_water))
-
+# #Nouragues2009,Sinnamary2011, Aechmea aquilega Vmax= exp(-0.4368 +0.735*log(fg1$diameter)+ 1.4260*log(fg1$num_leaf))
+# volNouragues2009<- function(a,b){exp(-0.4368 +0.735*log(a)+ 1.4260*log(b))}
+# summ_broms <- summ_broms%>%
+#   mutate(max_water= ifelse(visit_id == 336|visit_id==331, volNouragues2009(diameter,num_leaf), max_water))
+#
 
 #FrenchGuianaVriesea2007, Vriesea splendens No information of diameter and number of leaf, information about actual water
 #select data set only Vriesea splendens and create an equation
