@@ -18,24 +18,18 @@ There seem to be two data sources:
 (leaves, diameter, etc) and also of volume (frequently `actual_volume`,
 rarely `maximum_volume`)
 
-
-```{r }
-size_dat <- read_csv("data-intermediate/size_all_data.csv")
-kable(head(size_dat))
-```
-
 Let's look at how these variables relate to each other:
 
 ```{r}
-ggplot(size_dat, aes(x = Diam1, y = Vmax, size = NL)) + 
+ggplot(supp_data_additional, aes(x = Diam1, y = Vmax, size = NL)) + 
   geom_point(alpha = 0.5) + 
   facet_wrap(~species, scales = "free")
 ```
 
-There is a mispelling! is filename any better for splitting up species:
+There is a misspelling! is file name any better for splitting up species:
 
 ```{r}
-ggplot(size_dat, aes(x = Diam1, y = Vmax, size = NL)) + 
+ggplot(supp_data_additional, aes(x = Diam1, y = Vmax, size = NL)) + 
   geom_point(alpha = 0.5) + 
   facet_wrap(~filename, scales = "free")
 ```
@@ -43,7 +37,7 @@ ggplot(size_dat, aes(x = Diam1, y = Vmax, size = NL)) +
 Nope same error. Better fix the species then:
 
 ```{r}
-size_dat_species <- size_dat %>% 
+size_dat_species <- supp_data_additional %>% 
   mutate(species = if_else(str_detect(species, "Vri.*"), "Vriesea", species))
 
 ggplot(size_dat_species, aes(x = Diam1, y = Vmax, size = NL)) + 
@@ -68,7 +62,7 @@ I have in hand several equations (photo) which were apparently derived (in part?
 ### Volume predicted with Diameter:
 
 ```{r}
-bromeliad_diam_models <- size_dat %>%
+bromeliad_diam_models <- supp_data_additional %>%
   group_by(filename) %>%
   nest %>%
   mutate(pred_vo = map(data, ~ lm(log(Vmax) ~ log(Diam1), data = .x)))
@@ -98,7 +92,7 @@ volFrench2007<- function(a){exp(0.611+1.09*log(a))}
 ### Volume predicted with Diameter AND Number of Leaves
 
 ```{r}
-bromeliad_diam_models <- size_dat %>%
+bromeliad_diam_models <- supp_data_additional %>%
   group_by(filename) %>%
   nest %>%
   mutate(pred_vo = map(data, ~ lm(log(Vmax) ~ log(Diam1) + log(NL), data = .x)))
@@ -127,7 +121,7 @@ species_models <- size_dat_species %>%
   mutate(pred_vo = map(data, ~ lm(log(Vmax) ~ log(Diam1) + log(NL), data = .x)))
 ```
 
-LEt's look a tthe parameters of these:
+Let's look a the parameters of these:
 
 ```{r}
 species_models %>% 
@@ -207,9 +201,82 @@ kable(head(only_guzmania))
 
 ```{r}
 library(ggmissing)
-ggplot(only_guzmania, aes(x = num_leaf, y = max_water)) + 
+ggplot(only_guzmania, aes(x = num_leaf, y = max_water, size = actual_water)) + 
   geom_missing_point()
 
 # shape for species
+```
+
+There are several missing values, which we can remove for any plots (and also from the modelling)
+
+```{r}
+only_guzmania_complete <- only_guzmania %>% 
+  select(num_leaf, max_water, actual_water) %>% 
+  filter(complete.cases(.))
+
+guz_plot <- ggplot(only_guzmania_complete, 
+       aes(x = actual_water,
+           y = max_water,
+           size = num_leaf,
+           fill = num_leaf)) + 
+  geom_point(pch = 21) + theme_bw() + 
+  geom_abline(intercept = 0, slope = 1, lty = 2) + 
+  scale_fill_gradient(high = "#132B43", low = "#56B1F7") + 
+  coord_fixed()
+
+print(guz_plot)
+
+guz_plot + stat_smooth(method = "gam")
+
+guz_plot + 
+  scale_y_log10() + 
+  scale_x_log10()
+```
+
+Unsurprisingly, the data show a triangular relationship -- the actual volume can never be greater than the maximum volume. **Is that a problem for regressions?**  
+
+At any rate, what was the work that was done already? 
+
+```r
+# Model for Honduras and Colombia2000, 2001
+# plot(log(guz_only$num_leaf),log(guz_only$max_water))
+# summary(lm(log(max_water)~log(num_leaf) + log(actual_water +1),data=guz_only ))
+
+# Equation for Honduras and Colombia2000 and 2001:
+
+Vmax=exp(0.78960 + 0.68576*log(Col$num_leaf) + 0.44664*log(Col$actual_water +1))
+```
+
+Can we reproduce this? 
+
+```{r}
+vmax_guzmania <- lm(log(max_water) ~ log(num_leaf) + log(actual_water + 1), 
+                    data = only_guzmania_complete)
+
+vmax_guzmania %>% 
+  tidy %>% kable
+  
+```
+
+Fortunately , this works just fine! 
+
+### Guzmania volume from `num_leaf` only
+```{r}
+vmax_guzmania_leafonly <- lm(log(max_water) ~ log(num_leaf), 
+                    data = only_guzmania_complete)
+
+vmax_guzmania_leafonly %>% 
+  tidy %>% kable
+```
+
+Unfortunately, this does *not* match:
+
+```r
+#Model for Colombia.Rioblanco 2012 (366) and ElVerde
+# summary(lm(log(max_water)~log(num_leaf),data=guz_only))
+
+# equation for Colombia.Rioblanco 2012 (366) and ElVerde Vol.max=exp(-2.3418 + 2.1025*log(Col2012$num_leaf))
+#Guzmania
+volColombia2012<- function(a){exp(-2.3418 + 2.1025*log(a))}
 ```
 
