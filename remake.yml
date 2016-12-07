@@ -64,6 +64,7 @@ targets:
       - outputs/bromeliad_observations.csv
       - bromeliad_detritus
       - traits_all_BF_added
+      - seeking_volume_equations.md
       #- reports
 #  downloads:
 #      -
@@ -332,3 +333,10 @@ targets:
 
   traits_all_BF_added:
     command: put_traits_together(traits_all_CP_added, BF_genus, BF_family, I("BF"))
+
+  seeking_volume_equations.md:
+    knitr: true
+    depends:
+      - bromeliad_detritus
+      - dats_date
+

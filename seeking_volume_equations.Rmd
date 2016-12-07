@@ -1,0 +1,215 @@
+---
+output: 
+  html_document:
+    code_folding: show
+---
+
+
+## Where do the volume estimation equations come from?
+
+There are several equations that are used to estimate the maximum volume of
+plants in the experiment. What data are these derived from?
+
+## Data sources
+
+There seem to be two data sources:
+
+1. *the database itself*  which contains observations of Bromeliad size
+(leaves, diameter, etc) and also of volume (frequently `actual_volume`,
+rarely `maximum_volume`)
+
+
+```{r }
+size_dat <- read_csv("data-intermediate/size_all_data.csv")
+kable(head(size_dat))
+```
+
+Let's look at how these variables relate to each other:
+
+```{r}
+ggplot(size_dat, aes(x = Diam1, y = Vmax, size = NL)) + 
+  geom_point(alpha = 0.5) + 
+  facet_wrap(~species, scales = "free")
+```
+
+There is a mispelling! is filename any better for splitting up species:
+
+```{r}
+ggplot(size_dat, aes(x = Diam1, y = Vmax, size = NL)) + 
+  geom_point(alpha = 0.5) + 
+  facet_wrap(~filename, scales = "free")
+```
+
+Nope same error. Better fix the species then:
+
+```{r}
+size_dat_species <- size_dat %>% 
+  mutate(species = if_else(str_detect(species, "Vri.*"), "Vriesea", species))
+
+ggplot(size_dat_species, aes(x = Diam1, y = Vmax, size = NL)) + 
+  geom_point(alpha = 0.25) + 
+  facet_wrap(~species, scales = "free", ncol = 1) + 
+  theme_bw()
+```
+
+Some of these relationships seem quite strong. Others are from experiments where size and volume was tightly controlled -- so not surprising that diameter and volume do not vary much!
+
+## what's in these data
+
+```{r}
+vis_miss(size_dat_species)
+```
+
+
+## Where did the equations come from?
+
+I have in hand several equations (photo) which were apparently derived (in part?) from these data. 
+
+### Volume predicted with Diameter:
+
+```{r}
+bromeliad_diam_models <- size_dat %>%
+  group_by(filename) %>%
+  nest %>%
+  mutate(pred_vo = map(data, ~ lm(log(Vmax) ~ log(Diam1), data = .x)))
+```
+
+```{r}
+model_coefs <- bromeliad_diam_models %>% 
+  mutate(output = map(pred_vo, tidy)) %>% 
+  unnest(output) %>%
+  mutate(estimate = round(estimate, digits = 5))
+
+model_coefs %>% 
+  select(filename, term, estimate) %>% 
+  spread(term, estimate) %>% 
+  kable
+```
+
+Fortunately, at least one line in this table is familiar: this is the line for `vriesea`, which shows `0.62` and `1.06` -- this matches one equation! However, comments around the table show that it is from a different bromeliad: 
+
+```r
+## ~/Dropbox/communityanalysis/CESAB\ trait\ working\ group/Max_Volume_models/
+## FrenchGuianaAechmea2007,
+## Equation= exp(0.611+1.09*log(diameter)) for Aechmea mertensii
+volFrench2007<- function(a){exp(0.611+1.09*log(a))}
+```
+
+### Volume predicted with Diameter AND Number of Leaves
+
+```{r}
+bromeliad_diam_models <- size_dat %>%
+  group_by(filename) %>%
+  nest %>%
+  mutate(pred_vo = map(data, ~ lm(log(Vmax) ~ log(Diam1) + log(NL), data = .x)))
+```
+
+```{r}
+model_coefs <- bromeliad_diam_models %>% 
+  mutate(output = map(pred_vo, tidy)) %>% 
+  unnest(output) %>%
+  mutate(estimate = round(estimate, digits = 5))
+
+model_coefs %>% 
+  select(filename, term, estimate) %>% 
+  spread(term, estimate) %>% 
+  kable
+```
+
+
+## Within species (not dataset)
+
+
+```{r}
+species_models <- size_dat_species %>% 
+  group_by(species) %>% 
+  nest %>% 
+  mutate(pred_vo = map(data, ~ lm(log(Vmax) ~ log(Diam1) + log(NL), data = .x)))
+```
+
+LEt's look a tthe parameters of these:
+
+```{r}
+species_models %>% 
+  mutate(output = map(pred_vo, tidy)) %>% 
+  unnest(output) %>%
+  mutate(estimate = round(estimate, digits = 5)) %>% 
+  select(species, term, estimate) %>% 
+  spread(term, estimate) %>% 
+  kable
+```
+
+Another match! This time, it makes sense:
+
+```r
+#Nouragues2009,Sinnamary2011, Aechmea aquilega Vmax= exp(-0.4368 +0.735*log(fg1$diameter)+ 1.4260*log(fg1$num_leaf))
+volNouragues2009<- function(a,b){exp(-0.4368 +0.735*log(a)+ 1.4260*log(b))}
+summ_broms <- summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 336|visit_id==331, volNouragues2009(diameter,num_leaf), max_water))
+```
+
+## unidentified FG models
+
+```r
+#FrenchGuianaAechmea2008,PetitSaut, Aechmea mertensii, Vmax=exp(4.838+5.5888*log(diameter)-1.1649*(log(fg$diameter))^2+5.7181*log(fg$num_leaf)-1.7982*(log(fg$num_leaf)^2))
+volFrench2008<- function(a,b){exp(0.0292 +0.339*log(a) + 1.3563*log(b))}
+summ_broms <- summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 301, volFrench2008(diameter,num_leaf), max_water))
+
+#FrenchGuianaAechmea2008,Kaw, Aechmea mertensii,Vmax= exp(0.0292 +0.339*log(fg$diameter) + 1.3563*log(fg$num_leaf))
+volFrench2008_2<- function(a,b){exp(0.0292 +0.339*log(a) + 1.3563*log(b))}
+summ_broms <- summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 296, volFrench2008_2(diameter,num_leaf), max_water))
+```
+
+These two models are the same, but are applied to different places. I have no idea where they came from. 
+
+### linear (not power law) equation:
+
+```r
+#FrenchGuianaVriesea2007, Vriesea splendens No information of diameter and number of leaf, information about actual water
+#select data set only Vriesea splendens and create an equation
+# Equation vmax = 1.4144*actual vol + 39.343
+volFrench2007Vrisea<- function(a){1.4144*a + 39.343}
+summ_broms <-summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 341 & species=="Vriesea splendens", volFrench2007Vrisea(actual_water), max_water))
+```
+
+### Were they derived from the database itself?
+
+Its possible that these numbers were not from these "supplementary" data, but from the actual database itself. Let's look at all the data from French Guiana that is in the BWG database (bromeliads only:)
+
+
+```{r fg_brom_missing, fig.cap="Visualizing data from all bromeliads in French Guiana."}
+dats_date %>%
+  filter(country == "French Guiana") %>%
+  select(dataset_name = name) %>%
+  semi_join(bromeliad_detritus, .) %>%
+  keep(~ any(!is.na(.x))) %>% 
+  vis_dat(sort_type = TRUE)
+```
+
+Well, actual water is frequently recorded -- but Maximum Volume is missing for almost all plants, so this is probably not where the regressions come from. 
+
+## other sites
+
+We *DO* use data from other sites to find the relationship between `max_water` and volume. Specifically in these three sites:
+
+### Guzmania
+
+where are they?
+```{r}
+only_guzmania <- bromeliad_detritus %>% 
+  filter(grepl("^Gu|^G\\.", species))
+
+kable(head(only_guzmania))
+```
+
+```{r}
+library(ggmissing)
+ggplot(only_guzmania, aes(x = num_leaf, y = max_water)) + 
+  geom_missing_point()
+
+# shape for species
+```
+
