@@ -4,29 +4,12 @@ output:
   pdf_document: default
 ---
 
-## checking the volume equations
+## recalculating the volume equations
 
-Begin by reading in the data.
+This document retraces the process used by Regis (and Kurt?) for creating & choosing the relationships for filling in data of bromeliad size. 
 
 ```{r}
-##Aechmea mertensii maxvol estimation
-
-mertensii<-read.csv("data-intermediate/size_mertensii.csv",header=TRUE, sep=";")
-combined_data <- read.csv("data-intermediate/size_all_data.csv")
-
-model_mertensii <- lm(log(Vmax) ~ log(NL) + log(Diam1), data = mertensii)
-
-tidy(model_mertensii)
-
-combined_data_mert <- combined_data %>% 
-  filter(filename == "mertensii")
-
-model_combined_mertensii <- lm(log(Vmax) ~ log(NL) + log(Diam1), data = combined_data_mert)
-
-all.equal(combined_data_mert$NL, mertensii$NL)
-all.equal(combined_data_mert$Diam1, mertensii$Diam1)
-combined_data_mert$Diam1; mertensii$Diam1
-
+kable(head(mertensii))
 ##rename natural log transformed variables
 mertensii$logNL<-log(mertensii$NL)
 mertensii$logDiam1<-log(mertensii$Diam1)
@@ -47,34 +30,35 @@ a6<-lm(logVmax~logDiam1+logNL,data=mertensii)#linear
 
 #model formula
 anova(a1,test="F")
-a1
+tidy(a1)
 
-AIC(a1,a6)#a6 better
+tidy(AIC(a1,a6))#a6 better
 
-summary(a6)
-a6
+tidy(a6)
+glance(a6)
 ```
 
 ```{r, eval=FALSE}
-summary(lm(log(Vmax) ~ log(Diam1) + log(NL), data = mertensii))
-
 ##plot selected model on log-log scale
 par(mfrow=c(1,1),omi=c(1,1,1,1),mar=c(5,6,6,5)*.5)
 plot(mertensii$logNL,mertensii$logVmax,ylim=c(0,(max(mertensii$logVmax)*1.2)),xlab="",ylab="")
 xy<-seq(min(mertensii$logNL),max(mertensii$logNL),length=100)
 pNL.a6<-predict(a6,data.frame(logNL=xy,logDiam1=rep(mean(mertensii$logDiam1),length(xy))))
-# lines(xy,pNL.a1)
+lines(xy,pNL.a6)
 mtext("Ln Number of leaves",side=1,line=2.5,cex=1.2)
 mtext("Ln Max volume (mL)",side=2,line=2.5,cex=1.2)
+```
 
+```{r}
 plot(mertensii$logDiam1,mertensii$logVmax,ylim=c(0,(max(mertensii$logVmax)*1.2)),xlab="",ylab="")
 xv<-seq(min(mertensii$logDiam1),max(mertensii$logDiam1),length=100)
 pDiam.a6<-predict(a1,data.frame(logDiam1=xv,logNL=rep(mean(mertensii$logNL),length(xv))))
 lines(xv,pDiam.a6)
 mtext("Ln Diameter (cm)",side=1,line=2.5,cex=1.2)
 mtext("Ln Max volume (mL)",side=2,line=2.5,cex=1.2)
+```
 
-
+```{r}
 #plot selected model with actual response values
 par(mfrow=c(1,1),omi=c(1,1,1,1),mar=c(5,6,6,5)*.5)
 plot(exp(mertensii$logNL),exp(mertensii$logVmax),ylim=c(0,(max(exp(mertensii$logVmax))*1.2)),xlab="",ylab="")
@@ -94,11 +78,11 @@ a5<-lm(logVmax~logDiam1,data=mertensii)
 summary(a5)
 AIC(a1,a5)
 a5
+```
 
 
 
-
-
+```{r}
 ####Vriesea splendens maxvol estimation###
 ##start with 2 datasets
 vriesea<-read.csv("../data-intermediate/size_vriesea.csv",header=TRUE, sep=";")
