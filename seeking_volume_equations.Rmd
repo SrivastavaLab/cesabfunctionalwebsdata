@@ -143,11 +143,59 @@ splendens_maxwater <- bromeliad_detritus %>%
 splendens_maxwater_mod <- splendens_maxwater %>% 
   lm(max_water ~ actual_water, data = .)
 
-tidy(splendens_maxwater_mod)
-glance(splendens_maxwater_mod)
+kable(tidy(splendens_maxwater_mod))
+kable(glance(splendens_maxwater_mod))
+```
+this is from `r#unique(splendens_maxwater$dataset_name)` which is visit number `r#unique(splendens_maxwater$visit_id)`
+
+Well, a relationship can definitely be created, but its parameters do not resemble the original at all. 
+
+```{r fig.cap="actual water is weakly correlated with maximum water."}
+splendens_maxwater %>% 
+  ggplot(aes(x = actual_water, y  = max_water)) + 
+  geom_point() + 
+  stat_smooth(method = "lm") + 
+  coord_fixed(ratio = 1, xlim = c(0, 350), ylim = c(0, 350)) + 
+  geom_abline(slope = 1, intercept = 0, lty = 2)
 ```
 
-this is from `r#unique(splendens_maxwater$dataset_name)`
+## _Aechmea aquilega_, diameter and number of leaves, `v2`
+
+The R script and the "equation table" agree this time: 
+
+```r
+#Nouragues2009,Sinnamary2011, Aechmea aquilega Vmax= exp(-0.4368 +0.735*log(fg1$diameter)+ 1.4260*log(fg1$num_leaf))
+volNouragues2009<- function(a,b){exp(-0.4368 +0.735*log(a)+ 1.4260*log(b))}
+summ_broms <- summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 336|visit_id==331, volNouragues2009(diameter,num_leaf), max_water))
+```
+
+We being by calculating the model
+
+```{r}
+A_aquilega_model <- Supp_data %>% 
+  filter(species == "Aechmaea_aquilega") %>% 
+  lm(log(max_water) ~ log(diameter) + log(num_leaf), .)
+
+kable(glance(A_aquilega_model))
+kable(tidy(A_aquilega_model))
+```
+
+These are the same! let's visualize it just because:
+
+```{r fig.cap="Relationship between diameter and maximum water volume. Note that the line is jut a smooth loess fit, and it not related to the model"}
+Supp_data %>% 
+  filter(species == "Aechmaea_aquilega") %>% 
+  ggplot(aes(x = diameter, y = max_water)) + 
+  geom_point(aes(size = num_leaf,
+           fill = num_leaf), pch = 21) + theme_bw() + 
+  scale_fill_gradient(high = "#132B43", low = "#56B1F7") + stat_smooth()
+
+```
+
+## _Aechmea mertensii_ prior to 2008
+
+
 
 ### Brouillon
 There seem to be two data sources:
