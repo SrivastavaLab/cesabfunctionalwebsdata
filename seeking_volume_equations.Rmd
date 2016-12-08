@@ -5,12 +5,99 @@ output:
 ---
 
 
-## Where do the volume estimation equations come from?
+# Where do the volume estimation equations come from?
 
 There are several equations that are used to estimate the maximum volume of 
 plants in the experiment. What data are these derived from?
 
-## Data sources
+## list of the equations: 
+
+Here are the equations which are listed in the file `CommunityAnalysis\CESAB trait working group\Max_Volume_models`:
+
+```{r fig.cap = ""}
+knitr::include_graphics("images/photo_of_equations.png")
+```
+
+Can we reproduce these results? Doing so has several advantages:
+
+1. We can update these equations when we get more data (and/or see where we might need _more_ data)
+2. We can predict the new values with *error* (i.e. preserve the standard error 
+of the estimated value). We can then use this later in the analysis, to
+downweight predicted values relative to observed ones
+
+
+## Data source: French Guiana
+
+In the French Guianan datasets that we currently have in the database, Maximum Volume (`max_water`) was rarely measured directly. However other size variables were, such as diameter, number of leaves and actual volume. 
+<!--add a link to the "transcript" of Regis and Kurt's work -->
+
+Below I'm going to review where each model comes from, as an intermediate step between the modelling done already and adding them to the database data-preparation workflow. Here is how I'm going to refer to each of the two sources of data:
+
+* **BWGdatabase** means data that has been uploaded to the BWG database, which is online
+* **supplementary data** data that Regis et al collected in the field. 
+<!-- add in summaries of models later when this is organized?? -->
+
+### _Vriesea splendens_: `v1`
+
+Right away this is kind of confusing. In the table above the following equation is given
+
+```r
+Log(Vmax)= -6.331+1.46LogDiam+ 1.993LogNL
+```
+
+But, in `24_volumen.R` the following equation is used, ostensibly for Vriesea:
+
+```r
+#FrenchGuianaVriesea2007, Vriesea splendens No information of diameter and number of leaf, information about actual water
+#select data set only Vriesea splendens and create an equation
+# Equation vmax = 1.4144*actual vol + 39.343
+volFrench2007Vrisea<- function(a){1.4144*a + 39.343}
+summ_broms <-summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 341 & species=="Vriesea splendens", volFrench2007Vrisea(actual_water), max_water))
+```
+
+No information? what does that mean in this context? Does that mean that Diam1 or volume is missing from either the **BWG data** or the **supplementary data**?
+
+```{r}
+supp_data_additional %>% 
+  filter(species == "Vrisea_splendens") %>% 
+  head %>% 
+  kable
+```
+
+No, the data is there. Do the model parameters match?
+
+```{r}
+vrisea_diam_nl_mod <- supp_data_additional %>% 
+  filter(species == "Vrisea_splendens") %>% 
+  lm(log(Vmax) ~ log(Diam1) + log(NL), data = .) 
+
+kable(tidy(vrisea_diam_nl_mod))
+
+kable(glance(vrisea_diam_nl_mod))
+```
+
+```{r}
+supp_data_additional %>% 
+  filter(species == "Vrisea_splendens") %>% 
+  ggplot(aes(x = Diam1,
+             y = Vmax,
+             size = NL,
+             fill = NL)) + 
+  geom_point(pch = 21) + theme_bw() + 
+  geom_abline(intercept = 0, slope = 1, lty = 2) + 
+  scale_fill_gradient(high = "#132B43", low = "#56B1F7") + 
+  coord_fixed()
+
+```
+
+
+What does this `visit` of `291` in the table mean??
+
+```{r}
+
+```
+
 
 There seem to be two data sources:
 
