@@ -28,6 +28,15 @@ downweight predicted values relative to observed ones
 
 ## Data source: French Guiana
 
+```{r}
+#  in using the Supplementary data, I'm going to rename the columns --
+#  eventually move this process to the outside, to remake
+Supp_data <- supp_data_additional %>% 
+  rename(diameter = Diam1, num_leaf = NL, max_water = Vmax) %>% 
+  select(-Diam2)
+```
+
+
 In the French Guianan datasets that we currently have in the database, Maximum Volume (`max_water`) was rarely measured directly. However other size variables were, such as diameter, number of leaves and actual volume. 
 <!--add a link to the "transcript" of Regis and Kurt's work -->
 
@@ -59,7 +68,7 @@ summ_broms <-summ_broms%>%
 No information? what does that mean in this context? Does that mean that Diam1 or volume is missing from either the **BWG data** or the **supplementary data**?
 
 ```{r}
-supp_data_additional %>% 
+Supp_data %>% 
   filter(species == "Vrisea_splendens") %>% 
   head %>% 
   kable
@@ -68,9 +77,9 @@ supp_data_additional %>%
 No, the data is there. Do the model parameters match?
 
 ```{r}
-vrisea_diam_nl_mod <- supp_data_additional %>% 
+vrisea_diam_nl_mod <- Supp_data %>% 
   filter(species == "Vrisea_splendens") %>% 
-  lm(log(Vmax) ~ log(Diam1) + log(NL), data = .) 
+  lm(log(max_water) ~ log(diameter) + log(num_leaf), data = .) 
 
 kable(tidy(vrisea_diam_nl_mod))
 
@@ -78,27 +87,69 @@ kable(glance(vrisea_diam_nl_mod))
 ```
 
 ```{r}
-supp_data_additional %>% 
+Supp_data %>% 
   filter(species == "Vrisea_splendens") %>% 
-  ggplot(aes(x = Diam1,
-             y = Vmax,
-             size = NL,
-             fill = NL)) + 
-  geom_point(pch = 21) + theme_bw() + 
-  geom_abline(intercept = 0, slope = 1, lty = 2) + 
+  ggplot(aes(x = diameter,
+             y = max_water,
+             size = num_leaf,
+             fill = num_leaf)) + 
+  geom_point(pch = 21) + 
+  theme_bw() + 
   scale_fill_gradient(high = "#132B43", low = "#56B1F7") + 
-  coord_fixed()
+  stat_smooth()
 
 ```
 
 
-What does this `visit` of `291` in the table mean??
+What does this `visit` of `291` in the table mean?? `r#unique(bromeliad_detritus$dataset_name[bromeliad_detritus$visit_id == "291"])`
 
 ```{r}
+# visname <- unique(bromeliad_detritus$dataset_name[bromeliad_detritus$visit_id == "291"]
 
+bromeliad_detritus  %>% 
+  filter(visit_id == "291") %>% 
+  select_("diameter", "num_leaf", "max_water", "species") %>% 
+  vis_dat()
 ```
 
+Well there seems to be no such data in the database, at least not for this site! So this regression could neither be created nor used in Petit Saut.. so what does the `219` mean??
 
+#### the linear version
+
+The code above references a linear relationship  
+
+Where could it even be used? 
+
+```{r}
+bromeliad_detritus  %>% 
+  filter(species %>% str_detect("splendens")) %>% 
+  vis_miss(cluster = TRUE)
+  
+```
+
+OK so all _V. splendens_ have `actual_water`, but most lack `num_leaf` (and those that don't, have `max_water` anyway). From the way the function is used above, it seems that `max_water` was being predicted by `actual_water`. 
+
+This doesn't exist in the Supplementary Data
+```{r}
+kable(head(Supp_data))
+```
+
+So it must have come from the BWG data?
+```{r}
+splendens_maxwater <- bromeliad_detritus %>% 
+  filter(species %>% str_detect("splendens"), 
+         !is.na(max_water))
+
+splendens_maxwater_mod <- splendens_maxwater %>% 
+  lm(max_water ~ actual_water, data = .)
+
+tidy(splendens_maxwater_mod)
+glance(splendens_maxwater_mod)
+```
+
+this is from `r#unique(splendens_maxwater$dataset_name)`
+
+### Brouillon
 There seem to be two data sources:
 
 1. *the database itself*  which contains observations of Bromeliad size (leaves,
