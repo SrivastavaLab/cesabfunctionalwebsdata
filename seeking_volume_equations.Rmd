@@ -7,16 +7,16 @@ output:
 
 ## Where do the volume estimation equations come from?
 
-There are several equations that are used to estimate the maximum volume of
+There are several equations that are used to estimate the maximum volume of 
 plants in the experiment. What data are these derived from?
 
 ## Data sources
 
 There seem to be two data sources:
 
-1. *the database itself*  which contains observations of Bromeliad size
-(leaves, diameter, etc) and also of volume (frequently `actual_volume`,
-rarely `maximum_volume`)
+1. *the database itself*  which contains observations of Bromeliad size (leaves,
+diameter, etc) and also of volume (frequently `actual_volume`, rarely
+`maximum_volume`)
 
 Let's look at how these variables relate to each other:
 
