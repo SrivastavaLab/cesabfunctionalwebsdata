@@ -4,29 +4,14 @@ output:
   pdf_document: default
 ---
 
-## checking the volume equations
+## Calculating the volume equations
 
-Begin by reading in the data.
+This document retraces the process used by Regis (and Kurt?) for creating & choosing the relationships for filling in data of bromeliad size. 
+
+### Aechmaea mertensii
 
 ```{r}
-##Aechmea mertensii maxvol estimation
-
-mertensii<-read.csv("data-intermediate/size_mertensii.csv",header=TRUE, sep=";")
-combined_data <- read.csv("data-intermediate/size_all_data.csv")
-
-model_mertensii <- lm(log(Vmax) ~ log(NL) + log(Diam1), data = mertensii)
-
-tidy(model_mertensii)
-
-combined_data_mert <- combined_data %>% 
-  filter(filename == "mertensii")
-
-model_combined_mertensii <- lm(log(Vmax) ~ log(NL) + log(Diam1), data = combined_data_mert)
-
-all.equal(combined_data_mert$NL, mertensii$NL)
-all.equal(combined_data_mert$Diam1, mertensii$Diam1)
-combined_data_mert$Diam1; mertensii$Diam1
-
+kable(head(mertensii))
 ##rename natural log transformed variables
 mertensii$logNL<-log(mertensii$NL)
 mertensii$logDiam1<-log(mertensii$Diam1)
@@ -47,42 +32,45 @@ a6<-lm(logVmax~logDiam1+logNL,data=mertensii)#linear
 
 #model formula
 anova(a1,test="F")
-a1
+tidy(a1)
 
-AIC(a1,a6)#a6 better
+tidy(AIC(a1,a6))#a6 better
 
-summary(a6)
-a6
+tidy(a6)
+glance(a6)
 ```
 
 ```{r, eval=FALSE}
-summary(lm(log(Vmax) ~ log(Diam1) + log(NL), data = mertensii))
-
 ##plot selected model on log-log scale
 par(mfrow=c(1,1),omi=c(1,1,1,1),mar=c(5,6,6,5)*.5)
 plot(mertensii$logNL,mertensii$logVmax,ylim=c(0,(max(mertensii$logVmax)*1.2)),xlab="",ylab="")
 xy<-seq(min(mertensii$logNL),max(mertensii$logNL),length=100)
 pNL.a6<-predict(a6,data.frame(logNL=xy,logDiam1=rep(mean(mertensii$logDiam1),length(xy))))
-# lines(xy,pNL.a1)
+lines(xy,pNL.a6)
 mtext("Ln Number of leaves",side=1,line=2.5,cex=1.2)
 mtext("Ln Max volume (mL)",side=2,line=2.5,cex=1.2)
+```
 
+```{r}
 plot(mertensii$logDiam1,mertensii$logVmax,ylim=c(0,(max(mertensii$logVmax)*1.2)),xlab="",ylab="")
 xv<-seq(min(mertensii$logDiam1),max(mertensii$logDiam1),length=100)
 pDiam.a6<-predict(a1,data.frame(logDiam1=xv,logNL=rep(mean(mertensii$logNL),length(xv))))
 lines(xv,pDiam.a6)
 mtext("Ln Diameter (cm)",side=1,line=2.5,cex=1.2)
 mtext("Ln Max volume (mL)",side=2,line=2.5,cex=1.2)
+```
 
-
+```{r}
 #plot selected model with actual response values
 par(mfrow=c(1,1),omi=c(1,1,1,1),mar=c(5,6,6,5)*.5)
-plot(exp(mertensii$logNL),exp(mertensii$logVmax),ylim=c(0,(max(exp(mertensii$logVmax))*1.2)),xlab="",ylab="")
-lines(exp(xy),exp(pNL.a6))
+plot(exp(mertensii$logNL),exp(mertensii$logVmax),
+     ylim=c(0,max(exp(mertensii$logVmax)*1.2)),
+     xlab="",ylab="")
+# lines(exp(xy),exp(pNL.a6))
 mtext("Number of leaves",side=1,line=2.5,cex=1.2)
 mtext("Max volume (mL)",side=2,line=2.5,cex=1.2)
 
-plot(exp(mertensii$logDiam6),exp(mertensii$logVmax),ylim=c(0,(max(exp(mertensii$logVmax))*1.2)),xlab="",ylab="")
+plot(exp(mertensii$logDiam1),exp(mertensii$logVmax),ylim=c(0,max(exp(mertensii$logVmax))*1.2),xlab="",ylab="")
 lines(exp(xv),exp(pDiam.a6))
 mtext("Diameter (cm)",side=1,line=2.5,cex=1.2)
 mtext("Max volume (mL)",side=2,line=2.5,cex=1.2)
@@ -94,20 +82,17 @@ a5<-lm(logVmax~logDiam1,data=mertensii)
 summary(a5)
 AIC(a1,a5)
 a5
+```
 
 
-
-
-
+### Vriesea
+```{r}
 ####Vriesea splendens maxvol estimation###
 ##start with 2 datasets
-vriesea<-read.csv("../data-intermediate/size_vriesea.csv",header=TRUE, sep=";")
-vriesea_prod<-read.csv("../data-intermediate/size_vriesea_prod.csv",header=TRUE, sep=";")
 ##merge datasets
 vriesea$dataset<-1 #datafrom droughtexpt
 vriesea_prod$dataset<-2 #data from production
 vriesea_all<-rbind(vriesea,vriesea_prod)
-sort(vriesea_all$BromeliadID)
 
 ##rename natural log transformed variables
 vriesea_all$logNL<-log(vriesea_all$NL)
@@ -158,19 +143,14 @@ plot(exp(vriesea_all$logDiam1),exp(vriesea_all$logVmax),ylim=c(0,(max(exp(vriese
 lines(exp(xv),exp(pDiam.a1))
 mtext("Diameter (cm)",side=1,line=2.5,cex=1.2)
 mtext("Max volume (mL)",side=2,line=2.5,cex=1.2)
+```
 
-
-########################################################################################
-
-####Aechmea aquilega maxvol estimation###
-##start with 2 datasets
-aquilega<-read.csv("data-intermediate/size_aquilega_Biog.csv",header=TRUE, sep=";")
-aquilegaKT<-read.csv("data-intermediate/size_aquilegaKT.csv",header=TRUE, sep=";")
+### Aechmea aquilega
+```{r}
 ##merge datasets
-aquilega$dataset<-1 #datafrom biogeogr expt
+aquilega_biog$dataset<-1 #datafrom biogeogr expt
 aquilegaKT$dataset<-2 #data KT algae expt
-aquilega_all<-rbind(aquilega,aquilegaKT)
-sort(aquilega_all$ID)
+aquilega_all<-rbind(aquilega_biog,aquilegaKT)
 
 ##rename natural log transformed variables
 aquilega_all$logNL<-log(aquilega_all$NL)
@@ -203,7 +183,6 @@ AIC(a1,a5)
 par(mfrow=c(2,1),omi=c(1,1,1,1),mar=c(5,6,6,5)*.5)
 plot(aquilega_all$logNL,aquilega_all$logVmax,ylim=c(0,(max(aquilega_all$logVmax)*1.2)),xlab="",ylab="")
 xy<-seq(min(aquilega_all$logNL),max(aquilega_all$logNL),length=100)
-pNL.a1<-predict(a1,data.frame(NL=xy,Diam1=rep(mean(aquilega_all$Diam1),length(xy))),type="response")
 pNL.a5<-predict(a5,data.frame(logNL=xy,logDiam1=rep(mean(aquilega_all$logDiam1),length(xy))))
 lines(xy,pNL.a5)
 mtext("Ln Number of leaves",side=1,line=2.5,cex=1.2)
@@ -237,35 +216,36 @@ mtext("Max volume (mL)",side=2,line=2.5,cex=1.2)
 ##notes on other models explored Vriesea splendens
 
 ######test allometry with mean diameter and Number of leaves
-vriesea$meandiam<-(vriesea$Diam1+vriesea$Diam2)/2
-vriesea
-a2<-lm(log(Vmax)~log(meandiam)+log(NL),data=vriesea)
-anova(a2,test="F")
-summary(a2)
-a2$residuals
+# vriesea$meandiam<-(vriesea$Diam1+vriesea$Diam2)/2
+# vriesea
+# a2<-lm(log(Vmax)~log(meandiam)+log(NL),data=vriesea)
+# anova(a2,test="F")
+# summary(a2)
+# a2$residuals
+# 
+# ##test allometry with Diameter1 only - reduction r2?
+# a3<-lm(log(Vmax)~log(Diam1),data=vriesea)
+# anova(a3,test="F")
+# summary(a3)
+# 
+# ##examine residuals - model fit a1
+# par(mfrow=c(2,1))
+# plot((vriesea_all$logDiam1),a1$residuals)
+# abline(h=0)
+# plot((vriesea_all$logNL),a1$residuals)
+# abline(h=0)
+# 
+# ##examine residuals - model fit a2
+# par(mfrow=c(2,1))
+# plot(log(vriesea$meandiam),a2$residuals)
+# abline(h=0)
+# plot(log(vriesea$NL),a2$residuals)
+# abline(h=0)
+```
 
-##test allometry with Diameter1 only - reduction r2?
-a3<-lm(log(Vmax)~log(Diam1),data=vriesea)
-anova(a3,test="F")
-summary(a3)
+### Guzmania (Puerto Rico)
 
-##examine residuals - model fit a1
-par(mfrow=c(2,1))
-plot((vriesea_all$logDiam1),a1$residuals)
-abline(h=0)
-plot((vriesea_all$logNL),a1$residuals)
-abline(h=0)
-
-##examine residuals - model fit a2
-par(mfrow=c(2,1))
-plot(log(vriesea$meandiam),a2$residuals)
-abline(h=0)
-plot(log(vriesea$NL),a2$residuals)
-abline(h=0)
-
-##Guzmania Puerto Rico
-
-guzmania<-read.csv("../data-intermediate/size_Guzmania_PR.csv",header=TRUE, sep=";")
+```{r}
 ##rename natural log transformed variables
 guzmania$logNL<-log(guzmania$NL)
 guzmania$logDiam1<-log(guzmania$Diam1)

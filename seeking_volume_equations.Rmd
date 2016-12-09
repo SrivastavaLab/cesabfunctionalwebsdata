@@ -5,37 +5,449 @@ output:
 ---
 
 
-## Where do the volume estimation equations come from?
+# Where do the volume estimation equations come from?
 
-There are several equations that are used to estimate the maximum volume of
+There are several equations that are used to estimate the maximum volume of 
 plants in the experiment. What data are these derived from?
 
-## Data sources
+## list of the equations: 
+
+Here are the equations which are listed in the file `CommunityAnalysis\CESAB trait working group\Max_Volume_models`:
+
+```{r fig.cap = ""}
+knitr::include_graphics("images/photo_of_equations.png")
+```
+
+Can we reproduce these results? Doing so has several advantages:
+
+1. We can update these equations when we get more data (and/or see where we might need _more_ data)
+2. We can predict the new values with *error* (i.e. preserve the standard error 
+of the estimated value). We can then use this later in the analysis, to
+downweight predicted values relative to observed ones
+
+
+## Data source: French Guiana
+
+```{r}
+#  in using the Supplementary data, I'm going to rename the columns --
+#  eventually move this process to the outside, to remake
+Supp_data <- supp_data_additional %>% 
+  rename(diameter = Diam1, num_leaf = NL, max_water = Vmax) %>% 
+  select(-Diam2)
+```
+
+
+In the French Guianan datasets that we currently have in the database, Maximum Volume (`max_water`) was rarely measured directly. However other size variables were, such as diameter, number of leaves and actual volume. 
+<!--add a link to the "transcript" of Regis and Kurt's work -->
+
+Below I'm going to review where each model comes from, as an intermediate step between the modelling done already and adding them to the database data-preparation workflow. Here is how I'm going to refer to each of the two sources of data:
+
+* **BWGdatabase** means data that has been uploaded to the BWG database, which is online
+* **supplementary data** data that Regis et al collected in the field. 
+<!-- add in summaries of models later when this is organized?? -->
+
+### _Vriesea splendens_: `v1`
+
+Right away this is kind of confusing. In the table above the following equation is given
+
+```r
+Log(Vmax)= -6.331+1.46LogDiam+ 1.993LogNL
+```
+
+But, in `24_volumen.R` the following equation is used, ostensibly for Vriesea:
+
+```r
+#FrenchGuianaVriesea2007, Vriesea splendens No information of diameter and number of leaf, information about actual water
+#select data set only Vriesea splendens and create an equation
+# Equation vmax = 1.4144*actual vol + 39.343
+volFrench2007Vrisea<- function(a){1.4144*a + 39.343}
+summ_broms <-summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 341 & species=="Vriesea splendens", volFrench2007Vrisea(actual_water), max_water))
+```
+
+No information? what does that mean in this context? Does that mean that Diam1 or volume is missing from either the **BWG data** or the **supplementary data**?
+
+```{r}
+Supp_data %>% 
+  filter(species == "Vrisea_splendens") %>% 
+  head %>% 
+  kable
+```
+
+No, the data is there. Do the model parameters match?
+
+```{r}
+vrisea_diam_nl_mod <- Supp_data %>% 
+  filter(species == "Vrisea_splendens") %>% 
+  lm(log(max_water) ~ log(diameter) + log(num_leaf), data = .) 
+
+kable(tidy(vrisea_diam_nl_mod))
+
+kable(glance(vrisea_diam_nl_mod))
+```
+
+```{r}
+Supp_data %>% 
+  filter(species == "Vrisea_splendens") %>% 
+  ggplot(aes(x = diameter,
+             y = max_water,
+             size = num_leaf,
+             fill = num_leaf)) + 
+  geom_point(pch = 21) + 
+  theme_bw() + 
+  scale_fill_gradient(high = "#132B43", low = "#56B1F7") + 
+  stat_smooth()
+
+```
+
+
+What does this `visit` of `291` in the table mean?? `r#unique(bromeliad_detritus$dataset_name[bromeliad_detritus$visit_id == "291"])`
+
+```{r}
+# visname <- unique(bromeliad_detritus$dataset_name[bromeliad_detritus$visit_id == "291"]
+
+bromeliad_detritus  %>% 
+  filter(visit_id == "291") %>% 
+  select_("diameter", "num_leaf", "max_water", "species") %>% 
+  vis_dat()
+```
+
+Well there seems to be no such data in the database, at least not for this site! So this regression could neither be created nor used in Petit Saut.. so what does the `219` mean??
+
+#### the linear version
+
+The code above references a linear relationship  
+
+Where could it even be used? 
+
+```{r}
+bromeliad_detritus  %>% 
+  filter(species %>% str_detect("splendens")) %>% 
+  vis_miss(cluster = TRUE)
+  
+```
+
+OK so all _V. splendens_ have `actual_water`, but most lack `num_leaf` (and those that don't, have `max_water` anyway). From the way the function is used above, it seems that `max_water` was being predicted by `actual_water`. 
+
+This doesn't exist in the Supplementary Data
+```{r}
+kable(head(Supp_data))
+```
+
+So it must have come from the BWG data?
+```{r}
+splendens_maxwater <- bromeliad_detritus %>% 
+  filter(species %>% str_detect("splendens"), 
+         !is.na(max_water))
+
+splendens_maxwater_mod <- splendens_maxwater %>% 
+  lm(max_water ~ actual_water, data = .)
+
+kable(tidy(splendens_maxwater_mod))
+kable(glance(splendens_maxwater_mod))
+```
+this is from `r#unique(splendens_maxwater$dataset_name)` which is visit number `r#unique(splendens_maxwater$visit_id)`
+
+Well, a relationship can definitely be created, but its parameters do not resemble the original at all. 
+
+```{r fig.cap="actual water is weakly correlated with maximum water."}
+splendens_maxwater %>% 
+  ggplot(aes(x = actual_water, y  = max_water)) + 
+  geom_point() + 
+  stat_smooth(method = "lm") + 
+  coord_fixed(ratio = 1, xlim = c(0, 350), ylim = c(0, 350)) + 
+  geom_abline(slope = 1, intercept = 0, lty = 2)
+```
+
+## _Aechmea aquilega_, diameter and number of leaves, `v2`
+
+The R script and the "equation table" agree this time: 
+
+```r
+#Nouragues2009,Sinnamary2011, Aechmea aquilega Vmax= exp(-0.4368 +0.735*log(fg1$diameter)+ 1.4260*log(fg1$num_leaf))
+volNouragues2009<- function(a,b){exp(-0.4368 +0.735*log(a)+ 1.4260*log(b))}
+summ_broms <- summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 336|visit_id==331, volNouragues2009(diameter,num_leaf), max_water))
+```
+
+We begin by calculating the model
+
+```{r}
+A_aquilega_model <- Supp_data %>% 
+  filter(species == "Aechmaea_aquilega") %>% 
+  lm(log(max_water) ~ log(diameter) + log(num_leaf), .)
+
+kable(glance(A_aquilega_model))
+kable(tidy(A_aquilega_model))
+```
+
+These are the same! let's visualize it just because:
+
+```{r fig.cap="Relationship between diameter and maximum water volume. Note that the line is jut a smooth loess fit, and it not related to the model"}
+Supp_data %>% 
+  filter(species == "Aechmaea_aquilega") %>% 
+  ggplot(aes(x = diameter, y = max_water)) + 
+  geom_point(aes(size = num_leaf,
+           fill = num_leaf), pch = 21) + theme_bw() + 
+  scale_fill_gradient(high = "#132B43", low = "#56B1F7") + stat_smooth()
+
+```
+
+## _Aechmea mertensii_ prior to 2008
+
+I am not totally clear on this "prior to 2008/post 2008" thing. Was something different between those years? were the relationships done in different sites?? 
+
+The code used by Fabiola and Ingacio was:
+```r
+volFrench2007<- function(a){exp(0.611+1.09*log(a))}
+summ_broms <- summ_broms %>%
+  mutate(max_water= ifelse(visit_id == 286, volFrench2007(diameter), NA))
+```
+This matches the table of equations!  
+
+Can we recreate this from data?
+```{r}
+mertensii_model_supp_dat <- Supp_data %>% 
+  filter(species == "Aechmaea_mertensii") %>% 
+  lm(log(max_water) ~ log(diameter), data  = .)
+
+mertensii_model_supp_dat %>% 
+  tidy %>% 
+  kable
+```
+
+there they are! the same coeffiecients as were previously found.
+
+## _Aechmea mertensii_ after 2008
+
+This is different from the previous one in that it also includes the number of leaves:
+
+```r
+#FrenchGuianaAechmea2008,PetitSaut, Aechmea mertensii, Vmax=exp(4.838+5.5888*log(diameter)-1.1649*(log(fg$diameter))^2+5.7181*log(fg$num_leaf)-1.7982*(log(fg$num_leaf)^2))
+volFrench2008<- function(a,b){exp(0.0292 +0.339*log(a) + 1.3563*log(b))}
+summ_broms <- summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 301, volFrench2008(diameter,num_leaf), max_water))
+```
+(Why the quadratic term in the parentheses?)
+
+OK, so maybe it is the same data but with a different model? 
+```{r}
+mertensii_model_supp_dat_post_08 <- Supp_data %>% 
+  filter(species == "Aechmaea_mertensii") %>% 
+  lm(log(max_water) ~ log(diameter) + log(num_leaf), data  = .)
+
+mertensii_model_supp_dat_post_08 %>% 
+  tidy %>% 
+  kable
+```
+
+Yep! This matches. So, are two different regressions being used here because different variables were measured in different places in the experiment? i.e. do sites before 2008 lack number of leaves, while sites after 2008 possess it? 
+
+indeed, a glance at [the French Guiana Bromeliad data](http://aammd.info/bwg-data/check_frenchguiana.html) shows that leaves were missing in Petit Saut 2007
+
+#### Comparing the 2007 and 2008 models
+
+One has more parameters and few sample sizes, so I expect it would be a crappier model:
+
+```{r}
+list(after_2008 = mertensii_model_supp_dat_post_08, before_2008 = mertensii_model_supp_dat) %>% 
+  map_df(glance, .id = 'model category') %>% 
+  kable
+```
+
+
+### _Vriesea_ 2007, from actual water
+
+```r
+#FrenchGuianaVriesea2007, Vriesea splendens No information of diameter and number of leaf, information about actual water
+#select data set only Vriesea splendens and create an equation
+# Equation vmax = 1.4144*actual vol + 39.343
+volFrench2007Vrisea<- function(a){1.4144*a + 39.343}
+summ_broms <-summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 341 & species=="Vriesea splendens", volFrench2007Vrisea(actual_water), max_water))
+```
+
+## BWG data
+
+Some regressions seem to come from the BWG data itself. Where is that data? Can we recreate those relationships too? 
+
+### Tillandsia guatemalensis/turneri/Complanta from Honduras and Colombia
+
+```{r}
+BWG_tillandsia <- bromeliad_detritus %>% 
+  filter(species %>% str_detect("Tillandsia"))
+
+
+BWG_tillandsia %>% 
+  left_join(dats_date %>% dplyr::select(dataset_id, country)) %>% 
+  dplyr::select(species, dataset_name, country) %>% 
+  distinct %>% kable
+```
+
+OK there are more _Tillandsia_ in the database than just those in Colombia and Honduras! Let instead filter by country:
+
+```{r}
+dats_date %>% select(dataset_id, country) %>% filter(country %in% c("Colombia", "Honduras")) %>% 
+  left_join(BWG_tillandsia) %>% 
+  vis_miss(cluster=TRUE)
+```
+
+Well, the regressions were certainly not made from here! There is no observation of `max_water` in Colombia at all. 
+
+On closer inspection of the original script, it turns out that the regressions for _Tillandsia_ were done with _Guzmania_:
+
+```r
+#how many species names are there for bromeliads
+unique(summ_broms$species)
+#select only Guzmania
+guz_only = filter(summ_broms, grepl("^Gu|^G\\.", species))
+unique(guz_only$species)
+glimpse(guz_only)
+
+# Model for Honduras and Colombia2000, 2001
+# plot(log(guz_only$num_leaf),log(guz_only$max_water))
+# summary(lm(log(max_water)~log(num_leaf) + log(actual_water +1),data=guz_only ))
+```
+
+Where were the Guzmania measured? 
+```{r}
+only_guzmania <- bromeliad_detritus %>% 
+  filter(grepl("^Gu|^G\\.", species))
+
+only_guzmania %>% 
+  left_join(dats_date %>% dplyr::select(dataset_id, country)) %>% 
+  dplyr::select(species, dataset_name, country) %>% 
+  distinct %>% kable
+```
+
+```{r fig.cap="data present for all the _Guzmania_ spp."}
+library(ggmissing)
+ggplot(only_guzmania, aes(x = num_leaf, y = max_water, size = actual_water)) + 
+  geom_missing_point()
+```
+
+```{r fig.cap = "missing values for Guzmania data"}
+# shape for species
+only_guzmania %>% vis_miss(cluster = TRUE)
+```
+
+There are several missing values, which we can remove for any plots (and also from the modelling)
+
+```{r}
+only_guzmania_complete <- only_guzmania %>% 
+  select(num_leaf, max_water, actual_water) %>% 
+  filter(complete.cases(.))
+
+ggplot(only_guzmania_complete, 
+       aes(x = actual_water,
+           y = max_water,
+           fill = num_leaf)) + 
+  geom_point(aes(size = num_leaf), pch = 21) + theme_bw() + 
+  geom_abline(intercept = 0, slope = 1, lty = 2) + 
+  scale_fill_gradient(high = "#132B43", low = "#56B1F7") + 
+  coord_fixed() + 
+  stat_smooth(method = "gam")
+
+```
+
+Unsurprisingly, the data show a triangular relationship -- the actual volume can never be greater than the maximum volume. I feel like that's a **Problem**. 
+
+At any rate, what was the work that was done already? 
+
+```r
+# Model for Honduras and Colombia2000, 2001
+# plot(log(guz_only$num_leaf),log(guz_only$max_water))
+# summary(lm(log(max_water)~log(num_leaf) + log(actual_water +1),data=guz_only ))
+
+# Equation for Honduras and Colombia2000 and 2001:
+
+Vmax=exp(0.78960 + 0.68576*log(Col$num_leaf) + 0.44664*log(Col$actual_water +1))
+```
+
+Can we reproduce this? 
+
+```{r}
+vmax_guzmania <- lm(log(max_water) ~ log(num_leaf) + log(actual_water + 1), 
+                    data = only_guzmania_complete)
+
+vmax_guzmania %>% 
+  tidy %>% 
+  kable
+```
+
+This resembles the equation from the table above, but this is a problem because:
+
+1. it is calculated on _Guzmania_.. can it really be used to predict _Tillandsia_?
+2. I think that using actual volume to predict maximum is a bad idea, because it predicts the minimum, not the mean, of maximum volume. 
+
+### Guzmania volume from `num_leaf` only
+```{r}
+vmax_guzmania_leafonly <- lm(log(max_water) ~ log(num_leaf), 
+                    data = only_guzmania_complete)
+
+vmax_guzmania_leafonly %>% 
+  tidy %>% kable
+```
+
+Unfortunately, this does *not* match:
+
+```r
+#Model for Colombia.Rioblanco 2012 (366) and ElVerde
+# summary(lm(log(max_water)~log(num_leaf),data=guz_only))
+
+# equation for Colombia.Rioblanco 2012 (366) and ElVerde Vol.max=exp(-2.3418 + 2.1025*log(Col2012$num_leaf))
+#Guzmania
+volColombia2012<- function(a){exp(-2.3418 + 2.1025*log(a))}
+```
+
+
+## Extras
+
+#### Comparing NLS to lm model fits.
+```{r}
+mertensii_nls_mod <- Supp_data %>% 
+  filter(species == "Aechmaea_mertensii") %>% 
+  nls(max_water ~ exp(a + b * log(diameter)), start = list(a = 0.6, b = 1), data  = .)
+
+pred <- data_frame(diameter = seq_range(Supp_data %>%  
+                                          filter(species == "Aechmaea_mertensii") %>%
+                                          .[["diameter"]],
+                                        n = 30)) %>% 
+  add_predictions(mertensii_nls_mod, var = "nls_fit") %>% 
+  add_predictions(mertensii_model_supp_dat, var = "lm_fit") %>% 
+  mutate(lm_fit = exp(lm_fit))
+
+Supp_data %>% 
+  filter(species == "Aechmaea_mertensii") %>% 
+  ggplot(aes(x = diameter, y = max_water)) + geom_point() + 
+  geom_line(aes(y = nls_fit), colour = "forestgreen", data = pred) +
+  geom_line(aes(y = lm_fit), colour = "darkorange", data = pred) + 
+  scale_x_log10() + 
+  scale_y_log10()
+
+mertensii_nls_mod %>% tidy
+```
+
+
 
 There seem to be two data sources:
 
-1. *the database itself*  which contains observations of Bromeliad size
-(leaves, diameter, etc) and also of volume (frequently `actual_volume`,
-rarely `maximum_volume`)
-
-
-```{r }
-size_dat <- read_csv("data-intermediate/size_all_data.csv")
-kable(head(size_dat))
-```
+1. *the database itself*  which contains observations of Bromeliad size (leaves,
+diameter, etc) and also of volume (frequently `actual_volume`, rarely
+`maximum_volume`)
 
 Let's look at how these variables relate to each other:
 
 ```{r}
-ggplot(size_dat, aes(x = Diam1, y = Vmax, size = NL)) + 
+ggplot(supp_data_additional, aes(x = Diam1, y = Vmax, size = NL)) + 
   geom_point(alpha = 0.5) + 
   facet_wrap(~species, scales = "free")
 ```
 
-There is a mispelling! is filename any better for splitting up species:
+There is a misspelling! is file name any better for splitting up species:
 
 ```{r}
-ggplot(size_dat, aes(x = Diam1, y = Vmax, size = NL)) + 
+ggplot(supp_data_additional, aes(x = Diam1, y = Vmax, size = NL)) + 
   geom_point(alpha = 0.5) + 
   facet_wrap(~filename, scales = "free")
 ```
@@ -43,7 +455,7 @@ ggplot(size_dat, aes(x = Diam1, y = Vmax, size = NL)) +
 Nope same error. Better fix the species then:
 
 ```{r}
-size_dat_species <- size_dat %>% 
+size_dat_species <- supp_data_additional %>% 
   mutate(species = if_else(str_detect(species, "Vri.*"), "Vriesea", species))
 
 ggplot(size_dat_species, aes(x = Diam1, y = Vmax, size = NL)) + 
@@ -68,7 +480,7 @@ I have in hand several equations (photo) which were apparently derived (in part?
 ### Volume predicted with Diameter:
 
 ```{r}
-bromeliad_diam_models <- size_dat %>%
+bromeliad_diam_models <- supp_data_additional %>%
   group_by(filename) %>%
   nest %>%
   mutate(pred_vo = map(data, ~ lm(log(Vmax) ~ log(Diam1), data = .x)))
@@ -98,7 +510,7 @@ volFrench2007<- function(a){exp(0.611+1.09*log(a))}
 ### Volume predicted with Diameter AND Number of Leaves
 
 ```{r}
-bromeliad_diam_models <- size_dat %>%
+bromeliad_diam_models <- supp_data_additional %>%
   group_by(filename) %>%
   nest %>%
   mutate(pred_vo = map(data, ~ lm(log(Vmax) ~ log(Diam1) + log(NL), data = .x)))
@@ -127,7 +539,7 @@ species_models <- size_dat_species %>%
   mutate(pred_vo = map(data, ~ lm(log(Vmax) ~ log(Diam1) + log(NL), data = .x)))
 ```
 
-LEt's look a tthe parameters of these:
+Let's look a the parameters of these:
 
 ```{r}
 species_models %>% 
@@ -195,21 +607,5 @@ Well, actual water is frequently recorded -- but Maximum Volume is missing for a
 
 We *DO* use data from other sites to find the relationship between `max_water` and volume. Specifically in these three sites:
 
-### Guzmania
 
-where are they?
-```{r}
-only_guzmania <- bromeliad_detritus %>% 
-  filter(grepl("^Gu|^G\\.", species))
-
-kable(head(only_guzmania))
-```
-
-```{r}
-library(ggmissing)
-ggplot(only_guzmania, aes(x = num_leaf, y = max_water)) + 
-  geom_missing_point()
-
-# shape for species
-```
 
