@@ -1,27 +1,30 @@
 #  working with the size data
-remake::dump_environment()
 
+supp_data_rename <- function(.supp_data_additional){
+  .supp_data_additional %>%
+    rename(diameter = Diam1, num_leaf = NL, max_water = Vmax) %>%
+    select(-Diam2)
+}
+
+# generate the table of the models we are going to calculate with the Supplementary data
+#  src_dat defines the subset of the data used for the model -- here, the species name used
 make_model_data <- function(){
   frame_data(
-    ~m_id, ~src_dat,                             ~xvar,                   ~yvar,          ~.f,     ~target_dat,      ~family,
-    "v1", "mertensii",                           "~log(Diam1)",           "~log(Vmax)",    glm,      286,              "gaussian",
-    "v2", c("aquilega_Biog","aquilegaKT"),       "~log(Diam1) + log(NL)", "~log(Vmax)",    glm,      286,              "gaussian"
+    ~m_id, ~src_species,         ~xvar,                            ~yvar,          ~.f,       ~family,
+    "v1", "Aechmaea_mertensii",  "~log(diameter)",                 "~log(max_water)",    glm, "gaussian",
+    "v2", "Aechmaea_aquilega",   "~log(diameter) + log(num_leaf)", "~log(max_water)",    glm, "gaussian"
   )  %>%
     mutate(xvar = xvar %>% map(as.formula),
            yvar = yvar %>% map(as.formula))
 }
 
-mods <- make_model_data()
-
-renamed_size_dat <- size_dat %>% rename(dataset_id = filename)
-
 derive_modelling_information_simpler <- function(.model_table, .obs_data){
   .model_table %>%
     # select the required input rows
-    mutate(src_df = map(src_dat,
+    mutate(src_df = map(src_species,
                         ~ .obs_data %>%
                           # TODO: ? add select() to contain only some variables??
-                          filter(dataset_id %in% .x)),
+                          filter(species %in% .x)),
            # create modelling function
            fml = map2(.x = xvar, .y = yvar, ~ formulae(.y, .x)),
            fml = flatten(fml)) %>%
@@ -29,12 +32,23 @@ derive_modelling_information_simpler <- function(.model_table, .obs_data){
            y_symb = yvar %>% map(find_symbols))
 }
 
-mod_info <- derive_modelling_information_simpler(.model_table = mods, .obs_data = renamed_size_dat)
+make_model_target_data <- function(){
+  frame_data(
+    ~m_id, ~target_dat,
+    "v1",  c("286"),
+    "v2",  c("301", "296")
+  )
+}
 
-mod_info %>% glimpse
+# add in the target data (this is not strictly necessary for the model itself,
+# but i guess  you should not make one of these imputation models if you don't
+# know why you are making it)
 
-fit_models <- mod_info %>% do_fit_predictive_model()
+fit_size_models_to_data <- function(.mod_info, .supp_size_model_data){
+  .mod_info %>%
+    left_join(.supp_size_model_data) %>%
+    do_fit_predictive_model() %>%
+    mutate(predicting_model = flatten(predicting_model))
+}
 
-fit_models$predicting_model[[2]][[1]] %>% tidy
-# try looking in some various FrenchGuianaAechmea2007
-
+# combining these data with observed data and creating predictions ---

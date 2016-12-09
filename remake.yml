@@ -37,6 +37,7 @@ sources:
   - Rfunctions/22_detritus_combination.R
   - Rfunctions/07_traits_checking.R
   - Rfunctions/preparing_supp_data.R
+  - Rfunctions/24_vol_brouillon.R
 
 targets:
   downloads:
@@ -62,11 +63,10 @@ targets:
     depends:
       - abundance
       - detritus_model_plots
-      - outputs/bromeliad_observations.csv
       - bromeliad_detritus
       - traits_all_BF_added
       - seeking_volume_equations.md
-      - supp_data_additional
+      - supp_size_model_fits
       - maxvol_model.md
       #- reports
 #  downloads:
@@ -364,6 +364,21 @@ targets:
 
   supp_data_additional:
     command: add_more_info_to_supp(supplementary_size_data)
+
+  supp_data_renamed:
+    command: supp_data_rename(supp_data_additional)
+
+  supp_size_models:
+    command: make_model_data()
+
+  supp_size_model_info:
+    command: derive_modelling_information_simpler(supp_size_models, supp_data_renamed)
+
+  supp_size_model_data:
+    command: make_model_target_data()
+
+  supp_size_model_fits:
+    command: fit_size_models_to_data(supp_size_model_info, supp_size_model_data)
 
   maxvol_model.md:
     knitr:
