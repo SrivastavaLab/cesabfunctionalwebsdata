@@ -1,6 +1,5 @@
 #  working with the size data
 remake::dump_environment()
-size_dat <- read_csv("data-intermediate/size_all_data.csv")
 
 make_model_data <- function(){
   frame_data(
