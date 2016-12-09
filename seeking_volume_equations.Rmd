@@ -170,7 +170,7 @@ summ_broms <- summ_broms%>%
   mutate(max_water= ifelse(visit_id == 336|visit_id==331, volNouragues2009(diameter,num_leaf), max_water))
 ```
 
-We being by calculating the model
+We begin by calculating the model
 
 ```{r}
 A_aquilega_model <- Supp_data %>% 
@@ -195,9 +195,97 @@ Supp_data %>%
 
 ## _Aechmea mertensii_ prior to 2008
 
+I am not totally clear on this "prior to 2008/post 2008" thing. Was something different between those years? were the relationships done in different sites?? 
+
+The code used by Fabiola and Ingacio was:
+```r
+volFrench2007<- function(a){exp(0.611+1.09*log(a))}
+summ_broms <- summ_broms %>%
+  mutate(max_water= ifelse(visit_id == 286, volFrench2007(diameter), NA))
+```
+This matches the table of equations!  
+
+Can we recreate this from data?
+```{r}
+mertensii_model_supp_dat <- Supp_data %>% 
+  filter(species == "Aechmaea_mertensii") %>% 
+  lm(log(max_water) ~ log(diameter), data  = .)
+
+mertensii_model_supp_dat %>% 
+  tidy %>% 
+  kable
+```
+
+there they are! the same coeffiecients as were previously found.
+
+## _Aechmea mertensii_ after 2008
+
+This is different from the previous one in that it also includes the number of leaves:
+
+```r
+#FrenchGuianaAechmea2008,PetitSaut, Aechmea mertensii, Vmax=exp(4.838+5.5888*log(diameter)-1.1649*(log(fg$diameter))^2+5.7181*log(fg$num_leaf)-1.7982*(log(fg$num_leaf)^2))
+volFrench2008<- function(a,b){exp(0.0292 +0.339*log(a) + 1.3563*log(b))}
+summ_broms <- summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 301, volFrench2008(diameter,num_leaf), max_water))
+```
+(Why the quadratic term in the parentheses?)
+
+OK, so maybe it is the same data but with a different model? 
+```{r}
+mertensii_model_supp_dat_post_08 <- Supp_data %>% 
+  filter(species == "Aechmaea_mertensii") %>% 
+  lm(log(max_water) ~ log(diameter) + log(num_leaf), data  = .)
+
+mertensii_model_supp_dat_post_08 %>% 
+  tidy %>% 
+  kable
+```
+
+Yep! This matches. So, are two different regressions being used here because different variables were measured in different places in the experiment? i.e. do sites before 2008 lack number of leaves, while sites after 2008 possess it? 
+
+indeed, a glance at [the French Guiana Bromeliad data](http://aammd.info/bwg-data/check_frenchguiana.html) shows that leaves were missing in Petit Saut 2007
 
 
-### Brouillon
+### 
+
+```r
+#FrenchGuianaVriesea2007, Vriesea splendens No information of diameter and number of leaf, information about actual water
+#select data set only Vriesea splendens and create an equation
+# Equation vmax = 1.4144*actual vol + 39.343
+volFrench2007Vrisea<- function(a){1.4144*a + 39.343}
+summ_broms <-summ_broms%>%
+  mutate(max_water= ifelse(visit_id == 341 & species=="Vriesea splendens", volFrench2007Vrisea(actual_water), max_water))
+```
+
+### Extras
+
+#### Comparing NLS to lm model fits.
+```{r}
+mertensii_nls_mod <- Supp_data %>% 
+  filter(species == "Aechmaea_mertensii") %>% 
+  nls(max_water ~ exp(a + b * log(diameter)), start = list(a = 0.6, b = 1), data  = .)
+
+pred <- data_frame(diameter = seq_range(Supp_data %>%  
+                                          filter(species == "Aechmaea_mertensii") %>%
+                                          .[["diameter"]],
+                                        n = 30)) %>% 
+  add_predictions(mertensii_nls_mod, var = "nls_fit") %>% 
+  add_predictions(mertensii_model_supp_dat, var = "lm_fit") %>% 
+  mutate(lm_fit = exp(lm_fit))
+
+Supp_data %>% 
+  filter(species == "Aechmaea_mertensii") %>% 
+  ggplot(aes(x = diameter, y = max_water)) + geom_point() + 
+  geom_line(aes(y = nls_fit), colour = "forestgreen", data = pred) +
+  geom_line(aes(y = lm_fit), colour = "darkorange", data = pred) + 
+  scale_x_log10() + 
+  scale_y_log10()
+
+mertensii_nls_mod %>% tidy
+```
+
+
+
 There seem to be two data sources:
 
 1. *the database itself*  which contains observations of Bromeliad size (leaves,
