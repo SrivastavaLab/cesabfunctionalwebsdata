@@ -245,8 +245,18 @@ Yep! This matches. So, are two different regressions being used here because dif
 
 indeed, a glance at [the French Guiana Bromeliad data](http://aammd.info/bwg-data/check_frenchguiana.html) shows that leaves were missing in Petit Saut 2007
 
+#### Comparing the 2007 and 2008 models
 
-### 
+One has more parameters and few sample sizes, so I expect it would be a crappier model:
+
+```{r}
+list(after_2008 = mertensii_model_supp_dat_post_08, before_2008 = mertensii_model_supp_dat) %>% 
+  map_df(glance, .id = 'model category') %>% 
+  kable
+```
+
+
+### _Vriesea_ 2007, from actual water
 
 ```r
 #FrenchGuianaVriesea2007, Vriesea splendens No information of diameter and number of leaf, information about actual water
@@ -257,7 +267,141 @@ summ_broms <-summ_broms%>%
   mutate(max_water= ifelse(visit_id == 341 & species=="Vriesea splendens", volFrench2007Vrisea(actual_water), max_water))
 ```
 
-### Extras
+## BWG data
+
+Some regressions seem to come from the BWG data itself. Where is that data? Can we recreate those relationships too? 
+
+### Tillandsia guatemalensis/turneri/Complanta from Honduras and Colombia
+
+```{r}
+BWG_tillandsia <- bromeliad_detritus %>% 
+  filter(species %>% str_detect("Tillandsia"))
+
+
+BWG_tillandsia %>% 
+  left_join(dats_date %>% dplyr::select(dataset_id, country)) %>% 
+  dplyr::select(species, dataset_name, country) %>% 
+  distinct %>% kable
+```
+
+OK there are more _Tillandsia_ in the database than just those in Colombia and Honduras! Let instead filter by country:
+
+```{r}
+dats_date %>% select(dataset_id, country) %>% filter(country %in% c("Colombia", "Honduras")) %>% 
+  left_join(BWG_tillandsia) %>% 
+  vis_miss(cluster=TRUE)
+```
+
+Well, the regressions were certainly not made from here! There is no observation of `max_water` in Colombia at all. 
+
+On closer inspection of the original script, it turns out that the regressions for _Tillandsia_ were done with _Guzmania_:
+
+```r
+#how many species names are there for bromeliads
+unique(summ_broms$species)
+#select only Guzmania
+guz_only = filter(summ_broms, grepl("^Gu|^G\\.", species))
+unique(guz_only$species)
+glimpse(guz_only)
+
+# Model for Honduras and Colombia2000, 2001
+# plot(log(guz_only$num_leaf),log(guz_only$max_water))
+# summary(lm(log(max_water)~log(num_leaf) + log(actual_water +1),data=guz_only ))
+```
+
+Where were the Guzmania measured? 
+```{r}
+only_guzmania <- bromeliad_detritus %>% 
+  filter(grepl("^Gu|^G\\.", species))
+
+only_guzmania %>% 
+  left_join(dats_date %>% dplyr::select(dataset_id, country)) %>% 
+  dplyr::select(species, dataset_name, country) %>% 
+  distinct %>% kable
+```
+
+```{r fig.cap="data present for all the _Guzmania_ spp."}
+library(ggmissing)
+ggplot(only_guzmania, aes(x = num_leaf, y = max_water, size = actual_water)) + 
+  geom_missing_point()
+```
+
+```{r fig.cap = "missing values for Guzmania data"}
+# shape for species
+only_guzmania %>% vis_miss(cluster = TRUE)
+```
+
+There are several missing values, which we can remove for any plots (and also from the modelling)
+
+```{r}
+only_guzmania_complete <- only_guzmania %>% 
+  select(num_leaf, max_water, actual_water) %>% 
+  filter(complete.cases(.))
+
+ggplot(only_guzmania_complete, 
+       aes(x = actual_water,
+           y = max_water,
+           fill = num_leaf)) + 
+  geom_point(aes(size = num_leaf), pch = 21) + theme_bw() + 
+  geom_abline(intercept = 0, slope = 1, lty = 2) + 
+  scale_fill_gradient(high = "#132B43", low = "#56B1F7") + 
+  coord_fixed() + 
+  stat_smooth(method = "gam")
+
+```
+
+Unsurprisingly, the data show a triangular relationship -- the actual volume can never be greater than the maximum volume. I feel like that's a **Problem**. 
+
+At any rate, what was the work that was done already? 
+
+```r
+# Model for Honduras and Colombia2000, 2001
+# plot(log(guz_only$num_leaf),log(guz_only$max_water))
+# summary(lm(log(max_water)~log(num_leaf) + log(actual_water +1),data=guz_only ))
+
+# Equation for Honduras and Colombia2000 and 2001:
+
+Vmax=exp(0.78960 + 0.68576*log(Col$num_leaf) + 0.44664*log(Col$actual_water +1))
+```
+
+Can we reproduce this? 
+
+```{r}
+vmax_guzmania <- lm(log(max_water) ~ log(num_leaf) + log(actual_water + 1), 
+                    data = only_guzmania_complete)
+
+vmax_guzmania %>% 
+  tidy %>% 
+  kable
+```
+
+This resembles the equation from the table above, but this is a problem because:
+
+1. it is calculated on _Guzmania_.. can it really be used to predict _Tillandsia_?
+2. I think that using actual volume to predict maximum is a bad idea, because it predicts the minimum, not the mean, of maximum volume. 
+
+### Guzmania volume from `num_leaf` only
+```{r}
+vmax_guzmania_leafonly <- lm(log(max_water) ~ log(num_leaf), 
+                    data = only_guzmania_complete)
+
+vmax_guzmania_leafonly %>% 
+  tidy %>% kable
+```
+
+Unfortunately, this does *not* match:
+
+```r
+#Model for Colombia.Rioblanco 2012 (366) and ElVerde
+# summary(lm(log(max_water)~log(num_leaf),data=guz_only))
+
+# equation for Colombia.Rioblanco 2012 (366) and ElVerde Vol.max=exp(-2.3418 + 2.1025*log(Col2012$num_leaf))
+#Guzmania
+volColombia2012<- function(a){exp(-2.3418 + 2.1025*log(a))}
+```
+
+
+## Extras
 
 #### Comparing NLS to lm model fits.
 ```{r}
@@ -463,94 +607,5 @@ Well, actual water is frequently recorded -- but Maximum Volume is missing for a
 
 We *DO* use data from other sites to find the relationship between `max_water` and volume. Specifically in these three sites:
 
-### Guzmania
 
-where are they?
-```{r}
-only_guzmania <- bromeliad_detritus %>% 
-  filter(grepl("^Gu|^G\\.", species))
-
-kable(head(only_guzmania))
-```
-
-```{r}
-library(ggmissing)
-ggplot(only_guzmania, aes(x = num_leaf, y = max_water, size = actual_water)) + 
-  geom_missing_point()
-
-# shape for species
-```
-
-There are several missing values, which we can remove for any plots (and also from the modelling)
-
-```{r}
-only_guzmania_complete <- only_guzmania %>% 
-  select(num_leaf, max_water, actual_water) %>% 
-  filter(complete.cases(.))
-
-guz_plot <- ggplot(only_guzmania_complete, 
-       aes(x = actual_water,
-           y = max_water,
-           size = num_leaf,
-           fill = num_leaf)) + 
-  geom_point(pch = 21) + theme_bw() + 
-  geom_abline(intercept = 0, slope = 1, lty = 2) + 
-  scale_fill_gradient(high = "#132B43", low = "#56B1F7") + 
-  coord_fixed()
-
-print(guz_plot)
-
-guz_plot + stat_smooth(method = "gam")
-
-guz_plot + 
-  scale_y_log10() + 
-  scale_x_log10()
-```
-
-Unsurprisingly, the data show a triangular relationship -- the actual volume can never be greater than the maximum volume. **Is that a problem for regressions?**  
-
-At any rate, what was the work that was done already? 
-
-```r
-# Model for Honduras and Colombia2000, 2001
-# plot(log(guz_only$num_leaf),log(guz_only$max_water))
-# summary(lm(log(max_water)~log(num_leaf) + log(actual_water +1),data=guz_only ))
-
-# Equation for Honduras and Colombia2000 and 2001:
-
-Vmax=exp(0.78960 + 0.68576*log(Col$num_leaf) + 0.44664*log(Col$actual_water +1))
-```
-
-Can we reproduce this? 
-
-```{r}
-vmax_guzmania <- lm(log(max_water) ~ log(num_leaf) + log(actual_water + 1), 
-                    data = only_guzmania_complete)
-
-vmax_guzmania %>% 
-  tidy %>% kable
-  
-```
-
-Fortunately , this works just fine! 
-
-### Guzmania volume from `num_leaf` only
-```{r}
-vmax_guzmania_leafonly <- lm(log(max_water) ~ log(num_leaf), 
-                    data = only_guzmania_complete)
-
-vmax_guzmania_leafonly %>% 
-  tidy %>% kable
-```
-
-Unfortunately, this does *not* match:
-
-```r
-#Model for Colombia.Rioblanco 2012 (366) and ElVerde
-# summary(lm(log(max_water)~log(num_leaf),data=guz_only))
-
-# equation for Colombia.Rioblanco 2012 (366) and ElVerde Vol.max=exp(-2.3418 + 2.1025*log(Col2012$num_leaf))
-#Guzmania
-volColombia2012<- function(a){exp(-2.3418 + 2.1025*log(a))}
-```
 
