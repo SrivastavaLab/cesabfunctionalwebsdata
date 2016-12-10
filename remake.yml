@@ -65,9 +65,9 @@ targets:
       - detritus_model_plots
       - bromeliad_detritus
       - traits_all_BF_added
-      - seeking_volume_equations.md
+#      - seeking_volume_equations.md
       - supp_size_model_fits
-      - maxvol_model.md
+#      - maxvol_model.md
       #- reports
 #  downloads:
 #      -
@@ -380,22 +380,22 @@ targets:
   supp_size_model_fits:
     command: fit_size_models_to_data(supp_size_model_info, supp_size_model_data)
 
-  maxvol_model.md:
-    knitr:
-      auto_figure_prefix: true
-    depends:
-      - aquilega_biog
-      - aquilegaKT
-      - guzmania
-      - mertensii
-      - vriesea
-      - vriesea_prod
+#  maxvol_model.md:
+#    knitr:
+#      auto_figure_prefix: true
+#    depends:
+#      - aquilega_biog
+#      - aquilegaKT
+#      - guzmania
+#      - mertensii
+#      - vriesea
+#      - vriesea_prod
 
-  seeking_volume_equations.md:
-    knitr:
-      auto_figure_prefix: true
-    depends:
-      - bromeliad_detritus
-      - dats_date
-      - supp_data_additional
+#  seeking_volume_equations.md:
+#    knitr:
+#      auto_figure_prefix: true
+#    depends:
+#      - bromeliad_detritus
+#      - dats_date
+#      - supp_data_additional
 
