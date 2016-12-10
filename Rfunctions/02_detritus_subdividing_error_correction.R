@@ -67,7 +67,9 @@ make_detritus_wide <- function(.broms){
   bromeliad_wide
 }
 
-
+# select only the "detritus" columns, and add in necessary information about
+# diameter, fpom, and information at the level of Visit. Check that none have
+# been duplicated by these joins
 make_detritus_wider <- function(.broms, .detritus_wide, .visitnames, .diam_brom, .fpom_brom) {
 
   detritus_novisit_justdetritus <- .detritus_wide %>%
