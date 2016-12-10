@@ -47,8 +47,7 @@ make_model_target_data <- function(){
 fit_size_models_to_data <- function(.mod_info, .supp_size_model_data){
   .mod_info %>%
     left_join(.supp_size_model_data) %>%
-    do_fit_predictive_model() %>%
-    mutate(predicting_model = flatten(predicting_model))
+    do_fit_predictive_model()
 }
 
 # combining these data with observed data and creating predictions ---
