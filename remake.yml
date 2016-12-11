@@ -38,6 +38,8 @@ sources:
   - Rfunctions/07_traits_checking.R
   - Rfunctions/preparing_supp_data.R
   - Rfunctions/24_volume_imputation.R
+  - Rfunctions/manipulate_abundances.R
+  - Rfunctions/openness.R
 
 targets:
   downloads:
@@ -63,11 +65,13 @@ targets:
     depends:
       - abundance
       - detritus_model_plots
-      - bromeliad_detritus
+      - bromeliad_detritus_open
       - traits_all_BF_added
+      - spp_abundances_wide
 #      - seeking_volume_equations.md
       - supp_size_model_fits
 #      - maxvol_model.md
+
       #- reports
 #  downloads:
 #      -
@@ -131,9 +135,6 @@ targets:
     command: anti_join(broms_rename_unnest, blacklist)
 
 ## coercing values if necessary
-
-  abundance_values:
-    command: coerce_values_abundance(abundance_filtered)
 
   trts_all_values:
     command: parse_column_types_reader(trts_all_filtered)
@@ -379,6 +380,31 @@ targets:
 
   supp_size_model_fits:
     command: fit_size_models_to_data(supp_size_model_info, supp_size_model_data)
+
+# creating the "openness" response variable -----------------------------------------------------
+
+  bromeliad_detritus_extra_cols:
+    command: add_in_extra_columns(detritus_wide, detritus_wider, bromeliad_detritus)
+
+  bromeliad_detritus_incidentrad:
+    command: correct_incident_rad_percent(bromeliad_detritus_extra_cols)
+
+  openness_conversion_table:
+    command: create_openness_conversion_table()
+
+  bromeliad_detritus_open:
+    command: left_join(bromeliad_detritus_incidentrad, openness_conversion_table)
+
+
+# Abundances -----------------------------------------------------
+
+  summed_abundance_spp:
+    command: sum_species_abundances(abundance_filtered)
+
+
+  spp_abundances_wide:
+    command: spread_present_species(summed_abundance_spp)
+
 
 #  maxvol_model.md:
 #    knitr:
