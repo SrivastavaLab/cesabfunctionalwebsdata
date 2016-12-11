@@ -40,6 +40,7 @@ sources:
   - Rfunctions/24_volume_imputation.R
   - Rfunctions/manipulate_abundances.R
   - Rfunctions/openness.R
+  - Rfunctions/adding_elevation.R
 
 targets:
   downloads:
@@ -65,7 +66,7 @@ targets:
     depends:
       - abundance
       - detritus_model_plots
-      - bromeliad_detritus_open
+      - bromeliad_elevation
       - traits_all_BF_added
       - spp_abundances_wide
 #      - seeking_volume_equations.md
@@ -395,6 +396,11 @@ targets:
   bromeliad_detritus_open:
     command: left_join(bromeliad_detritus_incidentrad, openness_conversion_table)
 
+# Elevation  ------------------------------------
+
+
+  bromeliad_elevation:
+    command: add_elevation(bromeliad_detritus_open)
 
 # Abundances -----------------------------------------------------
 
