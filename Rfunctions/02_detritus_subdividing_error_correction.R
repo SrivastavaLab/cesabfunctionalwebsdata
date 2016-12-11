@@ -221,7 +221,11 @@ parse_column_types_reader <- function(df){
 }
 
 
-## WEIRD PART must drop a strange value with a bad name
+## IN WHICH we clean up the names of variables. some variables with rather
+## unhelpful names (character encoding issues perhaps) are simply dropped --
+## these are rare variables, which are recorded too infrequently to be missed.
+## Some other, more usful variables are renamed to fix their bad names --
+## spaces, confusing/duplicate spelling, etc
 drop_bad_name <- function(.broms_rename_unnest){
   please_leave <- which(names(.broms_rename_unnest) %in% c("horizontal _leaves_percentage", "conductivity_?S_cm-1", "algae_?gC_per_L"))
   .broms_rename_unnest <- .broms_rename_unnest[-please_leave]
