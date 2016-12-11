@@ -67,7 +67,7 @@ targets:
       - abundance
       - detritus_model_plots
       - bromeliad_elevation
-      - traits_all_BF_added
+      - traits_bwg_and_new
       - spp_abundances_wide
 #      - seeking_volume_equations.md
       - supp_size_model_fits
@@ -338,6 +338,14 @@ targets:
 
   traits_all_BF_added:
     command: put_traits_together(traits_all_CP_added, BF_genus, BF_family, I("BF"))
+
+# Keeping these two _added tables for checking, which is probably a wise thing to add later!
+  traits_newly_added:
+    command: select_new_traits_sp_id(traits_all_BF_added)
+
+  traits_bwg_and_new:
+    command: combine_bwg_new_traits(traits_all_renamed, traits_newly_added)
+
 
 # Volume equations -------------------------------------------------------------------------------------
 
