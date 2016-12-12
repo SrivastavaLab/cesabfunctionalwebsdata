@@ -172,7 +172,7 @@ create_model_table <- function(){
 derive_modelling_information <- function(.model_table, .detritus_data){
   # create a dataframe that holds everything we need to run the models:
 
-  .model_table %>%
+  model_info <- .model_table %>%
     # select the required input rows
     mutate(src_df = map(src_dat,
                         ~ .detritus_data %>%
@@ -187,6 +187,13 @@ derive_modelling_information <- function(.model_table, .detritus_data){
            x_vars = x_symb %>% map_chr("variables"),
            y_funs = y_symb %>% map("functions") %>% map_if(is_empty, ~ "") %>% flatten_chr(),
            y_vars = y_symb %>% map_chr("variables"))
+
+
+  # make sure that there are actually some data to use to fit the model!
+  nrows_src_df <- map_dbl(model_info$src_df, nrow)
+  if(any(nrows_src_df == 0)) stop("there are 0 rows in some input data for the imputation models")
+
+  return(model_info)
 }
 
 
