@@ -10,5 +10,5 @@ github_release_create1 <- datastorr:::github_release_create_
 
 ## creating a release
 github_release_create(our_info,
-                      description = "small improvements over 0.1.0 : This version contains better checking for the formato of the WBE matrices.",
-                      filename = "~/Desktop/all_data.rds")
+                      description = "0.5.0 contains updated and corrected data for several new sites.",
+                      filename = "RELEASE/all_data.rds")
