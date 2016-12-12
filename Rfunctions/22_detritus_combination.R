@@ -119,7 +119,7 @@ extract_numeric_min_max <- function(.det_long_broken_up){
     data.frame(min_detritus = minval, max_detritus = maxval)
   }
 
-  output <- det_long_broken_up %>%
+  output <- .det_long_broken_up %>%
     mutate(detritus_max = map(detritus_broken_up, find_range)) %>%
     unnest(detritus_max) %>%
     # tests here?
@@ -167,7 +167,7 @@ add_consecutive_detritus_col <- function(.det_long_min_max) {
 }
 
 create_detritus_summary <- function(.det_long_check_consec){
-  det_long_check_consec %>%
+  .det_long_check_consec %>%
     mutate(summary_df = map(data, ~data_frame(min_det = min(.x$min_detritus),
                                               max_det = max(.x$max_detritus),
                                               obs_or_fit = paste0(unique(.x$obs_or_fit), collapse = "_"),

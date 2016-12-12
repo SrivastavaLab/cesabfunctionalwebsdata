@@ -41,6 +41,8 @@ sources:
   - Rfunctions/manipulate_abundances.R
   - Rfunctions/openness.R
   - Rfunctions/adding_elevation.R
+  - Rfunctions/11_MDtrait_Function.R
+  - Rfunctions/RELEASE.R
 
 targets:
   downloads:
@@ -64,19 +66,11 @@ targets:
 
   all:
     depends:
-      - abundance
       - detritus_model_plots
       - bromeliad_elevation
       - traits_bwg_and_new
       - spp_abundances_wide
-#      - seeking_volume_equations.md
       - supp_size_model_fits
-#      - maxvol_model.md
-
-      #- reports
-#  downloads:
-#      -
-## or should i give the original downloads a "clean" step, so that I could just delete them all and remake it again?
 
   ## obtain all the data
 
@@ -439,3 +433,8 @@ targets:
 #      - dats_date
 #      - supp_data_additional
 
+
+# RELEASE
+
+  RELEASE/all_data.rds:
+    command: create_data_release(target_name, datasets = dats_date, visits = visits_date, traits = traits_bwg_and_new, bromeliads = bromeliad_elevation, abundance = spp_abundances_wide)
