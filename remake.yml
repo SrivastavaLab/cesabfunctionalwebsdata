@@ -37,6 +37,10 @@ sources:
   - Rfunctions/22_detritus_combination.R
   - Rfunctions/07_traits_checking.R
   - Rfunctions/preparing_supp_data.R
+  - Rfunctions/24_volume_imputation.R
+  - Rfunctions/manipulate_abundances.R
+  - Rfunctions/openness.R
+  - Rfunctions/adding_elevation.R
 
 targets:
   downloads:
@@ -62,12 +66,13 @@ targets:
     depends:
       - abundance
       - detritus_model_plots
-      - outputs/bromeliad_observations.csv
-      - bromeliad_detritus
-      - traits_all_BF_added
-      - seeking_volume_equations.md
-      - supp_data_additional
-      - maxvol_model.md
+      - bromeliad_elevation
+      - traits_bwg_and_new
+      - spp_abundances_wide
+#      - seeking_volume_equations.md
+      - supp_size_model_fits
+#      - maxvol_model.md
+
       #- reports
 #  downloads:
 #      -
@@ -131,9 +136,6 @@ targets:
     command: anti_join(broms_rename_unnest, blacklist)
 
 ## coercing values if necessary
-
-  abundance_values:
-    command: coerce_values_abundance(abundance_filtered)
 
   trts_all_values:
     command: parse_column_types_reader(trts_all_filtered)
@@ -337,6 +339,14 @@ targets:
   traits_all_BF_added:
     command: put_traits_together(traits_all_CP_added, BF_genus, BF_family, I("BF"))
 
+# Keeping these two _added tables for checking, which is probably a wise thing to add later!
+  traits_newly_added:
+    command: select_new_traits_sp_id(traits_all_BF_added)
+
+  traits_bwg_and_new:
+    command: combine_bwg_new_traits(traits_all_renamed, traits_newly_added)
+
+
 # Volume equations -------------------------------------------------------------------------------------
 
   aquilega_biog:
@@ -365,22 +375,67 @@ targets:
   supp_data_additional:
     command: add_more_info_to_supp(supplementary_size_data)
 
-  maxvol_model.md:
-    knitr:
-      auto_figure_prefix: true
-    depends:
-      - aquilega_biog
-      - aquilegaKT
-      - guzmania
-      - mertensii
-      - vriesea
-      - vriesea_prod
+  supp_data_renamed:
+    command: supp_data_rename(supp_data_additional)
 
-  seeking_volume_equations.md:
-    knitr:
-      auto_figure_prefix: true
-    depends:
-      - bromeliad_detritus
-      - dats_date
-      - supp_data_additional
+  supp_size_models:
+    command: make_model_data()
+
+  supp_size_model_info:
+    command: derive_modelling_information_simpler(supp_size_models, supp_data_renamed)
+
+  supp_size_model_data:
+    command: make_model_target_data()
+
+  supp_size_model_fits:
+    command: fit_size_models_to_data(supp_size_model_info, supp_size_model_data)
+
+# creating the "openness" response variable -----------------------------------------------------
+
+  bromeliad_detritus_extra_cols:
+    command: add_in_extra_columns(detritus_wide, detritus_wider, bromeliad_detritus)
+
+  bromeliad_detritus_incidentrad:
+    command: correct_incident_rad_percent(bromeliad_detritus_extra_cols)
+
+  openness_conversion_table:
+    command: create_openness_conversion_table()
+
+  bromeliad_detritus_open:
+    command: left_join(bromeliad_detritus_incidentrad, openness_conversion_table)
+
+# Elevation  ------------------------------------
+
+
+  bromeliad_elevation:
+    command: add_elevation(bromeliad_detritus_open)
+
+# Abundances -----------------------------------------------------
+
+  summed_abundance_spp:
+    command: sum_species_abundances(abundance_filtered)
+
+
+  spp_abundances_wide:
+    command: spread_present_species(summed_abundance_spp)
+
+
+#  maxvol_model.md:
+#    knitr:
+#      auto_figure_prefix: true
+#    depends:
+#      - aquilega_biog
+#      - aquilegaKT
+#      - guzmania
+#      - mertensii
+#      - vriesea
+#      - vriesea_prod
+
+#  seeking_volume_equations.md:
+#    knitr:
+#      auto_figure_prefix: true
+#    depends:
+#      - bromeliad_detritus
+#      - dats_date
+#      - supp_data_additional
 

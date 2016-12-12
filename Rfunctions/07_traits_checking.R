@@ -72,3 +72,19 @@ put_traits_together <- function(.traits_all_MD_added, .genus, .family, prefix){
 
   return(by_family)
 }
+
+
+select_new_traits_sp_id <- function(traittable){
+  traittable %>%
+    select(species_id, dplyr::matches("[A-Z]{2}[1-9]$"))
+}
+
+combine_bwg_new_traits <- function(.traits_all_renamed, .traits_newly_added){
+  combd <- left_join(.traits_all_renamed, .traits_newly_added)
+
+  duplicate_problems <- combd %>% group_by(species_id) %>% tally %>% filter(n>1)
+
+  if(nrow(duplicate_problems) > 0) stop("Species were duplicated during the addition of new traits")
+
+  return(combd)
+}
