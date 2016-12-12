@@ -41,6 +41,7 @@ sources:
   - Rfunctions/manipulate_abundances.R
   - Rfunctions/openness.R
   - Rfunctions/adding_elevation.R
+  - Rfunctions/11_MDtrait_Function.R
 
 targets:
   downloads:
