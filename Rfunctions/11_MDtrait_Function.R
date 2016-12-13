@@ -496,17 +496,17 @@ add_MD_trait <- function(.traits_all_renamed){
   ### Corynoneura, Eukiefferiella, Gravatamberus, Limnophyes, Metriocnemus, Phytotelmatocladius,
   ### Rheocricotopus, Smittia, Boreochlus, Larsia, Monopelopia and also NAs
 
-  ### we have the k192: Diptera.447 (black head chironomid) = it could be a sciaridae?
+  ### we have the Diptera.447 (black head chironomid) = it could be a sciaridae?
 
   ### MD1 (none):
   trait.2$MD1[trait.2$family=="Chironomidae"]=0 ### first I inserted 0 for all Chironomidae, then I substitute by
   ### the correct value for each subfamily/genus that are different from 0
 
   trait.2$MD1[trait.2$genus=="Stenochironomus"]=3
-  trait.2$MD1[trait.2$genus=="Tanytarsus"]=3
+  trait.2$MD1[trait.2$genus=="Tanytarsus"]=0
   trait.2$MD1[trait.2$subfamily=="Tanypodinae"]=3
 
-  trait.2$MD1[trait.2$key=="k192"]=3 ### Diptera.447 (black head chironomid); 3 for no defense.
+  trait.2$MD1[trait.2$bwg_name == "Diptera.447"]=3 ### Diptera.447 (black head chironomid); 3 for no defense.
 
   ### MD2 (Elongated tubercle) (0)
   trait.2$MD2[trait.2$family=="Chironomidae"]=0 ### first I inserted 0 for all Chironomidae, then I substitute by
@@ -514,7 +514,7 @@ add_MD_trait <- function(.traits_all_renamed){
 
   trait.2$MD2[trait.2$genus=="Chironomus"]=1
 
-  trait.2$MD2[trait.2$key=="k192"]=0 ### Diptera.447 (black head chironomid) (The mode)
+  trait.2$MD2[trait.2$bwg_name == "Diptera.447"]=0 ### Diptera.447 (black head chironomid) (The mode)
 
   ### MD3 (hair): Most of the Chironomidae from bromeliads has no hair exceptions: Lymnophies that have vey few hairs
   ### If there are other Chironomids with hairs in the trait database, please tell me
@@ -523,7 +523,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD3[trait.2$genus=="Limnophyes"]=1
 
 
-  trait.2$MD3[trait.2$key=="k192"]=0 ### Diptera.447 (black head chironomid); 0 is the mode
+  trait.2$MD3[trait.2$bwg_name == "Diptera.447"]=0 ### Diptera.447 (black head chironomid); 0 is the mode
 
   ### MD4 (Sclaritized spines) (0)
   trait.2$MD4[trait.2$family=="Chironomidae"]=0
@@ -559,13 +559,13 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD8[trait.2$genus=="Paratanytarsus"]=3
   trait.2$MD8[trait.2$genus=="Polypedilum"]=3
   trait.2$MD8[trait.2$genus=="Stenochironomus"]=0
-  trait.2$MD8[trait.2$genus=="Tanytarsus"]=0
+  trait.2$MD8[trait.2$genus=="Tanytarsus"]=3 #??
   trait.2$MD8[trait.2$subfamily=="Chironominae"]=3
   trait.2$MD8[trait.2$subfamily=="Orthocladiinae"]=1
   trait.2$MD8[trait.2$subfamily=="Podonominae"]=1
   trait.2$MD8[trait.2$subfamily=="Tanypodinae"]=0
 
-  trait.2$MD8[trait.2$key=="k192"]=0 ### I do not think that Diptera.447 (black head chironomid) should be a tube builter
+  trait.2$MD8[trait.2$bwg_name == "Diptera.447"]=0 ### I do not think that Diptera.447 (black head chironomid) should be a tube builter
   ## we should confirm it it is Sciaridae or chironomid.
 
 
