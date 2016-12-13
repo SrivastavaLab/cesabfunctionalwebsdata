@@ -840,10 +840,10 @@ add_MD_trait <- function(.traits_all_renamed){
   ###
 
   ### MD3 (hair) (0)
-  trait.2$MD3[trait.2$genus=="Platycrepidius"]= 0
+  trait.2$MD3[trait.2$genus %in% c("Platycrepidius", "Dilobitarsus")]= 0
 
   ### MD4 (sclerotized spines) (1)
-  trait.2$MD4[trait.2$genus=="Platycrepidius"]= 1
+  trait.2$MD4[trait.2$genus %in% c("Platycrepidius", "Dilobitarsus")]= 1
 
 
   ####### Carabidae ########
@@ -906,6 +906,25 @@ add_MD_trait <- function(.traits_all_renamed){
 
   ### MD6 (sclerotized exoskeleton)(2)
   trait.2$MD6[trait.2$ord=="Elateridae"& is.na(trait.2$genus)]= 2
+
+  #### other difficult genera -- Dilobitartus and
+  ### MD3 (hair) (1)
+
+  unknown_or_dipropus <- trait.2$family=="Elateridae" & (is.na(trait.2$genus) | trait.2$genus == "Dipropus")
+
+  trait.2$MD3[unknown_or_dipropus]= 1
+
+  ### MD2 (elongated tubercle) (0)
+  trait.2$MD2[unknown_or_dipropus]= 0
+
+  ### MD4 (sclerotized spines) (0)
+  trait.2$MD4[unknown_or_dipropus]= 0
+
+  ### MD5 (dorsal plates) (2)
+  trait.2$MD5[unknown_or_dipropus]= 2
+
+  ### MD6 (sclerotized exoskeleton)(2)
+  trait.2$MD6[unknown_or_dipropus]= 2
 
 
   ### Elmidae (the aquatic are all larvae)
