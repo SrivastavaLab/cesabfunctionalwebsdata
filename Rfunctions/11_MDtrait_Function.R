@@ -552,7 +552,10 @@ add_MD_trait <- function(.traits_all_renamed){
 
   trait.2$MD8[trait.2$family=="Chironomidae"]=3 ### first I inserted 3 for all Chironomidae, then I substitute by
   ### the correct value for each genus/subfamily
-
+  trait.2$MD8[trait.2$subfamily=="Chironominae"]=3
+  trait.2$MD8[trait.2$subfamily=="Orthocladiinae"]=1
+  trait.2$MD8[trait.2$subfamily=="Podonominae"]=1
+  trait.2$MD8[trait.2$subfamily=="Tanypodinae"]=0
 
   trait.2$MD8[trait.2$genus=="Chironomus"]=3
   trait.2$MD8[trait.2$genus=="Harnischia"]=3
@@ -560,10 +563,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD8[trait.2$genus=="Polypedilum"]=3
   trait.2$MD8[trait.2$genus=="Stenochironomus"]=0
   trait.2$MD8[trait.2$genus=="Tanytarsus"]=3 #??
-  trait.2$MD8[trait.2$subfamily=="Chironominae"]=3
-  trait.2$MD8[trait.2$subfamily=="Orthocladiinae"]=1
-  trait.2$MD8[trait.2$subfamily=="Podonominae"]=1
-  trait.2$MD8[trait.2$subfamily=="Tanypodinae"]=0
+
 
   trait.2$MD8[trait.2$bwg_name == "Diptera.447"]=0 ### I do not think that Diptera.447 (black head chironomid) should be a tube builter
   ## we should confirm it it is Sciaridae or chironomid.
@@ -650,6 +650,7 @@ add_MD_trait <- function(.traits_all_renamed){
 
   ##### (I know that there is a great variation in this family, however, we do not have good identification
   #####  of the genus)
+
 
   ### MD1 (none): 0
   trait.2$MD1[trait.2$family=="Psychodidae"]=0
