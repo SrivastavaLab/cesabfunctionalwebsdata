@@ -636,7 +636,10 @@ add_MD_trait <- function(.traits_all_renamed){
   #### For the NA values I will work as Diane did, I am going to use the mode. Culex is the most common genus,
   #### thus I inteted the value 2 (= Culex - hair modality).
   ### Culicid = Genus = NA
-  trait.2$MD3[trait.2$family=="Culicidae" & is.na(trait.2$genus=="NA")]=2
+  trait.2$MD3[trait.2$family=="Culicidae" & is.na(trait.2$genus)]=2
+
+  ## Add a trait for a incompletely indentified genus
+  trait.2$MD3[trait.2$genus=="Anopheles_or_Wyeomia_or_Culex"]=2
 
 
   ##########################################################################
