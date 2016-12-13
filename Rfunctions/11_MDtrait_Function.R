@@ -776,32 +776,6 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD8[trait.2$family=="Dolichopodidae"]=0
 
 
-  ### two morphospecies with wrong spelling
-  ### MD1 (none): (3)
-  trait.2$MD1[trait.2$family=="Dolychopodidae"]= 3
-
-  ### MD2 (elongated tubercle) (0)
-  trait.2$MD2[trait.2$family=="Dolychopodidae"]= 0
-
-  ### MD3 (hair) (0)
-  trait.2$MD3[trait.2$family=="Dolychopodidae"]= 0
-
-  ### MD4 (sclerotized spines) (0)
-  trait.2$MD4[trait.2$family=="Dolychopodidae"]= 0
-
-  ### MD5 (dorsal plates) (0)
-  trait.2$MD5[trait.2$family=="Dolychopodidae"]= 0
-
-  ### MD6 (sclerotized exoskeleton) (0)
-  trait.2$MD6[trait.2$family=="Dolychopodidae"]= 0
-
-  ### MD7 (Shell) (0)
-  trait.2$MD7[trait.2$family=="Dolychopodidae"]=0
-
-  ### MD8 (case/tube) (0)
-  trait.2$MD8[trait.2$family=="Dolychopodidae"]=0
-
-
   ##########################################################################
 
   ##### Family - Empididae #####
