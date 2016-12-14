@@ -86,7 +86,7 @@ targets:
 
 ## get every single abundance table (sensible datasets only)
   abds:
-    command: get_all_abundances(dats_filtered)
+    command: get_all_abundances(dats)
 
 ## specify trait arguments
   getargs:
@@ -113,36 +113,20 @@ targets:
     command: read_fpom_fg("data-raw/FPOMdecanted_dryweight.csv")
 
 
-## remove useless test datasets.
-  blacklist:
-    command: make_blacklist(visits, dats)
-
-  dats_filtered:
-    command: anti_join(dats, blacklist)
-
-  visits_filtered:
-    command: anti_join(visits, blacklist)
-
-  abundance_filtered:
-    command: anti_join(abundance, blacklist)
-
-  brom_rename_unnest_filtered:
-    command: anti_join(broms_rename_unnest, blacklist)
-
 ## coercing values if necessary
 
   trts_all_values:
     command: parse_column_types_reader(trts_all_filtered)
 
   visits_date:
-    command: parse_column_types_reader(visits_filtered)
+    command: parse_column_types_reader(visits)
 
   dats_date:
-    command: parse_column_types_reader(dats_filtered)
+    command: parse_column_types_reader(dats)
 
   ## drop a bad column name
   brom_clean_name:
-    command: drop_bad_name(brom_rename_unnest_filtered)
+    command: drop_bad_name(broms_rename_unnest)
 
   broms_date:
     command: parse_column_types_reader(brom_clean_name)
@@ -151,7 +135,7 @@ targets:
 
   visitnames:
     command: make_visitnames(visits_date, dats_date)
-    ## dats_filtered is here to work in a semi-join.
+    ## dats_date is here to work in a semi-join.
 
   datasetnames:
     command: make_datasetnames(visitnames)
@@ -225,7 +209,7 @@ targets:
     command: write_csv(fpom_fg_data, path = target_name)
 
   spp_dictonary:
-    command: output_spp_dictionary(abundance_filtered, broms_date, visits_date, trts_all_values)
+    command: output_spp_dictionary(abundance, broms_date, visits_date, trts_all_values)
 
   outputs/spp_dictionary.csv:
     command: write_csv(spp_dictonary, path = target_name)
@@ -398,20 +382,26 @@ targets:
   bromeliad_detritus_open:
     command: left_join(bromeliad_detritus_incidentrad, openness_conversion_table)
 
+  bromeliad_detritus_open_converted:
+    command: convert_incident_to_openness(bromeliad_detritus_open)
+
 # Elevation  ------------------------------------
 
 
   bromeliad_elevation:
-    command: add_elevation(bromeliad_detritus_open)
+    command: add_elevation(bromeliad_detritus_open_converted)
 
 # Abundances -----------------------------------------------------
 
   summed_abundance_spp:
-    command: sum_species_abundances(abundance_filtered)
+    command: sum_species_abundances(abundance)
+
+  summed_abundance_lasgamas_dyst_correct:
+    command: correct_lasgamas_dytiscid(summed_abundance_spp)
 
 
   spp_abundances_wide:
-    command: spread_present_species(summed_abundance_spp)
+    command: spread_present_species(summed_abundance_lasgamas_dyst_correct)
 
 
 #  maxvol_model.md:
@@ -437,4 +427,11 @@ targets:
 # RELEASE
 
   RELEASE/all_data.rds:
-    command: create_data_release(target_name, datasets = dats_date, visits = visits_date, traits = traits_bwg_and_new, bromeliads = bromeliad_elevation, abundance = spp_abundances_wide)
+    command: >
+      create_data_release(target_name,
+      datasets = dats_date,
+      visits = visits_date,
+      traits = traits_bwg_and_new,
+      bromeliads = bromeliad_elevation,
+      abundance = summed_abundance_lasgamas_dyst_correct,
+      abundance_matrix = spp_abundances_wide)

@@ -496,17 +496,17 @@ add_MD_trait <- function(.traits_all_renamed){
   ### Corynoneura, Eukiefferiella, Gravatamberus, Limnophyes, Metriocnemus, Phytotelmatocladius,
   ### Rheocricotopus, Smittia, Boreochlus, Larsia, Monopelopia and also NAs
 
-  ### we have the k192: Diptera.447 (black head chironomid) = it could be a sciaridae?
+  ### we have the Diptera.447 (black head chironomid) = it could be a sciaridae?
 
   ### MD1 (none):
   trait.2$MD1[trait.2$family=="Chironomidae"]=0 ### first I inserted 0 for all Chironomidae, then I substitute by
   ### the correct value for each subfamily/genus that are different from 0
 
   trait.2$MD1[trait.2$genus=="Stenochironomus"]=3
-  trait.2$MD1[trait.2$genus=="Tanytarsus"]=3
+  trait.2$MD1[trait.2$genus=="Tanytarsus"]=0
   trait.2$MD1[trait.2$subfamily=="Tanypodinae"]=3
 
-  trait.2$MD1[trait.2$key=="k192"]=3 ### Diptera.447 (black head chironomid); 3 for no defense.
+  trait.2$MD1[trait.2$bwg_name == "Diptera.447"]=3 ### Diptera.447 (black head chironomid); 3 for no defense.
 
   ### MD2 (Elongated tubercle) (0)
   trait.2$MD2[trait.2$family=="Chironomidae"]=0 ### first I inserted 0 for all Chironomidae, then I substitute by
@@ -514,7 +514,7 @@ add_MD_trait <- function(.traits_all_renamed){
 
   trait.2$MD2[trait.2$genus=="Chironomus"]=1
 
-  trait.2$MD2[trait.2$key=="k192"]=0 ### Diptera.447 (black head chironomid) (The mode)
+  trait.2$MD2[trait.2$bwg_name == "Diptera.447"]=0 ### Diptera.447 (black head chironomid) (The mode)
 
   ### MD3 (hair): Most of the Chironomidae from bromeliads has no hair exceptions: Lymnophies that have vey few hairs
   ### If there are other Chironomids with hairs in the trait database, please tell me
@@ -523,7 +523,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD3[trait.2$genus=="Limnophyes"]=1
 
 
-  trait.2$MD3[trait.2$key=="k192"]=0 ### Diptera.447 (black head chironomid); 0 is the mode
+  trait.2$MD3[trait.2$bwg_name == "Diptera.447"]=0 ### Diptera.447 (black head chironomid); 0 is the mode
 
   ### MD4 (Sclaritized spines) (0)
   trait.2$MD4[trait.2$family=="Chironomidae"]=0
@@ -552,20 +552,20 @@ add_MD_trait <- function(.traits_all_renamed){
 
   trait.2$MD8[trait.2$family=="Chironomidae"]=3 ### first I inserted 3 for all Chironomidae, then I substitute by
   ### the correct value for each genus/subfamily
-
+  trait.2$MD8[trait.2$subfamily=="Chironominae"]=3
+  trait.2$MD8[trait.2$subfamily=="Orthocladiinae"]=1
+  trait.2$MD8[trait.2$subfamily=="Podonominae"]=1
+  trait.2$MD8[trait.2$subfamily=="Tanypodinae"]=0
 
   trait.2$MD8[trait.2$genus=="Chironomus"]=3
   trait.2$MD8[trait.2$genus=="Harnischia"]=3
   trait.2$MD8[trait.2$genus=="Paratanytarsus"]=3
   trait.2$MD8[trait.2$genus=="Polypedilum"]=3
   trait.2$MD8[trait.2$genus=="Stenochironomus"]=0
-  trait.2$MD8[trait.2$genus=="Tanytarsus"]=0
-  trait.2$MD8[trait.2$subfamily=="Chironominae"]=3
-  trait.2$MD8[trait.2$subfamily=="Orthocladiinae"]=1
-  trait.2$MD8[trait.2$subfamily=="Podonominae"]=1
-  trait.2$MD8[trait.2$subfamily=="Tanypodinae"]=0
+  trait.2$MD8[trait.2$genus=="Tanytarsus"]=3 #??
 
-  trait.2$MD8[trait.2$key=="k192"]=0 ### I do not think that Diptera.447 (black head chironomid) should be a tube builter
+
+  trait.2$MD8[trait.2$bwg_name == "Diptera.447"]=0 ### I do not think that Diptera.447 (black head chironomid) should be a tube builter
   ## we should confirm it it is Sciaridae or chironomid.
 
 
@@ -636,7 +636,10 @@ add_MD_trait <- function(.traits_all_renamed){
   #### For the NA values I will work as Diane did, I am going to use the mode. Culex is the most common genus,
   #### thus I inteted the value 2 (= Culex - hair modality).
   ### Culicid = Genus = NA
-  trait.2$MD3[trait.2$family=="Culicidae" & is.na(trait.2$genus=="NA")]=2
+  trait.2$MD3[trait.2$family=="Culicidae" & is.na(trait.2$genus)]=2
+
+  ## Add a trait for a incompletely indentified genus
+  trait.2$MD3[trait.2$genus=="Anopheles_or_Wyeomia_or_Culex"]=2
 
 
   ##########################################################################
@@ -647,6 +650,7 @@ add_MD_trait <- function(.traits_all_renamed){
 
   ##### (I know that there is a great variation in this family, however, we do not have good identification
   #####  of the genus)
+
 
   ### MD1 (none): 0
   trait.2$MD1[trait.2$family=="Psychodidae"]=0
@@ -772,32 +776,6 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD8[trait.2$family=="Dolichopodidae"]=0
 
 
-  ### two morphospecies with wrong spelling
-  ### MD1 (none): (3)
-  trait.2$MD1[trait.2$family=="Dolychopodidae"]= 3
-
-  ### MD2 (elongated tubercle) (0)
-  trait.2$MD2[trait.2$family=="Dolychopodidae"]= 0
-
-  ### MD3 (hair) (0)
-  trait.2$MD3[trait.2$family=="Dolychopodidae"]= 0
-
-  ### MD4 (sclerotized spines) (0)
-  trait.2$MD4[trait.2$family=="Dolychopodidae"]= 0
-
-  ### MD5 (dorsal plates) (0)
-  trait.2$MD5[trait.2$family=="Dolychopodidae"]= 0
-
-  ### MD6 (sclerotized exoskeleton) (0)
-  trait.2$MD6[trait.2$family=="Dolychopodidae"]= 0
-
-  ### MD7 (Shell) (0)
-  trait.2$MD7[trait.2$family=="Dolychopodidae"]=0
-
-  ### MD8 (case/tube) (0)
-  trait.2$MD8[trait.2$family=="Dolychopodidae"]=0
-
-
   ##########################################################################
 
   ##### Family - Empididae #####
@@ -862,10 +840,10 @@ add_MD_trait <- function(.traits_all_renamed){
   ###
 
   ### MD3 (hair) (0)
-  trait.2$MD3[trait.2$genus=="Platycrepidius"]= 0
+  trait.2$MD3[trait.2$genus %in% c("Platycrepidius", "Dilobitarsus")]= 0
 
   ### MD4 (sclerotized spines) (1)
-  trait.2$MD4[trait.2$genus=="Platycrepidius"]= 1
+  trait.2$MD4[trait.2$genus %in% c("Platycrepidius", "Dilobitarsus")]= 1
 
 
   ####### Carabidae ########
@@ -928,6 +906,25 @@ add_MD_trait <- function(.traits_all_renamed){
 
   ### MD6 (sclerotized exoskeleton)(2)
   trait.2$MD6[trait.2$ord=="Elateridae"& is.na(trait.2$genus)]= 2
+
+  #### other difficult genera -- Dilobitartus and
+  ### MD3 (hair) (1)
+
+  unknown_or_dipropus <- trait.2$family=="Elateridae" & (is.na(trait.2$genus) | trait.2$genus == "Dipropus")
+
+  trait.2$MD3[unknown_or_dipropus]= 1
+
+  ### MD2 (elongated tubercle) (0)
+  trait.2$MD2[unknown_or_dipropus]= 0
+
+  ### MD4 (sclerotized spines) (0)
+  trait.2$MD4[unknown_or_dipropus]= 0
+
+  ### MD5 (dorsal plates) (2)
+  trait.2$MD5[unknown_or_dipropus]= 2
+
+  ### MD6 (sclerotized exoskeleton)(2)
+  trait.2$MD6[unknown_or_dipropus]= 2
 
 
   ### Elmidae (the aquatic are all larvae)
