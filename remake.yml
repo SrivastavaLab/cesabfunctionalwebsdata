@@ -396,9 +396,12 @@ targets:
   summed_abundance_spp:
     command: sum_species_abundances(abundance)
 
+  summed_abundance_lasgamas_dyst_correct:
+    command: correct_lasgamas_dytiscid(summed_abundance_spp)
+
 
   spp_abundances_wide:
-    command: spread_present_species(summed_abundance_spp)
+    command: spread_present_species(summed_abundance_lasgamas_dyst_correct)
 
 
 #  maxvol_model.md:
@@ -430,5 +433,5 @@ targets:
       visits = visits_date,
       traits = traits_bwg_and_new,
       bromeliads = bromeliad_elevation,
-      abundance = summed_abundance_spp,
+      abundance = summed_abundance_lasgamas_dyst_correct,
       abundance_matrix = spp_abundances_wide)
