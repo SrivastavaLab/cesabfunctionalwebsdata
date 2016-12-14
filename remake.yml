@@ -86,7 +86,7 @@ targets:
 
 ## get every single abundance table (sensible datasets only)
   abds:
-    command: get_all_abundances(dats_filtered)
+    command: get_all_abundances(dats)
 
 ## specify trait arguments
   getargs:
@@ -113,36 +113,20 @@ targets:
     command: read_fpom_fg("data-raw/FPOMdecanted_dryweight.csv")
 
 
-## remove useless test datasets.
-  blacklist:
-    command: make_blacklist(visits, dats)
-
-  dats_filtered:
-    command: anti_join(dats, blacklist)
-
-  visits_filtered:
-    command: anti_join(visits, blacklist)
-
-  abundance_filtered:
-    command: anti_join(abundance, blacklist)
-
-  brom_rename_unnest_filtered:
-    command: anti_join(broms_rename_unnest, blacklist)
-
 ## coercing values if necessary
 
   trts_all_values:
     command: parse_column_types_reader(trts_all_filtered)
 
   visits_date:
-    command: parse_column_types_reader(visits_filtered)
+    command: parse_column_types_reader(visits)
 
   dats_date:
-    command: parse_column_types_reader(dats_filtered)
+    command: parse_column_types_reader(dats)
 
   ## drop a bad column name
   brom_clean_name:
-    command: drop_bad_name(brom_rename_unnest_filtered)
+    command: drop_bad_name(broms_rename_unnest)
 
   broms_date:
     command: parse_column_types_reader(brom_clean_name)
@@ -151,7 +135,7 @@ targets:
 
   visitnames:
     command: make_visitnames(visits_date, dats_date)
-    ## dats_filtered is here to work in a semi-join.
+    ## dats_date is here to work in a semi-join.
 
   datasetnames:
     command: make_datasetnames(visitnames)
@@ -225,7 +209,7 @@ targets:
     command: write_csv(fpom_fg_data, path = target_name)
 
   spp_dictonary:
-    command: output_spp_dictionary(abundance_filtered, broms_date, visits_date, trts_all_values)
+    command: output_spp_dictionary(abundance, broms_date, visits_date, trts_all_values)
 
   outputs/spp_dictionary.csv:
     command: write_csv(spp_dictonary, path = target_name)
@@ -410,7 +394,7 @@ targets:
 # Abundances -----------------------------------------------------
 
   summed_abundance_spp:
-    command: sum_species_abundances(abundance_filtered)
+    command: sum_species_abundances(abundance)
 
 
   spp_abundances_wide:
