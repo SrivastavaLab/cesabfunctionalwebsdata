@@ -1,7 +1,8 @@
 
 sum_species_abundances <- function(.abundance_filtered) {
   .abundance_filtered %>%
-    group_by(dataset_id, species_id, bwg_name, brm) %>%
+    rename(bromeliad_id = brm) %>%
+    group_by(dataset_id, species_id, bwg_name, bromeliad_id) %>%
     summarise(abd = sum(abd, na.rm = TRUE)) %>%
     ungroup
 }
