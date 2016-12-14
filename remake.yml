@@ -425,9 +425,10 @@ targets:
 
   RELEASE/all_data.rds:
     command: >
-    create_data_release(target_name,
-    datasets = dats_date,
-    visits = visits_date,
-    traits = traits_bwg_and_new,
-    bromeliads = bromeliad_elevation,
-    abundance = summed_abundance_spp)
+      create_data_release(target_name,
+      datasets = dats_date,
+      visits = visits_date,
+      traits = traits_bwg_and_new,
+      bromeliads = bromeliad_elevation,
+      abundance = summed_abundance_spp,
+      abundance_matrix = spp_abundances_wide)
