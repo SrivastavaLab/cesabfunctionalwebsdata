@@ -10,5 +10,5 @@ github_release_create1 <- datastorr:::github_release_create_
 
 ## creating a release
 github_release_create(our_info,
-                      description = "0.5.0 contains updated and corrected data for several new sites.",
+                      description = "0.5.1 .",
                       filename = "RELEASE/all_data.rds")
