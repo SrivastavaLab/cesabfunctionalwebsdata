@@ -80,11 +80,15 @@ select_new_traits_sp_id <- function(traittable){
 }
 
 combine_bwg_new_traits <- function(.traits_all_renamed, .traits_newly_added){
-  combd <- left_join(.traits_all_renamed, .traits_newly_added)
+
+  # we remove all the MD traits from the original dataset, relying only on the new traits, derived from the script
+  traits_no_md <- .traits_all_renamed %>% select(-(MD1:MD8))
+
+  combd <- left_join(traits_no_md, .traits_newly_added, by = "species_id")
 
   duplicate_problems <- combd %>% group_by(species_id) %>% tally %>% filter(n>1)
 
   if(nrow(duplicate_problems) > 0) stop("Species were duplicated during the addition of new traits")
-
+# TODO confirm that all new traits have truly been added?
   return(combd)
 }
