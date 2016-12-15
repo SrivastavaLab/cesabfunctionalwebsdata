@@ -464,7 +464,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD2[trait.2$subfamily=="Dasyheleniae"]= 0
 
   ### MD3 (hair) (2)
-  trait.2$MD3[trait.2$subfamily=="Dasyheleniae"]= 2
+  trait.2$MD3[trait.2$subfamily=="Dasyheleniae"]= 3
 
   ### MD4 (sclerotized spines) (0)
   trait.2$MD4[trait.2$subfamily=="Dasyheleniae"]= 0
@@ -603,29 +603,29 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD8[trait.2$family=="Culicidae"]=0
 
   #### MD3 (Hairs)
-  ### Aedes: more often intermediate amount of hairs (2)
-  trait.2$MD3[trait.2$genus=="Aedes"]=2
 
-  ### Anopheles: more often dense amount of hairs (3)
+  trait.2$MD3[trait.2$genus=="Aedes"]=3
+
+
   trait.2$MD3[trait.2$genus=="Anopheles"]=3
 
-  ### Anopheles: more often dense amount of hairs (3)
+
   trait.2$MD3[trait.2$subfamily=="Anophelinae"]=3
 
-  ### Culex: more often have intermediate amount of hairs (2)
-  trait.2$MD3[trait.2$genus=="Culex"]=2
 
-  ### Haemagogus: more often intermediate amount of hairs (2)
-  trait.2$MD3[trait.2$genus=="Haemagogus"]=2
+  trait.2$MD3[trait.2$genus=="Culex"]=3
 
-  ### Limatus (we have just one species in the trait matrix): few hairs (1)
-  trait.2$MD3[trait.2$genus=="Limatus"]=1
 
-  ### Orthopodomyia: more often intermediate amount of hairs (2)
-  trait.2$MD3[trait.2$genus=="Orthopodomyia"]=2
+  trait.2$MD3[trait.2$genus=="Haemagogus"]=3
 
-  ### Runchomyia: more often have few hairs (1)
-  trait.2$MD3[trait.2$genus=="Runchomyia"]=1
+
+  trait.2$MD3[trait.2$genus=="Limatus"]=3
+
+
+  trait.2$MD3[trait.2$genus=="Orthopodomyia"]=3
+
+
+  trait.2$MD3[trait.2$genus=="Runchomyia"]=3
 
   ### Wyeomyia: more often DENSE HAIRS (3)
   trait.2$MD3[trait.2$genus=="Wyeomyia"]=3
@@ -636,10 +636,10 @@ add_MD_trait <- function(.traits_all_renamed){
   #### For the NA values I will work as Diane did, I am going to use the mode. Culex is the most common genus,
   #### thus I inteted the value 2 (= Culex - hair modality).
   ### Culicid = Genus = NA
-  trait.2$MD3[trait.2$family=="Culicidae" & is.na(trait.2$genus)]=2
+  trait.2$MD3[trait.2$family=="Culicidae" & is.na(trait.2$genus)]=3
 
   ## Add a trait for a incompletely indentified genus
-  trait.2$MD3[trait.2$genus=="Anopheles_or_Wyeomia_or_Culex"]=2
+  trait.2$MD3[trait.2$genus=="Anopheles_or_Wyeomia_or_Culex"]=3
 
 
   ##########################################################################
@@ -661,7 +661,7 @@ add_MD_trait <- function(.traits_all_renamed){
   ### MD3 (hair): For Telmatoscopus I think is intermediate amount of hairs (2)
 
   trait.2$MD3[trait.2$family=="Psychodidae"]=3
-  trait.2$MD3[trait.2$genus=="Telmatoscopus"]=2
+  trait.2$MD3[trait.2$genus=="Telmatoscopus"]=3
 
   ### MD4 (sclerotized spines) (0)
   trait.2$MD4[trait.2$family=="Psychodidae"]=0
@@ -725,7 +725,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD2[trait.2$family=="Corethrellidae"]= 0
 
   ### MD3 (hair) (2)
-  trait.2$MD3[trait.2$family=="Corethrellidae"]= 2
+  trait.2$MD3[trait.2$family=="Corethrellidae"]= 3
 
   ### MD4 (sclerotized spines) (0)
   trait.2$MD4[trait.2$family=="Corethrellidae"]= 0
@@ -843,7 +843,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD3[trait.2$genus %in% c("Platycrepidius", "Dilobitarsus")]= 0
 
   ### MD4 (sclerotized spines) (1)
-  trait.2$MD4[trait.2$genus %in% c("Platycrepidius", "Dilobitarsus")]= 1
+  trait.2$MD4[trait.2$genus %in% c("Platycrepidius", "Dilobitarsus")]= 3
 
 
   ####### Carabidae ########
@@ -2132,7 +2132,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD3[trait.2$ord=="Ephemeroptera"]= 0
 
   ### MD4 (sclerotized spines) (0)
-  trait.2$MD4[trait.2$ord=="Ephemeroptera"]= 0
+  trait.2$MD4[trait.2$ord=="Ephemeroptera"]= 1
 
   ### MD5 (dorsal plates) (0)
   trait.2$MD5[trait.2$ord=="Ephemeroptera"]= 0
