@@ -6,3 +6,6 @@ modelr:
   source: github
   repo: hadley/modelr
 
+visdat:
+  source: github
+  repo: njtierney/visdat
