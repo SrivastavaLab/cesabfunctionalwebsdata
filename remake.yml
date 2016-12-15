@@ -18,10 +18,8 @@ packages:
   - modelr
   - ggmap
   - viridis
-  - rmarkdown
   - assertthat
   - lazyeval
-  - assertr
   - prediction
   - visdat
 
