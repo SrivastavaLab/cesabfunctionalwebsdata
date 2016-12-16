@@ -63,7 +63,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD2[trait.2$subclass=="Acari"]=0
 
   ### MD3 (hair) (1)
-  trait.2$MD3[trait.2$subclass=="Acari"]= 1
+  trait.2$MD3[trait.2$subclass=="Acari"]= 3
 
   ### MD4 (sclerotized spines) (0)
   trait.2$MD4[trait.2$subclass=="Acari"]=0
@@ -505,6 +505,8 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD1[trait.2$genus=="Stenochironomus"]=3
   trait.2$MD1[trait.2$genus=="Tanytarsus"]=0
   trait.2$MD1[trait.2$subfamily=="Tanypodinae"]=3
+  trait.2$MD1[trait.2$subfamily=="Orthocladiinae"]=2
+  trait.2$MD1[trait.2$subfamily=="Podonominae"]=2
 
   trait.2$MD1[trait.2$bwg_name == "Diptera.447"]=3 ### Diptera.447 (black head chironomid); 3 for no defense.
 
@@ -512,7 +514,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD2[trait.2$family=="Chironomidae"]=0 ### first I inserted 0 for all Chironomidae, then I substitute by
   ### the correct value for the subfamily/genus that are different from 0
 
-  trait.2$MD2[trait.2$genus=="Chironomus"]=1
+  trait.2$MD2[trait.2$genus=="Chironomus"]=3
 
   trait.2$MD2[trait.2$bwg_name == "Diptera.447"]=0 ### Diptera.447 (black head chironomid) (The mode)
 
@@ -520,7 +522,7 @@ add_MD_trait <- function(.traits_all_renamed){
   ### If there are other Chironomids with hairs in the trait database, please tell me
 
   trait.2$MD3[trait.2$family=="Chironomidae"]=0
-  trait.2$MD3[trait.2$genus=="Limnophyes"]=1
+  trait.2$MD3[trait.2$genus=="Limnophyes"]=3
 
 
   trait.2$MD3[trait.2$bwg_name == "Diptera.447"]=0 ### Diptera.447 (black head chironomid); 0 is the mode
@@ -686,8 +688,8 @@ add_MD_trait <- function(.traits_all_renamed){
 
   ###########################################################################
 
-  ### MD1 (none): 0
-  trait.2$MD1[trait.2$ord=="Odonata"]= 0
+  ### MD1 (none): 3
+  trait.2$MD1[trait.2$ord=="Odonata"]= 3
 
   ### MD2 (elongated tubercle) (0)
   trait.2$MD2[trait.2$ord=="Odonata"]=0
@@ -701,8 +703,8 @@ add_MD_trait <- function(.traits_all_renamed){
   ### MD5 (dorsal plates) (0)
   trait.2$MD5[trait.2$ord=="Odonata"]= 0
 
-  ### MD6 (sclerotized exoskeleton)(2)
-  trait.2$MD6[trait.2$ord=="Odonata"]=2 ### I considered the value 2 because it is not as hard as the exoskeleton of and adult.
+  ### MD6 (sclerotized exoskeleton)(0)
+  trait.2$MD6[trait.2$ord=="Odonata"]=0
 
   ### MD7 (Shell)
   trait.2$MD7[trait.2$ord=="Odonata"]=0
@@ -876,7 +878,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD4[trait.2$family=="Dytiscidae"]= 1
 
   ### MD5 (dorsal plates) (2)
-  trait.2$MD5[trait.2$ord=="Dytiscidae"]= 2 ### larvae has dorsal plates, but they are very rare in bromeliads
+  trait.2$MD5[trait.2$ord=="Dytiscidae"]= 3
 
 
   ### family Curculionidae
@@ -893,7 +895,7 @@ add_MD_trait <- function(.traits_all_renamed){
   ### Elateridae, genus NA (aquatic) (larvae ?)
 
   ### MD3 (hair) (1)
-  trait.2$MD3[trait.2$family=="Elateridae" & is.na(trait.2$genus)]= 1
+  trait.2$MD3[trait.2$family=="Elateridae" & is.na(trait.2$genus)]= 0
 
   ### MD2 (elongated tubercle) (0)
   trait.2$MD2[trait.2$ord=="Elateridae"& is.na(trait.2$genus)]= 0
@@ -902,10 +904,10 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD4[trait.2$family=="Elateridae"& is.na(trait.2$genus)]= 0
 
   ### MD5 (dorsal plates) (2)
-  trait.2$MD5[trait.2$ord=="Elateridae"& is.na(trait.2$genus)]= 2
+  trait.2$MD5[trait.2$ord=="Elateridae"& is.na(trait.2$genus)]= 3
 
   ### MD6 (sclerotized exoskeleton)(2)
-  trait.2$MD6[trait.2$ord=="Elateridae"& is.na(trait.2$genus)]= 2
+  trait.2$MD6[trait.2$ord=="Elateridae"& is.na(trait.2$genus)]= 0
 
   #### other difficult genera -- Dilobitartus and
   ### MD3 (hair) (1)
@@ -921,10 +923,10 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD4[unknown_or_dipropus]= 0
 
   ### MD5 (dorsal plates) (2)
-  trait.2$MD5[unknown_or_dipropus]= 2
+  trait.2$MD5[unknown_or_dipropus]= 3
 
   ### MD6 (sclerotized exoskeleton)(2)
-  trait.2$MD6[unknown_or_dipropus]= 2
+  trait.2$MD6[unknown_or_dipropus]= 0
 
 
   ### Elmidae (the aquatic are all larvae)
@@ -957,7 +959,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD4[trait.2$family=="Hydrophilidae"]= 0
 
   ### MD5 (dorsal plates) (1)
-  trait.2$MD5[trait.2$ord=="Hydrophilidae"]= 1 ### (3 segments of larvae' body)
+  trait.2$MD5[trait.2$ord=="Hydrophilidae"]= 3 ### (3 segments of larvae' body)
 
   ### MD6 (sclerotized exoskeleton)(3)
   trait.2$MD6[trait.2$ord=="Hydrophilidae"]= 3 ### (adults)
@@ -993,7 +995,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD4[trait.2$family=="Ptilodactylidae"]= 0
 
   ### MD5 (dorsal plates) (1)
-  trait.2$MD5[trait.2$ord=="Ptilodactylidae"]= 1 # first segment only
+  trait.2$MD5[trait.2$ord=="Ptilodactylidae"]= 3 # first segment only
 
   ### MD6 (sclerotized exoskeleton)(2)
   trait.2$MD6[trait.2$ord=="Ptilodactylidae"]= 2
@@ -1002,7 +1004,7 @@ add_MD_trait <- function(.traits_all_renamed){
   ## Scirtidae (I think thy are all - larvae)
 
   ### MD3 (hair) (1)
-  trait.2$MD3[trait.2$family=="Scirtidae"]= 1
+  trait.2$MD3[trait.2$family=="Scirtidae"]= 3
 
   ### MD2 (elongated tubercle) (0)
   trait.2$MD2[trait.2$ord=="Scirtidae"]= 0
@@ -1014,14 +1016,14 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD5[trait.2$ord=="Scirtidae"]= 3
 
   ### MD6 (sclerotized exoskeleton)(1)
-  trait.2$MD6[trait.2$ord=="Scirtidae"]= 1
+  trait.2$MD6[trait.2$ord=="Scirtidae"]= 0
 
 
 
   ###### Coleoptera aquatic - Family and Subfamily = NA - (the mode is scirtidae)
 
   ### MD3 (hair) (1)
-  trait.2$MD3[trait.2$ord=="Coleoptera" & trait.2$realm =="aquatic" & is.na(trait.2$family)]= 1
+  trait.2$MD3[trait.2$ord=="Coleoptera" & trait.2$realm =="aquatic" & is.na(trait.2$family)]= 3
 
   ### MD2 (elongated tubercle) (0)
   trait.2$MD2[trait.2$ord=="Coleoptera" & trait.2$realm =="aquatic"& is.na(trait.2$family)]= 0
@@ -1033,7 +1035,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD5[trait.2$ord=="Coleoptera" & trait.2$realm =="aquatic"& is.na(trait.2$family)]= 3
 
   ### MD6 (sclerotized exoskeleton)(1)
-  trait.2$MD6[trait.2$ord=="Coleoptera" & trait.2$realm =="aquatic"& is.na(trait.2$family)]= 1
+  trait.2$MD6[trait.2$ord=="Coleoptera" & trait.2$realm =="aquatic"& is.na(trait.2$family)]= 0
 
 
 
@@ -1086,7 +1088,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD2[trait.2$subclass=="Copepoda"]= 0
 
   ### MD3 (hair) (1)
-  trait.2$MD3[trait.2$subclass=="Copepoda"]= 1
+  trait.2$MD3[trait.2$subclass=="Copepoda"]= 3
 
   ### MD4 (sclerotized spines) (1)
   trait.2$MD4[trait.2$subclass=="Copepoda"]= 1
@@ -1095,7 +1097,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD5[trait.2$subclass=="Copepoda"]= 0
 
   ### MD6 (sclerotized exoskeleton) (1)
-  trait.2$MD6[trait.2$subclass=="Copepoda"]= 1
+  trait.2$MD6[trait.2$subclass=="Copepoda"]= 0
 
   ### MD7 (Shell) (0)
   trait.2$MD7[trait.2$subclass=="Copepoda"]=0
@@ -1109,22 +1111,22 @@ add_MD_trait <- function(.traits_all_renamed){
   ######
 
   ### MD1 (none): 0
-  trait.2$MD1[trait.2$subclass=="Phyllopoda"]= 0
+  trait.2$MD1[trait.2$subclass=="Phyllopoda"]= 3
 
   ### MD2 (elongated tubercle) (0)
   trait.2$MD2[trait.2$subclass=="Phyllopoda"]= 0
 
   ### MD3 (hair) (1)
-  trait.2$MD3[trait.2$subclass=="Phyllopoda"]= 1
+  trait.2$MD3[trait.2$subclass=="Phyllopoda"]= 0
 
   ### MD4 (sclerotized spines) (1)
-  trait.2$MD4[trait.2$subclass=="Phyllopoda"]= 1
+  trait.2$MD4[trait.2$subclass=="Phyllopoda"]= 0
 
   ### MD5 (dorsal plates) (0)
   trait.2$MD5[trait.2$subclass=="Phyllopoda"]= 0
 
   ### MD6 (sclerotized exoskeleton) (1)
-  trait.2$MD6[trait.2$subclass=="Phyllopoda"]= 1
+  trait.2$MD6[trait.2$subclass=="Phyllopoda"]= 0
 
   ### MD7 (Shell) (0)
   trait.2$MD7[trait.2$subclass=="Phyllopoda"]= 0
@@ -1209,10 +1211,10 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD1[trait.2$family=="Ephydridae"]= 0
 
   ### MD2 (elongated tubercle) (1)
-  trait.2$MD2[trait.2$family=="Ephydridae"]= 1
+  trait.2$MD2[trait.2$family=="Ephydridae"]= 2
 
   ### MD3 (hair) (1)
-  trait.2$MD3[trait.2$family=="Ephydridae"]= 1
+  trait.2$MD3[trait.2$family=="Ephydridae"]= 2
 
   ### MD4 (sclerotized spines) (1)
   trait.2$MD4[trait.2$family=="Ephydridae"]= 1
@@ -1410,7 +1412,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD1[trait.2$family=="Aeolosomatidae"]=0
 
   ### MD3 (hair) (1)
-  trait.2$MD3[trait.2$family=="Aeolosomatidae"]=1
+  trait.2$MD3[trait.2$family=="Aeolosomatidae"]= 3
 
 
   ##### Enchytraeoidae - oligochaeta #####
@@ -1425,7 +1427,7 @@ add_MD_trait <- function(.traits_all_renamed){
   #### family Naididae
 
   ### MD1 (none): (0)
-  trait.2$MD1[trait.2$family=="Naididae"]= 0
+  trait.2$MD1[trait.2$family=="Naididae"]= 2
 
   ### MD3 (hair) (1)
   trait.2$MD3[trait.2$family=="Naididae"]= 1
@@ -1433,7 +1435,7 @@ add_MD_trait <- function(.traits_all_renamed){
 
   #### oligochaeta - family NA (here I inserted the value of the Mode)
   ### MD1 (none): (0)
-  trait.2$MD1[trait.2$subclass=="Oligochaeta" & is.na(trait.2$family)]= 0
+  trait.2$MD1[trait.2$subclass=="Oligochaeta" & is.na(trait.2$family)]= 2
 
   ### MD3 (hair) (1)
   trait.2$MD3[trait.2$subclass=="Oligochaeta" & is.na(trait.2$family)]= 1
@@ -1457,7 +1459,7 @@ add_MD_trait <- function(.traits_all_renamed){
   ### we have one Annelida without information regarding Sub Class
 
   ### MD1 (none): (0)
-  trait.2$MD1[trait.2$phylum=="Annelida" & is.na(trait.2$subclass)]= 0
+  trait.2$MD1[trait.2$phylum=="Annelida" & is.na(trait.2$subclass)]= 2
 
   ### MD3 (hair) (1)
   trait.2$MD3[trait.2$phylum=="Annelida" & is.na(trait.2$subclass)]= 1
@@ -1878,10 +1880,10 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD4[trait.2$family=="Stratiomyidae"]= 0
 
   ### MD5 (dorsal plates) (0)
-  trait.2$MD5[trait.2$family=="Stratiomyidae"]= 0
+  trait.2$MD5[trait.2$family=="Stratiomyidae"]= 2 ### Tachet: "Tégument de consistance cornée et d'aspect chagriné imprégnés de calcaire."
 
   ### MD6 (sclerotized exoskeleton) (2)
-  trait.2$MD6[trait.2$family=="Stratiomyidae"]= 2 ### it is not a trully sclerotization (I think), but Tachet: "Tégument de consistance cornée et d'aspect chagriné imprégnés de calcaire."
+  trait.2$MD6[trait.2$family=="Stratiomyidae"]= 0
 
   ### MD7 (Shell) (0)
   trait.2$MD7[trait.2$family=="Stratiomyidae"]= 0
@@ -1968,13 +1970,13 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD2[trait.2$ord=="Trichoptera"]=0
 
   ### MD3 (hair) (1)
-  trait.2$MD3[trait.2$ord=="Trichoptera"]=1
+  trait.2$MD3[trait.2$ord=="Trichoptera"]=3
 
   ### MD4 (sclerotized spines) (1)
   trait.2$MD4[trait.2$ord=="Trichoptera"]=1
 
   ### MD5 (dorsal plates) (1)
-  trait.2$MD5[trait.2$ord=="Trichoptera"]=1
+  trait.2$MD5[trait.2$ord=="Trichoptera"]=3
 
   ### MD6 (sclerotized exoskeleton)
   trait.2$MD6[trait.2$ord=="Trichoptera"]=0
@@ -2061,13 +2063,13 @@ add_MD_trait <- function(.traits_all_renamed){
   # soil or in drier habitats with decaying material, e.g. birds' nests, tree holes (figs 92 100)
 
   ### MD1 (none): (0)
-  trait.2$MD1[trait.2$family=="Scatopsidae"]= 0
+  trait.2$MD1[trait.2$family=="Scatopsidae"]= 2
 
   ### MD2 (elongated tubercle) (0)
   trait.2$MD2[trait.2$family=="Scatopsidae"]=0
 
   ### MD3 (hair) (3)
-  trait.2$MD3[trait.2$family=="Scatopsidae"]=3
+  trait.2$MD3[trait.2$family=="Scatopsidae"]= 1
 
   ### MD4 (sclerotized spines) (0)
   trait.2$MD4[trait.2$family=="Scatopsidae"]=0
@@ -2123,7 +2125,7 @@ add_MD_trait <- function(.traits_all_renamed){
   #########################################################
 
   ### MD1 (none): (0)
-  trait.2$MD1[trait.2$ord=="Ephemeroptera"]= 0
+  trait.2$MD1[trait.2$ord=="Ephemeroptera"]= 2
 
   ### MD2 (elongated tubercle) (0)
   trait.2$MD2[trait.2$ord=="Ephemeroptera"]= 0
@@ -2138,7 +2140,7 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD5[trait.2$ord=="Ephemeroptera"]= 0
 
   ### MD6 (sclerotized exoskeleton) (2)
-  trait.2$MD6[trait.2$ord=="Ephemeroptera"]= 2
+  trait.2$MD6[trait.2$ord=="Ephemeroptera"]= 0
 
   ### MD7 (Shell) (0)
   trait.2$MD7[trait.2$ord=="Ephemeroptera"]= 0
@@ -2165,10 +2167,10 @@ add_MD_trait <- function(.traits_all_renamed){
   trait.2$MD4[trait.2$ord=="Megaloptera"]= 0
 
   ### MD5 (dorsal plates) (1)
-  trait.2$MD5[trait.2$ord=="Megaloptera"]= 1 # 3 segments with dorsal plates
+  trait.2$MD5[trait.2$ord=="Megaloptera"]= 3 # 3 segments with dorsal plates
 
   ### MD6 (sclerotized exoskeleton) (2)
-  trait.2$MD6[trait.2$ord=="Megaloptera"]= 2
+  trait.2$MD6[trait.2$ord=="Megaloptera"]= 0
 
   ### MD7 (Shell) (0)
   trait.2$MD7[trait.2$ord=="Megaloptera"]= 0
