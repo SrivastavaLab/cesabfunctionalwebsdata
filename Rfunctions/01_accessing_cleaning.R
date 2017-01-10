@@ -5,12 +5,16 @@
 ## can be slow
 
 get_all_abundances <- function(.dats){
+
+  ## might need to replace this with a suitable structure
+  bwg_get_safe <- possibly(bwg_get, NA)
+
   abds_ <- .dats %>%
     .[["dataset_id"]] %>%
     as.numeric %>%
     set_names %>%
     map(~ list(dataset_id = .x)) %>%
-    map(~ bwg_get("matrix", .))
+    map(~ bwg_get_safe("matrix", .))
 
   return(abds_)
 }

@@ -101,8 +101,11 @@ targets:
   trts_all_filtered:
     command: combine_multi_names(trts_all)
 
+  pres_abds:
+    command: discard(abds, I(is.na))
+
   abundance:
-    command: tidy_dataset_list(abds)
+    command: tidy_dataset_list(pres_abds)
     ## function is from bwgdata
 
 ### load in supplementary data
