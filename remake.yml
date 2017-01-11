@@ -42,6 +42,7 @@ sources:
   - Rfunctions/adding_elevation.R
   - Rfunctions/11_MDtrait_Function.R
   - Rfunctions/RELEASE.R
+  - Rfunctions/correct_bromeliad_species.R
 
 targets:
   downloads:
@@ -66,7 +67,7 @@ targets:
   all:
     depends:
       - detritus_model_plots
-      - bromeliad_elevation
+      - bromeliad_correctnames
       - traits_bwg_and_new
       - spp_abundances_wide
       - supp_size_model_fits
@@ -156,11 +157,11 @@ targets:
 
 # import corrected bromeliad names --------------------------------------------------
 
-  bromeliad_spp:
-    command: import_BromeliadSpecies("data-intermediate/BromeliadSpecies.csv")
+  bromeliad_names:
+    command: import_BromeliadSpecies("data-intermediate/bromeliad_names.csv")
 
   detritus_wider_bromeliad_names:
-    command: correct_bromeliad_names(detritus_wider, bromeliad_spp)
+    command: fix_whitespace_bromeliad_names(detritus_wider)
 
   ## correcting erroneous measurements in Cardoso -- moving some values to the right
 
@@ -393,6 +394,17 @@ targets:
   bromeliad_elevation:
     command: add_elevation(bromeliad_detritus_open_converted)
 
+# Correct brom names --------------------------------------------
+
+  genus_spp_corrected:
+    command: extract_bromeliad_species_names(bromeliad_elevation)
+
+  correct_name_pairing:
+    command: join_old_new_bromeliad_names(genus_spp_corrected, bromeliad_names)
+
+  bromeliad_correctnames:
+    command: correct_bromelaid_species_names(bromeliad_elevation, correct_name_pairing)
+
 # Abundances -----------------------------------------------------
 
   summed_abundance_spp:
@@ -434,6 +446,6 @@ targets:
       datasets = dats_date,
       visits = visits_date,
       traits = traits_bwg_and_new,
-      bromeliads = bromeliad_elevation,
+      bromeliads = bromeliad_correctnames,
       abundance = summed_abundance_lasgamas_dyst_correct,
       abundance_matrix = spp_abundances_wide)

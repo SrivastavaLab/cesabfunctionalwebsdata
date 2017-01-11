@@ -223,34 +223,19 @@ drop_bad_name <- function(.broms_rename_unnest){
 
 # correct bromeliad names -------------------------------------------------
 
-correct_bromeliad_names <- function(.detritus_wider, .bromeliad_spp){
+
+fix_whitespace_bromeliad_names <- function(.detritus_wider){
 
   # WHIIIIITESPACE
   detritus_wider_clean <- .detritus_wider %>%
     mutate(species = species %>% str_trim(side = "both"))
 
-  out <- detritus_wider_clean #%>%
-    # left_join(.bromeliad_spp %>%
-    #             select(species = `Former name`,
-    #                    species_name = `Proposed name`))
-
-  # out_nrow <- filter(out, is.na(species_name)) %>% nrow()
-  #
-  # # browser()
-  # assert_that(out_nrow == 0)
-
 # NO duplications of bromeliads!!
-  out %>%
+  detritus_wider_clean %>%
     group_by(bromeliad_id) %>%
     tally %>%
     assert(in_set(1), n)
 
-  ## replace original "species" with new name
-#
-#   out <- out %>%
-#     select(-species) %>%
-#     rename(species = species_name)
-#
-  return(out)
+  return(detritus_wider_clean)
 }
 
