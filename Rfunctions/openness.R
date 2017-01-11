@@ -91,8 +91,8 @@ convert_incident_to_openness <- function(.bromeliad_detritus_open) {
 
   .bromeliad_detritus_open %>%
     mutate(open.canopy = ifelse(visit_id %in%c("296", "301"),incident_convert(incident_radiation_above_ground_percentage), open.canopy))%>%
-    mutate(open.canopy = ifelse(visit_id %in%c("331"),incident_convert(incident_radiation_percentage), open.canopy))%>%
-    mutate(open.canopy = ifelse(visit_id %in%c("491", "496","506"),'Canopy openess', open.canopy))
+    mutate(open.canopy = ifelse(visit_id %in%c("331"),incident_convert(incident_radiation_percentage), open.canopy))#%>%
+    # mutate(open.canopy = ifelse(visit_id %in%c("491", "496","506"),`Canopy openess`, open.canopy))
 
 
 
