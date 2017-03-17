@@ -44,15 +44,19 @@ make_taxonomy_cols <- function(.trts_all_filtered) {
 
 # taxa_species_names %>% glimpse
 #
-# # for each morphospecies, which is the lowest level to which it has been identified?
-# taxa_lowest <- taxa_species_names %>%
-#   gather(taxon_level, taxon_name, -species_id) %>%
-#   group_by(species_id) %>%
-#   # assuming that gather keeps column headers in the same sequence! this could be hard coded.
-#   mutate(tax_num = seq_along(taxon_level)) %>%
-#   filter(!is.na(taxon_name)) %>%
-#   filter(tax_num == max(tax_num))
-#
+
+get_lowest_taxonomic <- function(.taxonomy_cols) {
+  # for each morphospecies, which is the lowest level to which it has been identified?
+  taxa_lowest <- .taxonomy_cols %>%
+    gather(taxon_level, taxon_name, -species_id) %>%
+    group_by(species_id) %>%
+    # assuming that gather keeps column headers in the same sequence! this could be hard coded.
+    mutate(tax_num = seq_along(taxon_level)) %>%
+    filter(!is.na(taxon_name)) %>%
+    filter(tax_num == max(tax_num))
+  #
+}
+
 # ## prepare lowest-taxon table for merging
 # taxa_low_for_merge <- taxa_lowest %>%
 #   ungroup %>%

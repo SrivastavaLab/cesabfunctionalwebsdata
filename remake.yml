@@ -107,6 +107,9 @@ targets:
   taxonomy_cols:
     command: make_taxonomy_cols(trts_all_filtered)
 
+  lowest_taxonomic:
+    command: get_lowest_taxonomic(taxonomy_cols)
+
   pres_abds:
     command: discard(abds, I(is.na))
 
