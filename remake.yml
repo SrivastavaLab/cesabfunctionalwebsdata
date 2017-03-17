@@ -43,6 +43,7 @@ sources:
   - Rfunctions/11_MDtrait_Function.R
   - Rfunctions/RELEASE.R
   - Rfunctions/correct_bromeliad_species.R
+  - Rfunctions/traitmerge.R
 
 targets:
   downloads:
@@ -102,6 +103,9 @@ targets:
 
   trts_all_filtered:
     command: combine_multi_names(trts_all)
+
+  taxonomy_cols:
+    command: make_taxonomy_cols(trts_all_filtered)
 
   pres_abds:
     command: discard(abds, I(is.na))
