@@ -53,14 +53,14 @@ get_lowest_taxonomic <- function(.taxonomy_cols) {
     # assuming that gather keeps column headers in the same sequence! this could be hard coded.
     mutate(tax_num = seq_along(taxon_level)) %>%
     filter(!is.na(taxon_name)) %>%
-    filter(tax_num == max(tax_num))
+    filter(tax_num == max(tax_num)) %>%
+    ungroup %>%
+    mutate(species_id = as.character(species_id))
   #
 }
 
-# ## prepare lowest-taxon table for merging
-# taxa_low_for_merge <- taxa_lowest %>%
-#   ungroup %>%
-#   mutate(species_id = as.character(species_id))
+## prepare lowest-taxon table for merging
+taxa_low_for_merge <- taxa_lowest %>%
 #
 # # must get the taxonomic traits -------------------------------------------
 #
