@@ -130,9 +130,6 @@ targets:
 
 ## coercing values if necessary
 
-  trts_all_values:
-    command: parse_column_types_reader(trts_all_filtered)
-
   visits_date:
     command: parse_column_types_reader(visits)
 
@@ -224,7 +221,7 @@ targets:
     command: write_csv(fpom_fg_data, path = target_name)
 
   spp_dictonary:
-    command: output_spp_dictionary(abundance, broms_date, visits_date, trts_all_values)
+    command: output_spp_dictionary(abundance, broms_date, visits_date, trts_all_filtered)
 
   outputs/spp_dictionary.csv:
     command: write_csv(spp_dictonary, path = target_name)
@@ -306,39 +303,6 @@ targets:
     command: add_detritus_summary(detritus_wider_150_name_changed, detritus_summary)
 
 # Traits -------------------------------------------------------------------------------------
-
-  traits_all_renamed:
-    command: rename_check_traits(trts_all_filtered)
-
-
-  traits_all_MD_added:
-    command: add_MD_trait(traits_all_renamed)
-
-  CP_genus:
-    command: read_trait_data("data-intermediate/CPgenus_updated.csv", I("_cnnn"))
-
-  CP_family:
-    command: read_trait_data("data-intermediate/CPfamily_updated.csv", I("_cnnn"))
-
-  BF_genus:
-    command: read_trait_data("data-intermediate/BFgenus_updated.csv", I("_ciiii"))
-
-  BF_family:
-    command: read_trait_data("data-intermediate/BFfamily_updated.csv", I("_ciiii"))
-
-  traits_all_CP_added:
-    command: put_traits_together(traits_all_MD_added, CP_genus, CP_family, I("CP"))
-
-  traits_all_BF_added:
-    command: put_traits_together(traits_all_CP_added, BF_genus, BF_family, I("BF"))
-
-# Keeping these two _added tables for checking, which is probably a wise thing to add later!
-  traits_newly_added:
-    command: select_new_traits_sp_id(traits_all_BF_added)
-
-# delete this an all dependencies
-  traits_bwg_and_new:
-    command: combine_bwg_new_traits(traits_all_renamed, traits_newly_added)
 
   traits:
     command: merge_trait_by_taxonomy(trait_spreadsheet, lowest_taxonomic)
@@ -461,7 +425,7 @@ targets:
       create_data_release(target_name,
       datasets = dats_date,
       visits = visits_date,
-      traits = traits_bwg_and_new,
+      traits = traits,
       bromeliads = bromeliad_correctnames,
       abundance = summed_abundance_lasgamas_dyst_correct,
       abundance_matrix = spp_abundances_wide)
