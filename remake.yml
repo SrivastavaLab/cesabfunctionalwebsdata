@@ -52,8 +52,9 @@ targets:
       - dats
       - visits
       - broms
-      - trts_all # add the real traits
+      - trts_all
       - abds
+      - trait_spreadsheet
 
   outputs:
     depends:

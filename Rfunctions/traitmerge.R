@@ -20,24 +20,17 @@ make_taxonomy_cols <- function(.trts_all_filtered) {
 
   taxa_species_names <- trts_taxonomy_cols %>%
     ## delete "extra genus" parts of species names
-    mutate(newspecies = stringr::str_replace(species, "\\(.*\\)\\s", "")) %>%
+    # mutate(newspecies = stringr::str_replace(species, "\\(.*\\)\\s", "")) %>%
     # mutate(species_name = case_when(
     #   !is.na(genus) & !is.na(newspecies) & !is.na(subspecies) ~ paste(genus, newspecies, subspecies, sep = "_"),
     #   !is.na(genus) & !is.na(newspecies)                      ~ paste(genus, newspecies,             sep = "_")
     # )) %>%
-    mutate(newspecies = if_else(!is.na(newspecies) & !is.na(subspecies),
-                                true = paste(newspecies, subspecies, sep = "_"),
-                                # false = if_else(
-                                #   !is.na(genus) & !is.na(newspecies),
-                                #   true  = paste(genus, newspecies, sep = "_"),
-                                #   false = NA_character_)
-                                false = newspecies)
-    ) %>%
-    select(-species, -subspecies) %>%
-    mutate(species_name = if_else(!is.na(genus) & !is.na(newspecies),
-                                  true = paste(genus, newspecies, sep = "_"),
-                                  false = NA_character_)) %>%
-    select(-genus, -newspecies)
+    mutate(species_name = paste(genus, species, subspecies, sep = "_"),
+           ## remove the "_NA" bit that comes when absent names are combined
+           species_name = str_replace_all(species_name, pattern = "_NA", ""),
+           # parse remaining "NA" to true NA with readr
+           species_name = readr::parse_character(species_name)) %>%
+    select(- genus, -species, -subspecies)
 
   return(taxa_species_names)
 }
@@ -47,16 +40,37 @@ make_taxonomy_cols <- function(.trts_all_filtered) {
 
 get_lowest_taxonomic <- function(.taxonomy_cols) {
   # for each morphospecies, which is the lowest level to which it has been identified?
-  taxa_lowest <- .taxonomy_cols %>%
+  taxa_long <- .taxonomy_cols %>%
     gather(taxon_level, taxon_name, -species_id) %>%
+    filter(!is.na(taxon_name))
+
+  taxon_numbers <- frame_data(
+    ~num,     ~taxon_level,
+    1,        "domain",
+    2,        "kingdom",
+    3,        "phylum",
+    4,        "subphylum",
+    5,        "class",
+    6,        "subclass",
+    7,        "ord",
+    8,        "subord",
+    9,        "family",
+    10,        "subfamily",
+    11,        "tribe",
+    12,        "species_name"
+  )
+
+  taxonomic_levels <- taxa_long %>%
+    left_join(taxon_numbers, by = "taxon_level")
+
+
+  maximum_num <- taxonomic_levels %>%
     group_by(species_id) %>%
-    # assuming that gather keeps column headers in the same sequence! this could be hard coded.
-    mutate(tax_num = seq_along(taxon_level)) %>%
-    filter(!is.na(taxon_name)) %>%
-    filter(tax_num == max(tax_num)) %>%
-    ungroup %>%
-    mutate(species_id = as.character(species_id))
-  #
+    filter(num == max(num)) %>%
+    ungroup
+
+  return(maximum_num)
+
 }
 
 # must get the taxonomic traits -------------------------------------------
@@ -72,6 +86,16 @@ get_trait_spreadsheet <- function() {
   if( nrow(post_edit_no_dup %>% filter(duplicated(.))) > 0) stop("duplicates present")
 
   return(post_edit_no_dup)
+}
+
+find_taxo_missing <- function(.trait_spreadsheet, .lowest_taxonomic) {
+
+  spreadsheet_names <- .trait_spreadsheet %>% select(taxon_name) %>% distinct
+
+  lowtaxonomy_names <- .lowest_taxonomic %>% select(taxon_name) %>% distinct
+
+  dplyr::setdiff(spreadsheet_names, lowtaxonomy_names)
+
 }
 
 
