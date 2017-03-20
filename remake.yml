@@ -23,6 +23,7 @@ packages:
   - prediction
   - visdat
   - fuzzyjoin
+  - googlesheets
 
 sources:
   #- Rfunctions
@@ -51,7 +52,7 @@ targets:
       - dats
       - visits
       - broms
-      - trts_all
+      - trts_all # add the real traits
       - abds
 
   outputs:
@@ -69,7 +70,7 @@ targets:
     depends:
       - detritus_model_plots
       - bromeliad_correctnames
-      - traits_bwg_and_new
+      - traits
       - spp_abundances_wide
       - supp_size_model_fits
 
@@ -95,6 +96,9 @@ targets:
 
   trts_all:
     command: bwg_get(I("species"), getargs)
+
+  trait_spreadsheet:
+    command: get_trait_spreadsheet()
 
 ## restructuring datasets
 
@@ -331,8 +335,12 @@ targets:
   traits_newly_added:
     command: select_new_traits_sp_id(traits_all_BF_added)
 
+# delete this an all dependencies
   traits_bwg_and_new:
     command: combine_bwg_new_traits(traits_all_renamed, traits_newly_added)
+
+  traits:
+    command: merge_trait_by_taxonomy(trait_spreadsheet, lowest_taxonomic)
 
 
 # Volume equations -------------------------------------------------------------------------------------

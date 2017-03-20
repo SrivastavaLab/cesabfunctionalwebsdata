@@ -59,29 +59,29 @@ get_lowest_taxonomic <- function(.taxonomy_cols) {
   #
 }
 
-## prepare lowest-taxon table for merging
-taxa_low_for_merge <- taxa_lowest %>%
-#
-# # must get the taxonomic traits -------------------------------------------
-#
-# sheettitle <- "traits_for_editing_20-01-2017"
-#
-# library(googlesheets)
-# post_editing <- gs_title(sheettitle) %>%
-#   gs_read_csv()
-#
-#
-# post_edit_no_dup <- post_editing %>%
-#   select(-starts_with("reference"))
-#
-# ## check that no rows are duplicate
-# if( nrow(post_edit_no_dup %>% filter(duplicated(.))) > 0) stop("duplicates present")
-#
-#
-# ## prepare post_editing for merging
-# taxonomic_traits <- post_edit_no_dup %>%
-#   select(-tax_num, -taxon_level)
-#
-#
-# new_trait_table <- taxa_low_for_merge %>%
-#   left_join(taxonomic_traits, by = "taxon_name")
+# must get the taxonomic traits -------------------------------------------
+
+get_trait_spreadsheet <- function() {
+  post_editing <- gs_title("traits_for_editing_20-01-2017") %>%
+    gs_read_csv()
+
+  post_edit_no_dup <- post_editing %>%
+    select(-starts_with("reference"))
+
+  ## check that no rows are duplicate
+  if( nrow(post_edit_no_dup %>% filter(duplicated(.))) > 0) stop("duplicates present")
+
+  return(post_edit_no_dup)
+}
+
+
+merge_trait_by_taxonomy <- function(.trait_spreadsheet, .lowest_taxonomic){
+  ## prepare spreadsheet traits for merging
+  taxonomic_traits <- .trait_spreadsheet %>%
+    select(-tax_num, -taxon_level)
+
+  # merge traits by taxonomy
+  new_trait_table <- .lowest_taxonomic %>%
+    left_join(taxonomic_traits, by = "taxon_name")
+}
+
