@@ -304,8 +304,14 @@ targets:
 
 # Traits -------------------------------------------------------------------------------------
 
-  traits:
+  canonical_traits:
+    command: get_canonical_traits(trts_all_filtered)
+
+  traits_from_tax:
     command: merge_trait_by_taxonomy(trait_spreadsheet, lowest_taxonomic)
+
+  traits:
+    command: left_join(traits_from_tax, canonical_traits, by = I("species_id"))
 
 
 # Volume equations -------------------------------------------------------------------------------------

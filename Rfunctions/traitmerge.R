@@ -113,3 +113,9 @@ merge_trait_by_taxonomy <- function(.trait_spreadsheet, .lowest_taxonomic){
     left_join(taxonomic_traits, by = "taxon_name")
 }
 
+get_canonical_traits <- function(.trts_all_filtered) {
+  .trts_all_filtered %>%
+    select(species_id, functional_group, predation, realm, micro_macro)
+}
+
+

@@ -1,6 +1,4 @@
 
-canonical <- trts_all_filtered %>%
-  select(species_id, functional_group, predation, realm, micro_macro)
 
 # identify taxa which did not match ---------------------------------------
 
