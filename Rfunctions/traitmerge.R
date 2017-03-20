@@ -20,7 +20,7 @@ make_taxonomy_cols <- function(.trts_all_filtered) {
 
   taxa_species_names <- trts_taxonomy_cols %>%
     ## delete "extra genus" parts of species names
-    # mutate(newspecies = stringr::str_replace(species, "\\(.*\\)\\s", "")) %>%
+    mutate(species = stringr::str_replace(species, "\\(.*\\)\\s", "")) %>%
     # mutate(species_name = case_when(
     #   !is.na(genus) & !is.na(newspecies) & !is.na(subspecies) ~ paste(genus, newspecies, subspecies, sep = "_"),
     #   !is.na(genus) & !is.na(newspecies)                      ~ paste(genus, newspecies,             sep = "_")
@@ -94,8 +94,12 @@ find_taxo_missing <- function(.trait_spreadsheet, .lowest_taxonomic) {
 
   lowtaxonomy_names <- .lowest_taxonomic %>% select(taxon_name) %>% distinct
 
-  dplyr::setdiff(spreadsheet_names, lowtaxonomy_names)
+  in_spreadsheet_not_bwgdb <- dplyr::setdiff(spreadsheet_names, lowtaxonomy_names)
 
+  in_bwgdb_not_spreadsheet <-  dplyr::setdiff(lowtaxonomy_names, spreadsheet_names)
+
+  list(in_spreadsheet_not_bwgdb = in_spreadsheet_not_bwgdb,
+       in_bwgdb_not_spreadsheet = in_bwgdb_not_spreadsheet)
 }
 
 
