@@ -109,8 +109,11 @@ targets:
   trts_all_filtered:
     command: combine_multi_names(trts_all)
 
+  trts_parsed_cols:
+    command: parse_column_types_reader(trts_all_filtered)
+
   taxonomy_cols:
-    command: make_taxonomy_cols(trts_all_filtered)
+    command: make_taxonomy_cols(trts_parsed_cols)
 
   lowest_taxonomic:
     command: get_lowest_taxonomic(taxonomy_cols)
