@@ -60,6 +60,49 @@ get_lowest_taxonomic <- function(.taxonomy_cols) {
 
 }
 
+# split off subspecies and put it back
+
+lowest_name_and_subspecies <- function(.taxonomy_cols, .lowest_names) {
+
+  # here is all the subspecies columns
+  subspp <- .taxonomy_cols %>%
+    # cut off subspecies
+    select(species_id, subspecies)
+
+  # now we define the lowest taxonomic category, without subspecies. Because
+  # even something that is only identified to the level of subfamily can have a
+  # subspecies!! what a time to be alive
+  lowest_names <- .taxonomy_cols %>%
+    select(-subspecies) %>%
+    get_lowest_taxonomic
+
+  # anybody missing?
+  .taxonomy_cols %>%
+    anti_join(.lowest_names)
+  # just these unknown animals!
+  # check that the names are acceptable and message: "6516", "6511", "6506"
+
+  mysteries <- .taxonomy_cols %>%
+    anti_join(.lowest_names) %>%
+    assert(in_set(c("6516", "6511", "6506")), species_id)
+
+  # if that worked, let us know
+  message("There are only three taxa with no trait information at all. Three Unknown animals")
+
+  # we add on subspecies, no matter _what_ is the lowest level of the species --
+  # ie even if it is not species. That is because sometimes "subspecies" is
+  # actually just life history stage
+  with_taxon_names <- .lowest_names %>%
+    # add back in those subspecies!
+    left_join(subspp) %>%
+    mutate(taxon_name_2 = if_else(!is.na(subspecies),
+                                  paste0(taxon_name, "_", subspecies),
+                                  taxon_name)) %>%
+  select(species_id, taxon_level, taxon_name = taxon_name_2, taxon_number)
+
+  return(with_taxon_names)
+}
+
 # must get the taxonomic traits -------------------------------------------
 
 get_trait_spreadsheet <- function() {
@@ -91,6 +134,12 @@ find_taxo_missing <- function(.trait_spreadsheet, .lowest_taxonomic) {
 
 
 merge_trait_by_taxonomy <- function(.trait_spreadsheet, .lowest_taxonomic){
+
+  # there should be ABSOLUTELY NO taxa in the database that cannot find a match in
+  # the trait table. Stop the party if that is not true
+  message("checking that the taxonomy spreadsheet contains all the correct species")
+  .lowest_taxonomic %>% anti_join(.trait_spreadsheet) %>% verify(nrow(.) == 0)
+
   ## prepare spreadsheet traits for merging
   taxonomic_traits <- .trait_spreadsheet %>%
     rename(taxon_number = tax_num)
@@ -99,12 +148,20 @@ merge_trait_by_taxonomy <- function(.trait_spreadsheet, .lowest_taxonomic){
   new_trait_table <- .lowest_taxonomic %>%
     left_join(taxonomic_traits, by = c("taxon_name", "taxon_level", "taxon_number"))
 
+  # absolutely no increase in row numbers
+  stopifnot(nrow(new_trait_table) == nrow(.lowest_taxonomic))
+  message("traits combined with no duplication of species")
+
   return(new_trait_table)
 }
 
 get_canonical_traits <- function(.trts_all_filtered) {
   .trts_all_filtered %>%
-    select(species_id, functional_group, predation, realm, micro_macro)
+    select_("species_id","names", "bwg_name", "domain", "kingdom", "phylum", "subphylum",
+            "class", "subclass", "ord", "subord", "family", "subfamily",
+            "tribe", "genus", "species", "subspecies", "functional_group",
+            "predation", "realm", "micro_macro", "barcode")
+
 }
 
 

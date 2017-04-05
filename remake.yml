@@ -308,13 +308,16 @@ targets:
 # Traits -------------------------------------------------------------------------------------
 
   canonical_traits:
-    command: get_canonical_traits(trts_all_filtered)
+    command: get_canonical_traits(trts_parsed_cols)
+
+  taxon_lowest_names:
+    command: lowest_name_and_subspecies(taxonomy_cols, lowest_taxonomic)
 
   traits_from_tax:
-    command: merge_trait_by_taxonomy(trait_spreadsheet, lowest_taxonomic)
+    command: merge_trait_by_taxonomy(trait_spreadsheet, taxon_lowest_names)
 
   traits:
-    command: left_join(traits_from_tax, canonical_traits, by = I("species_id"))
+    command: left_join(canonical_traits, traits_from_tax, by = I("species_id"))
 
 
 # Volume equations -------------------------------------------------------------------------------------
