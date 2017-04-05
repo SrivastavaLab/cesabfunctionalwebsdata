@@ -57,7 +57,8 @@ get_lowest_taxonomic <- function(.taxonomy_cols) {
     9,        "family",
     10,        "subfamily",
     11,        "tribe",
-    12,        "species_name"
+    12,        "genus",
+    13,        "species_name"
   )
 
   taxonomic_levels <- taxa_long %>%
@@ -66,7 +67,7 @@ get_lowest_taxonomic <- function(.taxonomy_cols) {
 
   maximum_num <- taxonomic_levels %>%
     group_by(species_id) %>%
-    filter(num == max(num)) %>%
+    filter(taxon_number == max(taxon_number, na.rm = TRUE)) %>%
     ungroup
 
   return(maximum_num)
@@ -106,11 +107,13 @@ find_taxo_missing <- function(.trait_spreadsheet, .lowest_taxonomic) {
 merge_trait_by_taxonomy <- function(.trait_spreadsheet, .lowest_taxonomic){
   ## prepare spreadsheet traits for merging
   taxonomic_traits <- .trait_spreadsheet %>%
-    select(-tax_num, -taxon_level)
+    rename(taxon_number = tax_num)
 
   # merge traits by taxonomy
   new_trait_table <- .lowest_taxonomic %>%
-    left_join(taxonomic_traits, by = "taxon_name")
+    left_join(taxonomic_traits, by = c("taxon_name", "taxon_level", "taxon_number"))
+
+  return(new_trait_table)
 }
 
 get_canonical_traits <- function(.trts_all_filtered) {
