@@ -2,41 +2,27 @@
 #' notes on megin traits in to the dat
 
 make_taxonomy_cols <- function(.trts_all_filtered) {
-  trts_just_taxonomy <- .trts_all_filtered %>%
-    select_("species_id","names", "bwg_name", "domain", "kingdom", "phylum", "subphylum",
-            "class", "subclass", "ord", "subord", "family", "subfamily",
-            "tribe", "genus", "species", "subspecies", "functional_group",
-            "predation", "realm", "micro_macro", "barcode")
-
-  trts_parsed_cols <- parse_column_types_reader(trts_just_taxonomy)
-
-  # just the taxonomy
   trts_taxonomy_cols <- trts_parsed_cols %>%
     select_("species_id", "domain", "kingdom", "phylum", "subphylum",
             "class", "subclass", "ord", "subord", "family", "subfamily",
             "tribe", "genus", "species", "subspecies")
 
-  # could create something where i get the columsn which are ignored here, and preserve them.
+  #no starting NA
+  no_start_NA <- function(x) !grepl("NA[A-Za-z]{3,}", x)
 
-  taxa_species_names <- trts_taxonomy_cols %>%
-    ## delete "extra genus" parts of species names
+  taxo_cols_with_spp <- trts_taxonomy_cols %>%
     mutate(species = stringr::str_replace(species, "\\(.*\\)\\s", "")) %>%
-    # mutate(species_name = case_when(
-    #   !is.na(genus) & !is.na(newspecies) & !is.na(subspecies) ~ paste(genus, newspecies, subspecies, sep = "_"),
-    #   !is.na(genus) & !is.na(newspecies)                      ~ paste(genus, newspecies,             sep = "_")
-    # )) %>%
-    mutate(species_name = paste(genus, species, subspecies, sep = "_"),
-           ## remove the "_NA" bit that comes when absent names are combined
-           species_name = str_replace_all(species_name, pattern = "_NA", ""),
-           # parse remaining "NA" to true NA with readr
-           species_name = readr::parse_character(species_name)) %>%
-    select(- genus, -species, -subspecies)
+    # if species exists, fuse with genus -- this assumes that species is only present when genus is also present
+    assert_rows(num_row_NAs, within_bounds(0, 2), genus, species) %>%
+    assert_rows(col_concat, no_start_NA, genus, species) %>%
+    mutate(species_name = if_else(!is.na(species),
+                                  paste0(genus, "_", species),
+                                  NA_character_)) %>%
+    select(-species)
 
-  return(taxa_species_names)
+  return(taxo_cols_with_spp)
 }
 
-# taxa_species_names %>% glimpse
-#
 
 get_lowest_taxonomic <- function(.taxonomy_cols) {
   # for each morphospecies, which is the lowest level to which it has been identified?
@@ -45,7 +31,7 @@ get_lowest_taxonomic <- function(.taxonomy_cols) {
     filter(!is.na(taxon_name))
 
   taxon_numbers <- frame_data(
-    ~num,     ~taxon_level,
+    ~taxon_number,     ~taxon_level,
     1,        "domain",
     2,        "kingdom",
     3,        "phylum",
