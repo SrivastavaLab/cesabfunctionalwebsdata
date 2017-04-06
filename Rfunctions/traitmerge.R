@@ -2,7 +2,7 @@
 #' notes on megin traits in to the dat
 
 make_taxonomy_cols <- function(.trts_all_filtered) {
-  trts_taxonomy_cols <- trts_parsed_cols %>%
+  trts_taxonomy_cols <- .trts_all_filtered %>%
     select_("species_id", "domain", "kingdom", "phylum", "subphylum",
             "class", "subclass", "ord", "subord", "family", "subfamily",
             "tribe", "genus", "species", "subspecies")
@@ -116,20 +116,6 @@ get_trait_spreadsheet <- function() {
   if( nrow(post_edit_no_dup %>% filter(duplicated(.))) > 0) stop("duplicates present")
 
   return(post_edit_no_dup)
-}
-
-find_taxo_missing <- function(.trait_spreadsheet, .lowest_taxonomic) {
-
-  spreadsheet_names <- .trait_spreadsheet %>% select(taxon_name) %>% distinct
-
-  lowtaxonomy_names <- .lowest_taxonomic %>% select(taxon_name) %>% distinct
-
-  in_spreadsheet_not_bwgdb <- dplyr::setdiff(spreadsheet_names, lowtaxonomy_names)
-
-  in_bwgdb_not_spreadsheet <-  dplyr::setdiff(lowtaxonomy_names, spreadsheet_names)
-
-  list(in_spreadsheet_not_bwgdb = in_spreadsheet_not_bwgdb,
-       in_bwgdb_not_spreadsheet = in_bwgdb_not_spreadsheet)
 }
 
 

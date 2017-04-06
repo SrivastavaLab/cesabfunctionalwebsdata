@@ -112,12 +112,6 @@ targets:
   trts_parsed_cols:
     command: parse_column_types_reader(trts_all_filtered)
 
-  taxonomy_cols:
-    command: make_taxonomy_cols(trts_parsed_cols)
-
-  lowest_taxonomic:
-    command: get_lowest_taxonomic(taxonomy_cols)
-
   pres_abds:
     command: discard(abds, I(is.na))
 
@@ -306,6 +300,12 @@ targets:
     command: add_detritus_summary(detritus_wider_150_name_changed, detritus_summary)
 
 # Traits -------------------------------------------------------------------------------------
+
+  taxonomy_cols:
+    command: make_taxonomy_cols(trts_parsed_cols)
+
+  lowest_taxonomic:
+    command: get_lowest_taxonomic(taxonomy_cols)
 
   canonical_traits:
     command: get_canonical_traits(trts_parsed_cols)
