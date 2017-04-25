@@ -45,6 +45,7 @@ sources:
   - Rfunctions/RELEASE.R
   - Rfunctions/correct_bromeliad_species.R
   - Rfunctions/traitmerge.R
+  - Rfunctions/identify_merge_duplicates.R
 
 targets:
   downloads:
@@ -72,8 +73,14 @@ targets:
       - detritus_model_plots
       - bromeliad_correctnames
       - traits
+      - synonymous_names
+      - abundance_no_zero
       - spp_abundances_wide
       - supp_size_model_fits
+
+  release:
+    depends:
+      - RELEASE/all_data.rds
 
   ## obtain all the data
 
@@ -405,6 +412,11 @@ targets:
   summed_abundance_lasgamas_dyst_correct:
     command: correct_lasgamas_dytiscid(summed_abundance_spp)
 
+  abundance_no_zero:
+    command: filter_zero_abd(summed_abundance_lasgamas_dyst_correct)
+
+  synonymous_names:
+    command: identify_merge_duplicates(traits, summed_abundance_lasgamas_dyst_correct)
 
   spp_abundances_wide:
     command: spread_present_species(summed_abundance_lasgamas_dyst_correct)
@@ -439,5 +451,6 @@ targets:
       visits = visits_date,
       traits = traits,
       bromeliads = bromeliad_correctnames,
-      abundance = summed_abundance_lasgamas_dyst_correct,
+      abundance = abundance_no_zero,
+      synonymous_names = synonymous_names,
       abundance_matrix = spp_abundances_wide)

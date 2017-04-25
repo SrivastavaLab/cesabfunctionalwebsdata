@@ -1,4 +1,6 @@
 
+# This function is important for merging together different size categories of
+# different species, when that information is available
 sum_species_abundances <- function(.abundance_filtered) {
   .abundance_filtered %>%
     rename(bromeliad_id = brm) %>%
@@ -19,6 +21,14 @@ correct_lasgamas_dytiscid <- function(.summed_abundance_spp){
     )
 }
 
+
+# edit abundances, to remove the zeros, and make sure there are no NA abundances
+filter_zero_abd <- function(.summed_abundance_lasgamas_dyst_correct) {
+  .summed_abundance_lasgamas_dyst_correct %>%
+    assert(not_na, abd) %>%
+    filter(abd > 0) %>%
+    rename(abundance = abd)
+}
 
 spread_present_species <- function(.summed_abundance_spp){
   .summed_abundance_spp %>%
