@@ -16,7 +16,7 @@ traits %>%
   select(-matches("[A-Z]{2}[0-9]")) %>%
   semi_join(synonymous_names) %>%
   arrange(taxon_name) %>%
-  select(-(domain:species), -(functional_group:micro_macro), -barcode) %>% View
+  select(-(domain:ord), -(functional_group:micro_macro), -barcode) %>% View
 
 all_unique_names <- summed_abundance_lasgamas_dyst_correct %>%
   filter(abd > 0) %>%
