@@ -51,3 +51,39 @@ fit_size_models_to_data <- function(.mod_info, .supp_size_model_data){
 }
 
 # combining these data with observed data and creating predictions ---
+
+
+# this function will need to be divided in two to preserve the models used for imputation? maybe?
+predict_add_imputed <- function(.supp_size_model_fits, .bromeliad_detritus) {
+  # unnest the target data, duplicating models where necessary
+  supp_size_model_ready_to_apply <- .supp_size_model_fits %>%
+    unnest(target_dat, .drop = FALSE) %>%
+    mutate(predicting_model = flatten(predicting_model))
+
+  # select just the datasets which are needed for this analysis.
+  size_data_to_impute <- .bromeliad_detritus %>%
+    semi_join(supp_size_model_ready_to_apply, by = c("visit_id" = "target_dat")) %>%
+    group_by(visit_id) %>%
+    nest
+
+  predicted_max_volume <- size_data_to_impute %>%
+    left_join(supp_size_model_ready_to_apply, by = c("visit_id" = "target_dat")) %>%
+    mutate(predicted_size = map2(data, predicting_model, ~ predict(.y, newdata = .x)))
+
+
+  predicted_max_vol_for_merge <- predicted_max_volume %>%
+    unnest(predicted_size) %>%
+    select(visit_id, predicted_size)
+
+
+  # finally combine with the final thing
+
+  .bromeliad_detritus %>%
+    left_join(predicted_max_vol_for_merge, by = "visit_id") %>%
+    mutate(max_water = if_else(!is.na(predicted_size), predicted_size, max_water),
+           max_water_imputed = if_else(!is.na(predicted_size), "imputed", "observed")) %>%
+    # can drop predicted size
+    select(-predicted_size)
+}
+
+

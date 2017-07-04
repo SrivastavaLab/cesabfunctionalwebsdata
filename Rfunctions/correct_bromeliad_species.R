@@ -2,7 +2,10 @@
 # species. It corrects a few really egregious mispellings, in preparation for
 
 extract_bromeliad_species_names <- function(.bromeliad_elevation){
-  genus_spp_broms <- bromeliad_elevation %>%
+
+  # browser()
+
+  genus_spp_broms <- .bromeliad_elevation %>%
     select(species) %>%
     distinct %>%
     ## standardize the name of an unknown Vrisea/Guzmania combo

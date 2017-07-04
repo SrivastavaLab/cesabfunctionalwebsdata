@@ -370,10 +370,14 @@ targets:
   supp_size_model_fits:
     command: fit_size_models_to_data(supp_size_model_info, supp_size_model_data)
 
+
+  bromeliad_detritus_vol_imputed:
+    command: predict_add_imputed(supp_size_model_fits, bromeliad_detritus)
+
 # creating the "openness" response variable -----------------------------------------------------
 
   bromeliad_detritus_extra_cols:
-    command: add_in_extra_columns(detritus_wide, detritus_wider, bromeliad_detritus)
+    command: add_in_extra_columns(detritus_wide, detritus_wider, bromeliad_detritus_vol_imputed)
 
   bromeliad_detritus_incidentrad:
     command: correct_incident_rad_percent(bromeliad_detritus_extra_cols)
