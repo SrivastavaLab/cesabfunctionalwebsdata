@@ -19,7 +19,7 @@ ignacioconvert<-function(a){
 bromeliad_wide <- bromeliad_wide %>%
   mutate(open.canopy = ifelse(visit_id %in%c(281,266,271),ignacioconvert(canopy.openess), open.canopy))%>%
   mutate(open.canopy = ifelse(visit_id %in%c(331,311),1, ifelse(visit_id %in%c(326,316,306),0,open.canopy)))%>%
-  mutate(open.canopy = ifelse(visit_id %in%c(231),1, ifelse(visit_id %in%c(21),0,open.canopy)))
+  mutate(open.canopy = ifelse(visit_id %in%c(231, 511),1, ifelse(visit_id %in%c(21),0,open.canopy)))
 
 open_bromeliads <- bromeliad_wide %>%
   select(bromeliad_id, open.canopy)

@@ -14,4 +14,4 @@ brom_det_vol <- left_join(brom_vol, det, by = c("bromeliad_id"))
 
 brom_det_vol_open <- left_join(brom_det_vol, open_final, by = c("bromeliad_id"))
 
-write_csv(brom_det_vol_open, "data-raw/29_full_bromeliad_wide.csv")
+write.csv(brom_det_vol_open, "data-raw/29_full_bromeliad_wide.csv")
