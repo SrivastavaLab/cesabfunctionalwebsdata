@@ -46,6 +46,7 @@ sources:
   - Rfunctions/correct_bromeliad_species.R
   - Rfunctions/traitmerge.R
   - Rfunctions/identify_merge_duplicates.R
+  - Rfunctions/filter_visit_81.R
 
 targets:
   downloads:
@@ -71,12 +72,13 @@ targets:
   all:
     depends:
       - detritus_model_plots
-      - bromeliad_correctnames
+      - bromeliads_visit_no_81
       - traits
       - synonymous_names
-      - abundance_no_zero
+      - abundance_no_81
       - spp_abundances_wide
       - supp_size_model_fits
+      - visit_no_81
 
   release:
     depends:
@@ -456,15 +458,29 @@ targets:
 #      - supp_data_additional
 
 
+# remove visit 81
+
+
+  visit_no_81:
+    command: filter_visit_81(visits_date)
+
+  bromeliads_visit_no_81:
+    command: filter_bromeliads_visit81(bromeliad_correctnames, visit_no_81)
+
+  abundance_no_81:
+    command: filter_abundance_81(abundance_no_zero, bromeliads_visit_no_81)
+
+
+
 # RELEASE
 
   RELEASE/all_data.rds:
     command: >
       create_data_release(target_name,
       datasets = dats_date,
-      visits = visits_date,
+      visits = visit_no_81,
       traits = traits,
-      bromeliads = bromeliad_correctnames,
-      abundance = abundance_no_zero,
+      bromeliads = bromeliads_visit_no_81,
+      abundance = abundance_no_81,
       synonymous_names = synonymous_names,
       abundance_matrix = spp_abundances_wide)
