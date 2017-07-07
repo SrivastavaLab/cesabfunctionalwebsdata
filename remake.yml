@@ -374,10 +374,20 @@ targets:
   bromeliad_detritus_vol_imputed:
     command: predict_add_imputed(supp_size_model_fits, bromeliad_detritus)
 
+  # reading in guessed-at data
+
+  volume_estimated:
+    command: read_volume_estimated("data-raw/24_volume.csv")
+
+
+  bromeliad_detritus_vol_24_added:
+    command: add_24_volum_data(volume_estimated, bromeliad_detritus_vol_imputed)
+
+
 # creating the "openness" response variable -----------------------------------------------------
 
   bromeliad_detritus_extra_cols:
-    command: add_in_extra_columns(detritus_wide, detritus_wider, bromeliad_detritus_vol_imputed)
+    command: add_in_extra_columns(detritus_wide, detritus_wider, bromeliad_detritus_vol_24_added)
 
   bromeliad_detritus_incidentrad:
     command: correct_incident_rad_percent(bromeliad_detritus_extra_cols)
