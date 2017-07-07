@@ -55,6 +55,12 @@ fit_size_models_to_data <- function(.mod_info, .supp_size_model_data){
 
 # this function will need to be divided in two to preserve the models used for imputation? maybe?
 predict_add_imputed <- function(.supp_size_model_fits, .bromeliad_detritus) {
+
+  # select the model and the target data
+
+
+  # check that the number of rows has not changed
+
   # unnest the target data, duplicating models where necessary
   supp_size_model_ready_to_apply <- .supp_size_model_fits %>%
     unnest(target_dat, .drop = FALSE) %>%
@@ -68,22 +74,35 @@ predict_add_imputed <- function(.supp_size_model_fits, .bromeliad_detritus) {
 
   predicted_max_volume <- size_data_to_impute %>%
     left_join(supp_size_model_ready_to_apply, by = c("visit_id" = "target_dat")) %>%
-    mutate(predicted_size = map2(data, predicting_model, ~ predict(.y, newdata = .x)))
+    mutate(predicted_size = map2(data, predicting_model, add_predictions, var = "predicted_water"))
 
-
-  predicted_max_vol_for_merge <- predicted_max_volume %>%
-    unnest(predicted_size) %>%
-    select(visit_id, predicted_size)
-
+  visit_and_predictions <- predicted_max_volume %>%
+    unnest(predicted_size)
 
   # finally combine with the final thing
 
-  .bromeliad_detritus %>%
-    left_join(predicted_max_vol_for_merge, by = "visit_id") %>%
-    mutate(max_water = if_else(!is.na(predicted_size), predicted_size, max_water),
-           max_water_imputed = if_else(!is.na(predicted_size), "imputed", "observed")) %>%
+  observed_and_guesses <- .bromeliad_detritus %>%
+    # remove sites which were not imputed
+    anti_join(visit_and_predictions, by = "visit_id") %>%
+    # then stick the new values on the bottom (this should fill in NA for the new volume things)
+    bind_rows(visit_and_predictions)
+
+  # a little check to make sure everything is OK
+  stopifnot(nrow(observed_and_guesses) == nrow(.bromeliad_detritus))
+
+  # it should be impossible to predict an observed number! It should only have been done where observations are absent
+  observed_and_guesses %>%
+    filter(!is.na(max_water) & !is.na(predicted_water)) %>%
+    {stopifnot(nrow(.) == 0)}
+
+
+  observed_and_guesses %>%
+    mutate(max_water_combined = if_else(!is.na(predicted_water), predicted_water, max_water),
+           max_water_imputed = if_else(!is.na(predicted_water), "imputed", "observed")) %>%
     # can drop predicted size
-    select(-predicted_size)
+    select(-predicted_water)
 }
+
+# This last bit of code supplies the workflow for all the rest
 
 

@@ -32,8 +32,8 @@ extract_bromeliad_species_names <- function(.bromeliad_elevation){
 }
 
 join_old_new_bromeliad_names <- function(.genus_spp_corrected, .bromeliad_names) {
-  correct_name_pairing <- genus_spp_corrected %>%
-    stringdist_left_join(bromeliad_names, by = c(species_correct = "Bromeliad_species"), max_dis = 2) %>%
+  correct_name_pairing <- .genus_spp_corrected %>%
+    stringdist_left_join(.bromeliad_names, by = c(species_correct = "Bromeliad_species"), max_dis = 2) %>%
     arrange(Bromeliad_species)
 
   return(correct_name_pairing)
