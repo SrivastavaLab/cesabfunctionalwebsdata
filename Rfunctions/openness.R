@@ -65,7 +65,7 @@ create_openness_conversion_table <- function(){
     "edge",              0
   )
 
-  convert_visitid <- bind_rows(data_frame(visit_id = c("211", "331", "311", "231", "336", "456", "471", "476", "481", "501"), open.canopy = 1),
+  convert_visitid <- bind_rows(data_frame(visit_id = c("211", "331", "311", "231", "336", "456", "471", "476", "481", "501", "511"), open.canopy = 1),
                                data_frame(visit_id = c("326", "316", "306",  "21", "106", "111", "116", "121", "126", "131"), open.canopy = 0),
                                data_frame(visit_id = c("136", "141", "146", "151", "156", "161", "166", "171", "176", "181"), open.canopy = 0),
                                data_frame(visit_id = c("191", "196", "201", "241", "246", "251", "291", "341", "346", "351", "356"), open.canopy = 0),
