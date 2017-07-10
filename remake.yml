@@ -24,6 +24,7 @@ packages:
   - visdat
   - fuzzyjoin
   - googlesheets
+  - purrrlyr
 
 sources:
   #- Rfunctions
