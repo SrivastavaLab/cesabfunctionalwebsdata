@@ -106,8 +106,9 @@ lowest_name_and_subspecies <- function(.taxonomy_cols, .lowest_names) {
 # must get the taxonomic traits -------------------------------------------
 
 get_trait_spreadsheet <- function() {
-  post_editing <- gs_title("traits_for_editing_20-01-2017") %>%
-    gs_read_csv()
+  # post_editing <- gs_title("traits_for_editing_20-01-2017") %>%
+  #   gs_read_csv()
+  post_editing <- read_sheet("")
 
   post_edit_no_dup <- post_editing %>%
     select(-starts_with("reference"))
