@@ -23,7 +23,7 @@ packages:
   - prediction
   - visdat
   - fuzzyjoin
-  - googlesheets
+  - googlesheets4
   - purrrlyr
 
 sources:
