@@ -106,12 +106,11 @@ lowest_name_and_subspecies <- function(.taxonomy_cols, .lowest_names) {
 # must get the taxonomic traits -------------------------------------------
 
 get_trait_spreadsheet <- function() {
-  # post_editing <- gs_title("traits_for_editing_20-01-2017") %>%
-  #   gs_read_csv()
-  post_editing <- read_sheet("traits_for_editing_20-01-2017")
+
+  post_editing <- read_sheet("1db4g45Bg5HuPOWE0jiy5S8k7S_mEJjFbOUYzETBgMf4")
 
   post_edit_no_dup <- post_editing %>%
-    select(-starts_with("reference"))
+    dplyr::select(-starts_with("reference"))
 
   ## check that no rows are duplicate
   if( nrow(post_edit_no_dup %>% filter(duplicated(.))) > 0) stop("duplicates present")
