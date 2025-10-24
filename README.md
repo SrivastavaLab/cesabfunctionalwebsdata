@@ -27,7 +27,8 @@ read [the chapter on Projects](https://books.ropensci.org/targets/projects.html)
 This requires the user's BWG password. Previously, `bwgdata` (the R package that accesses the database API)
 prompted users to enter a username and password interactively. This won't work with the `targets` workflow, which is not interactive.
 This is why bwgdata 0.4.0 uses environment variables to store usernames and passwords. 
-Look at the [bwgdata Readme](https://github.com/SrivastavaLab/bwgdata) to know more about that!  
+Look at the [bwgdata Readme](https://github.com/SrivastavaLab/bwgdata) to know more about that! 
+This workflow will **NOT WORK** unless `bwgdata` is at version 0.4.0, which dates from October 2025.
 * `02_process_data` UNDER CONSTRUCTION. corrects, combines, and adds additional information to the dataset.
 
 
