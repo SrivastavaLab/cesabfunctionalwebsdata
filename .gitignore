@@ -2,6 +2,11 @@
 .Rhistory
 .Rapp.history
 *DS_Store
+.Renviron
+
+## leave out the targets objects (which contain data)
+/_targets/
+/store*
 
 # Session Data files
 .RData
