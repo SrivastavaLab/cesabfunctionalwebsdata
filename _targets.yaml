@@ -1,0 +1,6 @@
+project_download_data:
+  script: 01_download_data.R
+  store: store_download_data
+project_process_data:
+  script: 02_process_data.R
+  store: store_process_data
