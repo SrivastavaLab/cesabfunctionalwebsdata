@@ -13,7 +13,7 @@ plot_equation_with_all_data <- function(df, xvar, yvar, est_f){
 
 
   dat <- df %>%
-    select_(xs = xvar, ys = yvar, "dataset_name") %>%
+    select(xs = xvar, ys = yvar, matches("dataset_name")) %>%
     filter(complete.cases(.))
   # browser()
 
@@ -22,7 +22,7 @@ plot_equation_with_all_data <- function(df, xvar, yvar, est_f){
   # extract the function: TODO make sure it is length 1 before doing this
   f <- est_f[[1]]
 
-  curve_dat <- data_frame(xs     = seq_range(dat$xs, n = 40, expand = FALSE),
+  curve_dat <- tibble(xs     = seq_range(dat$xs, n = 40, expand = FALSE),
                           ys     = f(xs))
 
   dat %>%
@@ -37,7 +37,7 @@ plot_equation_with_all_data <- function(df, xvar, yvar, est_f){
 
 ## make the setup data
 create_equation_table <- function() {
-  frame_data(
+  tribble(
     ~xvar,                  ~yvar,              ~est_f,                                                   ~used_on_dataset,
     "detritus150_20000",    "detritus0_150",    function(coarse) {exp(0.68961 * log(coarse) - 0.11363)},   c(6),
     "detritus1500_20000",   "detritus10_1500",  function(med)    {exp(0.79031 * log(med) - 0.070033)},     c(111),
@@ -150,7 +150,7 @@ add_new_columns_for_prediction <- function(.detritus_data) {
 
 
 create_model_table <- function(){
-  frame_data(
+  tribble(
     ~m_id, ~target_dat,        ~src_dat,                       ~xvar,                            ~yvar,                           ~.f, ~family,
     "m01",   "116",              c("131", "126", "121", "221"),  "~log(diameter)",               "~log(detritus10_1500_2000_NA)", glm, "gaussian",
     "m02",   c("186", "216"),    c("211"),                       "~log(detritus0_150)",    "~log(detritus150_20000)",       glm, "gaussian",
@@ -294,15 +294,15 @@ plot_fn <- function(src_df, x_funs, y_funs, x_vars, y_vars, curve_data,...){
 
   # rename variables for plotting
   plotdat <- dd %>%
-    select_(xs = x_vars,
-            ys = y_vars)
+    select(xs = matches(x_vars),
+            ys = matches(y_vars))
 
   # tweak the name - predicted values have "_fitted" on the side
   y_vars <- paste0(y_vars, "_fitted")
 
   ld <- curve_data[[1]] %>%
-    select_(xs = x_vars,
-            ys = y_vars)
+    select(xs = matches(x_vars),
+            ys = matches(y_vars))
 
   plotdat %>%
     ggplot(aes(x = xs, y = ys)) +
