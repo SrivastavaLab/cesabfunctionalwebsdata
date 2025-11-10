@@ -4,20 +4,20 @@
 ## this convenience function creates a named vector of all the datasets and downloads them all
 ## can be slow
 
-get_all_abundances <- function(.dats){
-
-  ## might need to replace this with a suitable structure
-  bwg_get_safe <- possibly(bwg_get, NA)
-
-  abds_ <- .dats %>%
-    .[["dataset_id"]] %>%
-    as.numeric %>%
-    set_names %>%
-    map(~ list(dataset_id = .x)) %>%
-    map(~ bwg_get_safe("matrix", .))
-
-  return(abds_)
-}
+# get_all_abundances <- function(.dats){
+#
+#   ## might need to replace this with a suitable structure
+#   bwg_get_safe <- possibly(bwg_get, NA)
+#
+#   abds_ <- .dats %>%
+#     .[["dataset_id"]] %>%
+#     as.numeric %>%
+#     set_names %>%
+#     map(~ list(dataset_id = .x)) %>%
+#     map(~ bwg_get_safe("matrix", .))
+#
+#   return(abds_)
+# }
 
 
 
@@ -60,7 +60,7 @@ no_attrib_unnest_det <- function(.broms){
     ## supply a default data.frame, or otherwise unnesting chokes
     mutate(detritus = map_if(detritus,
                              is_null,
-                             ~ data_frame(min = NA,
+                             ~ tibble(min = NA,
                                           max = NA,
                                           mass = NA))) %>%
     unnest(detritus)
