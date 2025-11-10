@@ -1,12 +1,21 @@
-check_brom_data <- function(d) assert(d, within_bounds(lower.bound = 0, upper.bound = 150))
+check_brom_data <- function(d) {
+  # assertr::assert(d,
+  #        assertr::within_bounds(lower.bound = 0,
+  #                      upper.bound = 150))
+}
 
 
 read_size_aquilega <- function(filenm) {
-  filenm %>%
+  d <- filenm %>%
     read_delim(delim = ";") %>%
     rename(plant_id = ID) %>%
-    mutate(plant_id = as.character(plant_id)) %>%
-    check_brom_data
+    mutate(plant_id = as.character(plant_id))
+
+  # browser()
+
+  check_brom_data(d)
+
+  return(d)
 }
 
 read_size_Guzmania_mertensii <- function(filenm){
@@ -40,7 +49,7 @@ create_all_size_data <- function(.size_data) {
 
 # this could add more info at the level of the file: who collected it, etc.
 more_information <- function() {
-  frame_data(
+  tribble(
     ~ filename,       ~species,              # collected_year
     "aquilega_biog",  "Aechmaea_aquilega",
     "aquilegaKT",     "Aechmaea_aquilega",
