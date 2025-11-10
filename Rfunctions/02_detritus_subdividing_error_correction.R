@@ -30,18 +30,26 @@ make_diam_brom <- function(.broms){
     no_detritus_brom
 
   nodet %>%
-    select(bromeliad_id, species, actual_water, max_water,
-           longest_leaf, num_leaf, dead_leaves, height, diameter, extended_diameter,
-           leaf_width, catchment_diameter, catchment_height_cm, catchment_diameter_cm,
-           tank_height_cm, plant_area, plant_area_m2) %>%
+    # select(bromeliad_id, species, actual_water, max_water,
+    #        longest_leaf, num_leaf, dead_leaves, height, diameter, extended_diameter,
+    #        leaf_width, catchment_diameter, catchment_height_cm, catchment_diameter_cm,
+    #        tank_height_cm, plant_area, plant_area_m2) %>%
     verify(nrow(.) == nrow(nodet))
 }
 
 ## for each bromeliad select the fine detrius
+## THESE COLUMNS APPEAR TO BE GONE
 make_fpom_brom <- function(.broms){
-  .broms %>%
+  output <- .broms %>%
     # no_detritus_brom %>%
-    select(bromeliad_id, fpom_ml, fpom_mg, fpom_g, cpom_g)
+    select(
+      any_of(
+        c("bromeliad_id", "fpom_ml",
+      "fpom_mg", "fpom_g", "cpom_g")
+      )
+    )
+
+  return(output)
 }
 
 
@@ -72,13 +80,14 @@ make_detritus_wide <- function(.broms){
 # been duplicated by these joins
 make_detritus_wider <- function(.broms, .detritus_wide, .visitnames, .diam_brom, .fpom_brom) {
 
+  # browser()
   detritus_novisit_justdetritus <- .detritus_wide %>%
     # it is (or it had better be!) impossible for a bromeliad to be in more than
     # one visit. therefore this check should always pass
     select(bromeliad_id, starts_with("det")) %>%
     ## this should do nothing
     distinct %>%
-    verify(nrow(.) == nrow(.detritus_wide))
+    assertr::verify(nrow(.) == nrow(.detritus_wide))
 
   fpom_distinct <- distinct(.fpom_brom)
 
@@ -87,11 +96,14 @@ make_detritus_wider <- function(.broms, .detritus_wide, .visitnames, .diam_brom,
     distinct
 
   brom_just_ids %>%
-    left_join(detritus_novisit_justdetritus) %>%
+    left_join(detritus_novisit_justdetritus,
+              by = join_by(bromeliad_id)) %>%
     left_join(.visitnames, by = "visit_id") %>%
     left_join(.diam_brom, by = c("bromeliad_id")) %>%
     left_join(fpom_distinct, by = c("bromeliad_id")) %>%
-    verify(nrow(.) == nrow(brom_just_ids))
+    assertr::verify(nrow(.) == nrow(brom_just_ids))
+
+
 }
 
 
@@ -198,9 +210,10 @@ correct_picin_juraea <- function(.detritus_wider_correct_frenchguiana){
 # OK
 
 parse_column_types_reader <- function(df){
-  df %>%
-    # don't change id vars -- they may look like numbers but they are not!
-    mutate_at(vars(-ends_with("_id")), parse_guess)
+  return(df)
+  # df %>%
+  #   # don't change id vars -- they may look like numbers but they are not!
+  #   mutate_at(vars(-ends_with("_id")), parse_guess)
 }
 
 
@@ -210,9 +223,16 @@ parse_column_types_reader <- function(df){
 ## Some other, more usful variables are renamed to fix their bad names --
 ## spaces, confusing/duplicate spelling, etc
 drop_bad_name <- function(.broms_rename_unnest){
-  please_leave <- which(names(.broms_rename_unnest) %in% c("horizontal _leaves_percentage", "conductivity_?S_cm-1", "algae_?gC_per_L"))
-  .broms_rename_unnest <- .broms_rename_unnest[-please_leave]
 
+  please_leave <- which(names(.broms_rename_unnest) %in% c(
+    "horizontal _leaves_percentage", "conductivity_?S_cm-1", "algae_?gC_per_L"))
+
+  ## drop em if there are any
+  if(length(please_leave)>0) {
+    .broms_rename_unnest <- .broms_rename_unnest[-please_leave]
+  }
+
+  ## fix some name mistakes
   names(.broms_rename_unnest) <- str_replace_all(names(.broms_rename_unnest), "canopy openess", "canopy_openess_chr")
   names(.broms_rename_unnest) <-str_replace_all(names(.broms_rename_unnest), "cpom_g ", "cpom_g")
   names(.broms_rename_unnest) <-str_replace_all(names(.broms_rename_unnest), "canopy cover", "canopy_cover")
