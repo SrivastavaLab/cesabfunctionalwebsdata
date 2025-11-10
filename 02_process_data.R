@@ -8,7 +8,10 @@ tar_option_set(
     "dplyr",
     "bwgdata",
     "purrr",
-    "readr")
+    "readr",
+    "tidyr",
+    "stringr",
+    "assertr")
   )
 
 # read in functions -- only needed for `get_all_abundance`s
@@ -22,7 +25,32 @@ broms <- tar_read(broms, store = "store_download_data")
 abds <- tar_read(abds, store = "store_download_data")
 trts_all <- tar_read(trts_all, store = "store_download_data")
 
+  # trait_spreadsheet:
+  #   command: get_trait_spreadsheet()
+
+
 list(
+  ## read in any additional downloaded files
+  tar_target(
+    name = fuzzy_traits_csv,
+    command = "data_files_additional/fuzzy_traits.csv",
+    format = "file"
+  ),
+  tar_target(
+    name = volume_estimated_csv,
+    command = "data_files_additional/24_volume.csv",
+    format = "file"
+  ),
+  tar_target(
+    name = volume_estimated,
+    command = readr::read_csv(volume_estimated_csv)
+  ),
+  tar_target(
+    name = fuzzy_traits_df,
+    command = read_trait_spreadsheet(fuzzy_traits_csv)
+  ),
+
+  ## begin processing data
   tar_target(
     name = broms_rename_unnest,
     command = no_attrib_unnest_det(broms),
@@ -40,7 +68,8 @@ list(
 
   tar_target(
     name = pres_abds,
-    command = discard(abds, I(is.na)),
+    command = keep(abds, is.list) |>
+      keep(~ length(.x$species)>1)
   ),
 
   tar_target(
@@ -50,32 +79,32 @@ list(
 
   tar_target(
     name = fpom_fg_data,
-    command = read_fpom_fg("data-raw/FPOMdecanted_dryweight.csv"),
+    command = read_fpom_fg("data_files_additional/FPOMdecanted_dryweight.csv"),
   ),
 
-  tar_target(
-    name = visits_date,
-    command = parse_column_types_reader(visits),
-  ),
+  # tar_target(
+  #   name = visits_date,
+  #   command = parse_column_types_reader(visits),
+  # ),
+
+  # tar_target(
+  #   name = dats_date,
+  #   command = parse_column_types_reader(dats),
+  # ),
 
   tar_target(
-    name = dats_date,
-    command = parse_column_types_reader(dats),
-  ),
-
-  tar_target(
-    name = brom_clean_name,
+    name = broms_date, #formerly brom_clean_name
     command = drop_bad_name(broms_rename_unnest),
   ),
 
-  tar_target(
-    name = broms_date,
-    command = parse_column_types_reader(brom_clean_name),
-  ),
+  # tar_target(
+  #   name = broms_date,
+  #   command = parse_column_types_reader(brom_clean_name),
+  # ),
 
   tar_target(
     name = visitnames,
-    command = make_visitnames(visits_date, dats_date),
+    command = make_visitnames(visits, dats),
   ),
 
   tar_target(
@@ -100,7 +129,9 @@ list(
 
   tar_target(
     name = detritus_wider,
-    command = make_detritus_wider(broms_date, detritus_wide, visitnames, diam_brom, fpom_brom),
+    command = make_detritus_wider(
+      broms_date, detritus_wide,
+      visitnames, diam_brom, fpom_brom),
   ),
 
   tar_target(
@@ -175,7 +206,12 @@ list(
 
   tar_target(
     name = spp_dictonary,
-    command = output_spp_dictionary(abundance, broms_date, visits_date, trts_all_filtered),
+    command = output_spp_dictionary(
+      abundance |>
+        unnest(measurements) |>
+        mutate(bromeliad_id = as.numeric(bromeliad_id),
+               species_id = as.numeric(species_id) ),
+      broms_date, visits, trts_all_filtered),
   ),
 
   # tar_target(
@@ -395,11 +431,6 @@ list(
   ),
 
   tar_target(
-    name = volume_estimated,
-    command = read_volume_estimated("data-raw/24_volume.csv"),
-  ),
-
-  tar_target(
     name = bromeliad_detritus_vol_24_added,
     command = add_24_volum_data(volume_estimated, bromeliad_detritus_vol_imputed),
   ),
@@ -451,7 +482,13 @@ list(
 
   tar_target(
     name = summed_abundance_spp,
-    command = sum_species_abundances(abundance),
+    command = sum_species_abundances(
+      tidyr::unnest(abundance, measurements) |>
+        dplyr::mutate(
+          abd = purrr::flatten_chr(abd),
+          abd = readr::parse_double(abd)
+        )
+    ),
   ),
 
   tar_target(
@@ -476,7 +513,7 @@ list(
 
   tar_target(
     name = visit_no_81,
-    command = filter_visit_81(visits_date),
+    command = filter_visit_81(visits),
   ),
 
   tar_target(
