@@ -9,7 +9,7 @@ supp_data_rename <- function(.supp_data_additional){
 # generate the table of the models we are going to calculate with the Supplementary data
 #  src_dat defines the subset of the data used for the model -- here, the species name used
 make_model_data <- function(){
-  frame_data(
+  tribble(
     ~m_id, ~src_species,         ~xvar,                            ~yvar,          ~.f,       ~family,
     "v1", "Aechmaea_mertensii",  "~log(diameter)",                 "~log(max_water)",    glm, "gaussian",
     "v2", "Aechmaea_aquilega",   "~log(diameter) + log(num_leaf)", "~log(max_water)",    glm, "gaussian"
@@ -33,7 +33,7 @@ derive_modelling_information_simpler <- function(.model_table, .obs_data){
 }
 
 make_model_target_data <- function(){
-  frame_data(
+  tribble(
     ~m_id, ~target_dat,
     "v1",  c("286"),
     "v2",  c("301", "296")

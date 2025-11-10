@@ -58,19 +58,19 @@ correct_incident_rad_percent <- function(.bromeliad_detritus_opts) {
 
 #' @return A table which we can left_join with bromeliad_detritus
 create_openness_conversion_table <- function(){
-  convert_words_binary <- frame_data(
+  convert_words_binary <- tribble(
     ~canopy_openess_chr, ~open.canopy,
     "open",              1,
     "closed",            0,
     "edge",              0
   )
 
-  convert_visitid <- bind_rows(data_frame(visit_id = c("211", "331", "311", "231", "336", "456", "471", "476", "481", "501", "511"), open.canopy = 1),
-                               data_frame(visit_id = c("326", "316", "306",  "21", "106", "111", "116", "121", "126", "131"), open.canopy = 0),
-                               data_frame(visit_id = c("136", "141", "146", "151", "156", "161", "166", "171", "176", "181"), open.canopy = 0),
-                               data_frame(visit_id = c("191", "196", "201", "241", "246", "251", "291", "341", "346", "351", "356"), open.canopy = 0),
-                               data_frame(visit_id = c("361", "366", "371", "376", "391", "396", "401", "406",  "41", "411"), open.canopy = 0),
-                               data_frame(visit_id = c("416", "421", "426", "431", "436", "441", "446", "451", "46", "486", "51", "56", "61", "81", "91", "96"), open.canopy = 0))
+  convert_visitid <- bind_rows(tibble(visit_id = c("211", "331", "311", "231", "336", "456", "471", "476", "481", "501", "511"), open.canopy = 1),
+                               tibble(visit_id = c("326", "316", "306",  "21", "106", "111", "116", "121", "126", "131"), open.canopy = 0),
+                               tibble(visit_id = c("136", "141", "146", "151", "156", "161", "166", "171", "176", "181"), open.canopy = 0),
+                               tibble(visit_id = c("191", "196", "201", "241", "246", "251", "291", "341", "346", "351", "356"), open.canopy = 0),
+                               tibble(visit_id = c("361", "366", "371", "376", "391", "396", "401", "406",  "41", "411"), open.canopy = 0),
+                               tibble(visit_id = c("416", "421", "426", "431", "436", "441", "446", "451", "46", "486", "51", "56", "61", "81", "91", "96"), open.canopy = 0))
 
 
   new_openness_values <- expand.grid(visit_id = c("281","266","271"),

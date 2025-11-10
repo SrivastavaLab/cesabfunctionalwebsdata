@@ -38,7 +38,7 @@ add_MD_trait <- function(.traits_all_renamed){
   #### Here I create the new trait columns filled by "NA"
   trait.1 <- .traits_all_renamed %>%
     select(species_id, bwg_name, domain:subspecies) %>%
-    cbind(data_frame(MD1 = NA_real_,
+    cbind(tibble(MD1 = NA_real_,
                      MD2 = NA_real_,
                      MD3 = NA_real_,
                      MD4 = NA_real_,

@@ -168,7 +168,7 @@ add_consecutive_detritus_col <- function(.det_long_min_max) {
 
 create_detritus_summary <- function(.det_long_check_consec){
   .det_long_check_consec %>%
-    mutate(summary_df = map(data, ~data_frame(min_det = min(.x$min_detritus),
+    mutate(summary_df = map(data, ~tibble(min_det = min(.x$min_detritus),
                                               max_det = max(.x$max_detritus),
                                               obs_or_fit = paste0(unique(.x$obs_or_fit), collapse = "_"),
                                               total_detritus = sum(.x$detritus_amount)))) %>%
