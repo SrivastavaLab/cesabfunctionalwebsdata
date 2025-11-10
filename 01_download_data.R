@@ -7,20 +7,22 @@ tar_option_set(
     "bwgdata",
     "dplyr",
     "bwgdata",
-    "purrr")
+    "purrr",
+    "osfr")
   )
 
 # read in functions -- only needed for `get_all_abundance`s
 tar_source(files = "Rfunctions/")
 
 list(
+  ## Database downloads
   tar_target(
     name = dats,
     command = bwg_get("datasets")
   ),
   tar_target(
     name = visits,
-    command = bwg_get("datasets")
+    command = bwg_get("visits")
   ),
   tar_target(
     name = broms,
@@ -35,5 +37,21 @@ list(
     command = bwg_get("species",
                       list(tachet = "true",
                            traits = "true"))
+  ),
+  ## download additional files
+  tar_target(
+    name = fuzzy_traits,
+    command = get_osf_spreadsheet(ref = "uws6t"),
+    format = "file"
+  ),
+  tar_target(
+    name = FPOMdecanted_dryweight,
+    command = get_osf_spreadsheet(ref = "pu4eh"),
+    format = "file"
+  ),
+  tar_target(
+    name = volume_estimated,
+    command = get_osf_spreadsheet(ref = "v32yk"),
+    format = "file"
   )
 )
