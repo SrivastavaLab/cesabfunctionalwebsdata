@@ -3,9 +3,10 @@
 
 make_taxonomy_cols <- function(.trts_all_filtered) {
   trts_taxonomy_cols <- .trts_all_filtered %>%
-    select_("species_id", "domain", "kingdom", "phylum", "subphylum",
-            "class", "subclass", "ord", "subord", "family", "subfamily",
-            "tribe", "genus", "species", "subspecies")
+    select(all_of(c(
+      "species_id", "domain", "kingdom", "phylum", "subphylum",
+      "class", "subclass", "ord", "subord", "family", "subfamily",
+      "tribe", "genus", "species", "subspecies")))
 
   #no starting NA
   no_start_NA <- function(x) !grepl("NA[A-Za-z]{3,}", x)
@@ -30,7 +31,7 @@ get_lowest_taxonomic <- function(.taxonomy_cols) {
     gather(taxon_level, taxon_name, -species_id) %>%
     filter(!is.na(taxon_name))
 
-  taxon_numbers <- frame_data(
+  taxon_numbers <- tribble(
     ~taxon_number,     ~taxon_level,
     1,        "domain",
     2,        "kingdom",
@@ -105,17 +106,34 @@ lowest_name_and_subspecies <- function(.taxonomy_cols, .lowest_names) {
 
 # must get the taxonomic traits -------------------------------------------
 
-get_trait_spreadsheet <- function() {
-  post_editing <- gs_title("traits_for_editing_20-01-2017") %>%
-    gs_read_csv()
+get_osf_spreadsheet <- function(ref) {
+  # post_editing <- gs_title("traits_for_editing_20-01-2017") %>%
+    # gs_read_csv()
 
+  ## file used to be on Google Drive, now we use this file: https://osf.io/kaqm2/overview
+  post_editing <- osf_retrieve_file(ref) |>
+    osf_download(
+      path = "data_files_additional/"#,
+      # conflicts = "overwrite")
+  )
+
+  return(post_editing$local_path)
+}
+
+
+read_trait_spreadsheet <- function(path){
+  post_editing <- readr::read_csv(path)
+  ## move to reading function
   post_edit_no_dup <- post_editing %>%
     select(-starts_with("reference"))
 
   ## check that no rows are duplicate
-  if( nrow(post_edit_no_dup %>% filter(duplicated(.))) > 0) stop("duplicates present")
+  if( nrow(post_edit_no_dup %>%
+           filter(duplicated(.))) > 0 )
+    stop("duplicates present")
 
   return(post_edit_no_dup)
+
 }
 
 
@@ -143,11 +161,15 @@ merge_trait_by_taxonomy <- function(.trait_spreadsheet, .lowest_taxonomic){
 
 get_canonical_traits <- function(.trts_all_filtered) {
   .trts_all_filtered %>%
-    select_("species_id","names", "bwg_name", "domain", "kingdom", "phylum", "subphylum",
-            "class", "subclass", "ord", "subord", "family", "subfamily",
-            "tribe", "genus", "species", "subspecies", "functional_group",
-            "predation", "realm", "micro_macro", "barcode")
-
+    select(
+      all_of(
+        c(
+          "species_id","names", "bwg_name", "domain", "kingdom", "phylum", "subphylum",
+          "class", "subclass", "ord", "subord", "family", "subfamily",
+          "tribe", "genus", "species", "subspecies", "functional_group",
+          "predation", "realm", "micro_macro", "barcode")
+      )
+    )
 }
 
 
