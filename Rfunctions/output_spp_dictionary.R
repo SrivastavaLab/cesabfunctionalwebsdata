@@ -2,7 +2,7 @@
 output_spp_dictionary <- function(.abundance_filtered, .broms_date, .visits_date, .trts_all_values){
 
   spp_visits <- .abundance_filtered %>%
-    select(bromeliad_id = brm, species_id) %>%
+    select(bromeliad_id, species_id) %>%
     distinct() %>%
     left_join(.broms_date %>% select(bromeliad_id, visit_id) %>% distinct) %>%
     select(species_id, visit_id) %>%
