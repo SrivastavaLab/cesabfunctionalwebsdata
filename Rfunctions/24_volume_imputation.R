@@ -10,26 +10,24 @@ supp_data_rename <- function(.supp_data_additional){
 #  src_dat defines the subset of the data used for the model -- here, the species name used
 make_model_data <- function(){
   tribble(
-    ~m_id, ~src_species,         ~xvar,                            ~yvar,          ~.f,       ~family,
-    "v1", "Aechmaea_mertensii",  "~log(diameter)",                 "~log(max_water)",    glm, "gaussian",
-    "v2", "Aechmaea_aquilega",   "~log(diameter) + log(num_leaf)", "~log(max_water)",    glm, "gaussian"
+    ~m_id, ~src_species,         ~formula_text,                                 ~.f, ~family,
+    "v1", "Aechmaea_mertensii",  "log(max_water)~log(diameter)",                 glm,  "gaussian",
+    "v2", "Aechmaea_aquilega",   "log(max_water)~log(diameter) + log(num_leaf)", glm,  "gaussian"
   )  %>%
-    mutate(xvar = xvar %>% map(as.formula),
-           yvar = yvar %>% map(as.formula))
+    rowwise() |>
+    mutate(model_formula = list(as.formula(formula_text)))
 }
 
 derive_modelling_information_simpler <- function(.model_table, .obs_data){
   .model_table %>%
+    rowwise() |>
     # select the required input rows
-    mutate(src_df = map(src_species,
-                        ~ .obs_data %>%
-                          # TODO: ? add select() to contain only some variables??
-                          filter(species %in% .x)),
-           # create modelling function
-           fml = map2(.x = xvar, .y = yvar, ~ formulae(.y, .x)),
-           fml = flatten(fml)) %>%
-    mutate(x_symb = xvar %>% map(find_symbols),
-           y_symb = yvar %>% map(find_symbols))
+    mutate(
+      src_df = list(.obs_data %>%
+                      # TODO: ? add select() to contain only some variables??
+                      filter(species %in% src_species)
+      )
+    )
 }
 
 make_model_target_data <- function(){
@@ -45,9 +43,10 @@ make_model_target_data <- function(){
 # know why you are making it)
 
 fit_size_models_to_data <- function(.mod_info, .supp_size_model_data){
+
   .mod_info %>%
     left_join(.supp_size_model_data) %>%
-    do_fit_predictive_model()
+    mutate(model = list(.f(model_formula, family = family, data = src_df)))
 }
 
 # combining these data with observed data and creating predictions ---
