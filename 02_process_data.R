@@ -63,7 +63,7 @@ list(
 
   tar_target(
     name = trts_parsed_cols,
-    command = parse_column_types_reader(trts_all_filtered),
+    command = convert_text_to_NA(trts_all_filtered),
   ),
 
   tar_target(

@@ -1,4 +1,5 @@
 check_brom_data <- function(d) {
+  return(d)
   # assertr::assert(d,
   #        assertr::within_bounds(lower.bound = 0,
   #                      upper.bound = 150))

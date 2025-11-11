@@ -216,6 +216,13 @@ parse_column_types_reader <- function(df){
   #   mutate_at(vars(-ends_with("_id")), parse_guess)
 }
 
+# function to convert all the "NA" as text into correct NA values.
+# does so wherever there are NA values
+convert_text_to_NA <- function(dat){
+  dat |>
+    mutate(across(where(is.character), ~na_if(., "NA")))
+}
+
 
 ## IN WHICH we clean up the names of variables. some variables with rather
 ## unhelpful names (character encoding issues perhaps) are simply dropped --

@@ -85,7 +85,7 @@ lowest_name_and_subspecies <- function(.taxonomy_cols, .lowest_names) {
 
   mysteries <- .taxonomy_cols %>%
     anti_join(.lowest_names) %>%
-    assert(in_set(c("6516", "6511", "6506")), species_id)
+    assertr::assert(assertr::in_set(c("6516", "6511", "6506")), species_id)
 
   # if that worked, let us know
   message("There are only three taxa with no trait information at all. Three Unknown animals")
