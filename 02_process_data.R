@@ -11,7 +11,8 @@ tar_option_set(
     "readr",
     "tidyr",
     "stringr",
-    "assertr")
+    "assertr",
+    "broom")
   )
 
 # read in functions -- only needed for `get_all_abundance`s
@@ -46,11 +47,11 @@ list(
     command = readr::read_csv(volume_estimated_csv)
   ),
   tar_target(
-    name = fuzzy_traits_df,
+    name = trait_spreadsheet,
     command = read_trait_spreadsheet(fuzzy_traits_csv)
   ),
 
-  ## begin processing data
+  ## begin processing data ------------------------
   tar_target(
     name = broms_rename_unnest,
     command = no_attrib_unnest_det(broms),
@@ -87,10 +88,10 @@ list(
   #   command = parse_column_types_reader(visits),
   # ),
 
-  # tar_target(
-  #   name = dats_date,
-  #   command = parse_column_types_reader(dats),
-  # ),
+  tar_target(
+    name = dats_date,
+    command = parse_column_types_reader(dats),
+  ),
 
   tar_target(
     name = broms_date, #formerly brom_clean_name
@@ -355,7 +356,11 @@ list(
 
   tar_target(
     name = traits,
-    command = left_join(canonical_traits, traits_from_tax, by = I("species_id")),
+    command = left_join(canonical_traits |>
+                          mutate(species_id = as.character(species_id)),
+                        traits_from_tax |>
+                          mutate(species_id = as.character(species_id)),
+                        by = join_by("species_id")),
   ),
 
   tar_target(
@@ -390,9 +395,15 @@ list(
 
   tar_target(
     name = supplementary_size_data,
-    command = bind_rows(aquilega_biog = aquilega_biog, aquilegaKT = aquilegaKT,
-                        guzmania = guzmania, mertensii = mertensii, vriesea = vriesea,
-                        vriesea_prod = vriesea_prod, .id = I("filename")),
+    command = bind_rows(
+      aquilega_biog = aquilega_biog,
+      aquilegaKT = aquilegaKT,
+      guzmania = guzmania,
+      mertensii = mertensii,
+      vriesea = vriesea,
+      vriesea_prod = vriesea_prod,
+      .id = I("filename")
+    ),
   ),
 
   tar_target(
@@ -412,7 +423,9 @@ list(
 
   tar_target(
     name = supp_size_model_info,
-    command = derive_modelling_information_simpler(supp_size_models, supp_data_renamed),
+    command = derive_modelling_information_simpler(
+      supp_size_models,
+      supp_data_renamed),
   ),
 
   tar_target(
@@ -422,12 +435,16 @@ list(
 
   tar_target(
     name = supp_size_model_fits,
-    command = fit_size_models_to_data(supp_size_model_info, supp_size_model_data),
+    command = fit_size_models_to_data(
+      supp_size_model_info,
+      supp_size_model_data),
   ),
 
   tar_target(
     name = bromeliad_detritus_vol_imputed,
-    command = predict_add_imputed(supp_size_model_fits, bromeliad_detritus),
+    command = predict_add_imputed(
+      supp_size_model_fits,
+      bromeliad_detritus),
   ),
 
   tar_target(
@@ -472,12 +489,16 @@ list(
 
   tar_target(
     name = correct_name_pairing,
-    command = join_old_new_bromeliad_names(genus_spp_corrected, bromeliad_names),
+    command = join_old_new_bromeliad_names(
+      genus_spp_corrected,
+      bromeliad_names),
   ),
 
   tar_target(
     name = bromeliad_correctnames,
-    command = correct_bromelaid_species_names(bromeliad_elevation, correct_name_pairing),
+    command = correct_bromelaid_species_names(
+      bromeliad_elevation,
+      correct_name_pairing),
   ),
 
   tar_target(
