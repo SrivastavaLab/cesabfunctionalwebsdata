@@ -47,27 +47,35 @@ get_response_from_model <- function(mod) {
 }
 
 
-#' function to update the dataset with the new and correct fpom values for
-#' French Guiana. This uses the convenience function `predict_function()` to
-#' create the workhorse function that does the actual work
+#' using broom::augment to add new values here.
 
 add_predictions_to_data <- function(.df, .model) {
 
+  if (TRUE) {
+    warning("skipping detritus prediction")
+  }else{
   respname <- get_response_from_model(.model)
 
   # get predictions
-  model_predictions <- prediction(data = .df, model = .model)
+  # model_predictions <- prediction(data = .df, model = .model)
+  model_predictions <- broom::augment(x = .model)
 
-  # rename predictions
-  names(model_predictions) <- paste(respname, names(model_predictions), sep = "_")
+
+  # names(model_predictions_fulldata) <- paste(
+  #   respname, names(model_predictions_fulldata), sep = "_")
 
   # export list of prediciton object -- just in case i want it later! and also
   # the colbound data.fram
   outlist <- list(model_predictions = model_predictions,
-                  data_with_prediction = bind_cols(.df, model_predictions)
+                  data_with_prediction = left_join(.df, model_predictions, by = join_by(bromeliad_id))
   )
 
+
+
   return(outlist)
+  }
+
+  return(.df)
 }
 
 ## you just move the predictions (and the SEs) over where there is NOT data?
@@ -78,28 +86,43 @@ add_predictions_to_data <- function(.df, .model) {
 ## also observed detritus
 combine_observed_predicted_0_150_det <- function(.detritus_wider_fpom_g_pred) {
 
+  if(TRUE){
+    warning("FPOM not inferred from a model")
+    ## don't be confused by the object name. this passes the same information
+    ## unchanged from one step to the next
+  } else {
+
   outdf <- .detritus_wider_fpom_g_pred[["data_with_prediction"]]
 
   output <- outdf %>%
-    mutate_at(vars(ends_with("fitted")), as.numeric) %>%
+    # mutate_at(vars(ends_with("fitted")), as.numeric) %>%
     # not sure what to call this -- a combination of predictions and real values!
-    mutate(detritus0_150_combo = if_else(is.na(detritus0_150), fpom_g_fitted, detritus0_150),
+    mutate(detritus0_150_combo = if_else(is.na(detritus0_150), .fitted, detritus0_150),
            detritus0_150_src   = if_else(!is.na(detritus0_150),
                                          "observed",
-                                         if_else(!is.na(fpom_g_fitted),
+                                         if_else(!is.na(.fitted),
                                                  "estimated",
                                                  NA_character_)))
 
   # TODO tests? it might make sense to keep the name of the variable the same --
   # not to track metadata in a column name like that
 
-
+  output <- dplyr::select(output,-starts_with("."))
 
   return(output)
+
+  }
+  return(.detritus_wider_fpom_g_pred)
 }
 
 change_name_150_combo <- function(.detritus_wider_0_150_added){
+
+  if(TRUE){
+  warning("not renaming a detritus0_150_combo as missing values were never predicted")
+  }else{
   .detritus_wider_0_150_added %>%
     select(-detritus0_150) %>%
     rename(detritus0_150 = detritus0_150_combo)
+  }
+  return(.detritus_wider_0_150_added)
 }

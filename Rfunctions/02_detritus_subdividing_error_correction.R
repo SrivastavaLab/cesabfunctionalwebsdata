@@ -30,10 +30,14 @@ make_diam_brom <- function(.broms){
     no_detritus_brom
 
   nodet %>%
-    # select(bromeliad_id, species, actual_water, max_water,
-    #        longest_leaf, num_leaf, dead_leaves, height, diameter, extended_diameter,
-    #        leaf_width, catchment_diameter, catchment_height_cm, catchment_diameter_cm,
-    #        tank_height_cm, plant_area, plant_area_m2) %>%
+    select(any_of(
+      c("visit_id", "bromeliad_id", "species", "actual_water", "max_water",
+        "longest_leaf", "num_leaf", "dead_leaves", "height",
+        "diameter", "extended_diameter",
+        "leaf_width", "catchment_diameter", "catchment_height_cm",
+        "catchment_diameter_cm",
+        "tank_height_cm", "plant_area", "plant_area_m2")
+      )) %>%
     verify(nrow(.) == nrow(nodet))
 }
 
@@ -80,7 +84,6 @@ make_detritus_wide <- function(.broms){
 # been duplicated by these joins
 make_detritus_wider <- function(.broms, .detritus_wide, .visitnames, .diam_brom, .fpom_brom) {
 
-  # browser()
   detritus_novisit_justdetritus <- .detritus_wide %>%
     # it is (or it had better be!) impossible for a bromeliad to be in more than
     # one visit. therefore this check should always pass
@@ -94,12 +97,13 @@ make_detritus_wider <- function(.broms, .detritus_wide, .visitnames, .diam_brom,
   brom_just_ids <- .broms %>%
     select(visit_id, bromeliad_id) %>%
     distinct
+  # browser()
 
   brom_just_ids %>%
     left_join(detritus_novisit_justdetritus,
               by = join_by(bromeliad_id)) %>%
     left_join(.visitnames, by = "visit_id") %>%
-    left_join(.diam_brom, by = c("bromeliad_id")) %>%
+    left_join(.diam_brom, by = c("bromeliad_id", "visit_id")) %>%
     left_join(fpom_distinct, by = c("bromeliad_id")) %>%
     assertr::verify(nrow(.) == nrow(brom_just_ids))
 
@@ -128,6 +132,7 @@ correct_cardoso_detritus_wider <- function(.detritus_wider){
            detritus150_20000 = ifelse(visit_id == 21,
                                       NA,
                                       detritus150_20000))
+  .detritus_wider
 
 }
 
@@ -138,9 +143,9 @@ correct_cardoso_detritus_wider <- function(.detritus_wider){
 check_data_source_target <- function(dataset, sourcename, targetname) {
   testdata <- dataset %>%
     # where the 'source' data was..
-    filter_(!is.na(sourcename)) %>%
+    filter(!is.na({{sourcename}})) %>%
     # there should be no empty 'target' data!
-    filter_(is.na(targetname)) %>%
+    filter(is.na({{targetname}})) %>%
     verify(., nrow(.) == 0)
 }
 
@@ -149,17 +154,28 @@ check_data_source_target <- function(dataset, sourcename, targetname) {
 ### but not the other -- not detritus0_150
 correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
 
-  ## first correct the variable names -- move values from "fpom_g" "cpom_g" and
-  ## "dead_leaves", within the one site where they were recorded erroneously,
-  ## into correct "detritus*" columns
-  move_values_to_detritus <- .detritus_wider_cardoso_corrected %>%
-    mutate(detritus0_150 = ifelse(dataset_id=="211", fpom_g, detritus0_150))%>%
-    mutate(detritus150_20000 = ifelse(dataset_id=="211", cpom_g, detritus150_20000))%>%
-    mutate(detritus20000_NA= ifelse(dataset_id=="211", dead_leaves, detritus20000_NA))
+  if ("cpom_g" %in% names(.detritus_wider_cardoso_corrected)) {
+    message("moving detritus logged as fpom, cpom, and dead leaves to quantitative categories")
+    move_values_to_detritus <- .detritus_wider_cardoso_corrected %>%
+      mutate(detritus0_150 = if_else(dataset_id==211, readr::parse_number(fpom_g), detritus0_150),
+             detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000),
+             detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
+
+  } else {
+    warning("NOTE cpom_g is NOT found but it is expected! The code was written to move it into the correct detritus column, but now it is not there. If in the future it gets put back in the database (or in the output) you should UNCOMMENT the corresponding line in the function that cleans this data. please see the body of the function correct_frenchguiana_detritus")
+    ## first correct the variable names -- move values from "fpom_g" "cpom_g" and
+    ## "dead_leaves", within the one site where they were recorded erroneously,
+    ## into correct "detritus*" columns
+    move_values_to_detritus <- .detritus_wider_cardoso_corrected %>%
+      mutate(detritus0_150 = if_else(dataset_id==211, readr::parse_number(fpom_g), detritus0_150),
+             # detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000),
+             detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
+  }
+  # browser()
 
   ### fix the mg error as well -- in PetitSaut2014 and Nouragues 2009
   fix_fpom_mp <- move_values_to_detritus %>%
-    mutate(detritus0_150 = ifelse(dataset_id %in% c("206", "216"), (fpom_mg/1000), detritus0_150))
+    mutate(detritus0_150 = ifelse(dataset_id %in% c("206", "216"), (readr::parse_number(fpom_g)/1000), detritus0_150))
 
   ### remove these columns -- check first to confirm that no data is being discarded:
 
@@ -173,10 +189,10 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
 
 
   # if that did not throw and error, drop the old columns
-  fix_fpom_mp %>%
+  return(fix_fpom_mp) #%>%
     select(-fpom_g, -cpom_g, -dead_leaves, -fpom_mg) %>%
-    ## Nourages 2006 (dataset 201) accidentally has particle counts in detritus categories
-    #this needs to be corrected in BWGdb but for now
+    # Nourages 2006 (dataset 201) accidentally has particle counts in detritus categories
+    # this needs to be corrected in BWGdb but for now
     mutate(detritus30_150 = if_else(dataset_id==201,NA_real_, detritus30_150)) %>%
     mutate(detritus0_30 = if_else(dataset_id==201,NA_real_, detritus0_30)) %>%
     mutate(detritus150_300 = if_else(dataset_id==201,NA_real_, detritus150_300))
@@ -211,9 +227,9 @@ correct_picin_juraea <- function(.detritus_wider_correct_frenchguiana){
 
 parse_column_types_reader <- function(df){
   return(df)
-  # df %>%
-  #   # don't change id vars -- they may look like numbers but they are not!
-  #   mutate_at(vars(-ends_with("_id")), parse_guess)
+  df %>%
+    # don't change id vars -- they may look like numbers but they are not!
+    mutate_at(vars(-ends_with("_id")), parse_guess)
 }
 
 # function to convert all the "NA" as text into correct NA values.
