@@ -25,8 +25,12 @@ list(
     command = bwg_get("visits")
   ),
   tar_target(
+    name = broms_list,
+    command = get_all_bromeliads(visits)
+  ),
+  tar_target(
     name = broms,
-    command = bwg_get("bromeliads")
+    command = all_bromeliads_list_to_df(broms_list)
   ),
   tar_target(
     name = abds,
@@ -40,7 +44,7 @@ list(
   ),
   ## download additional files
   tar_target(
-    name = fuzzy_traits,
+    name = trait_spreadsheet,
     command = get_osf_spreadsheet(ref = "uws6t"),
     format = "file"
   ),
