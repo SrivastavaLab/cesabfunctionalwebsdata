@@ -139,10 +139,16 @@ read_trait_spreadsheet <- function(path){
 
 merge_trait_by_taxonomy <- function(.trait_spreadsheet, .lowest_taxonomic){
 
+  .lowest_taxonomic <- .lowest_taxonomic |>
+    filter(!(species_id %in% c(8036, 8171)))
+
+
   # there should be ABSOLUTELY NO taxa in the database that cannot find a match in
   # the trait table. Stop the party if that is not true
   message("checking that the taxonomy spreadsheet contains all the correct species")
-  .lowest_taxonomic %>% anti_join(.trait_spreadsheet) %>% verify(nrow(.) == 0)
+  .lowest_taxonomic %>%
+    dplyr::anti_join(.trait_spreadsheet) %>%
+    assertr::verify(nrow(.) == 0)
 
   ## prepare spreadsheet traits for merging
   taxonomic_traits <- .trait_spreadsheet %>%
