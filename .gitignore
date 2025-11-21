@@ -52,3 +52,5 @@ brouillon*
 utils/99_RELEASE.R
 
 scratch.R
+
+data_files_additional/*
