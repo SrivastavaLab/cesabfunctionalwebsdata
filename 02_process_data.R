@@ -11,8 +11,11 @@ tar_option_set(
     "readr",
     "tidyr",
     "stringr",
-    "assertr",
+    "assertr", # for checking data
+    "assertthat", # for checking arguments to functions
+    "lazyeval",
     "broom")
+
   )
 
 # read in functions -- only needed for `get_all_abundance`s
@@ -235,14 +238,15 @@ list(
     command = create_equation_table(),
   ),
 
-  tar_target(
-    name = detritus_equation_plots,
-    command = plot_data_with_equation_table(equation_table, .detritus_data = detritus_wider_150_name_changed),
-  ),
+  # tar_target(
+  #   name = detritus_equation_plots,
+  #   command = plot_data_with_equation_table(equation_table, .detritus_data = detritus_wider_150_name_changed),
+  # ),
 
   tar_target(
     name = detritus_estimate_equation_filt,
-    command = do_filter_dataset_id(equation_table, .detritus_data = detritus_wider_150_name_changed),
+    command = do_filter_dataset_id(equation_table,
+                                   .detritus_data = detritus_wider_150_name_changed),
   ),
 
   tar_target(
@@ -532,19 +536,21 @@ list(
     command = spread_present_species(summed_abundance_lasgamas_dyst_correct),
   ),
 
-  tar_target(
-    name = visit_no_81,
-    command = filter_visit_81(visits),
-  ),
+  # tar_target(
+  #   name = visit_no_81,
+  #   command = filter_visit_81(visits),
+  # ),
 
-  tar_target(
-    name = bromeliads_visit_no_81,
-    command = filter_bromeliads_visit81(bromeliad_correctnames, visit_no_81),
-  ),
+  # tar_target(
+  #   name = bromeliads_visit_no_81,
+  #   command = filter_bromeliads_visit81(bromeliad_correctnames, visit_no_81),
+  # ),
 
   tar_target(
     name = abundance_no_81,
-    command = filter_abundance_81(abundance_no_zero, bromeliads_visit_no_81),
-  )
+    command = abundance_no_zero |>
+      mutate(across(ends_with("_id"), readr::parse_integer)) |>
+      semi_join(diam_brom |>
+                  filter(visit_id!=81)))
 
 )

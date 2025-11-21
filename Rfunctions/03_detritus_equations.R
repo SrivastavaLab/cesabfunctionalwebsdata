@@ -73,14 +73,16 @@ plot_data_with_equation_table <- function(.equation_table, .detritus_data) {
 #'   other end of by_row
 filter_by_dataset_id <- function(used_on_dataset, xvar, df, ...){
 
-  ds_id <- unlist(used_on_dataset)
+  ds_id <- used_on_dataset
 
   df %>%
-    filter(dataset_id %in% ds_id) %>%
+    filter(dataset_id %in% ds_id)# %>%
     # check to make sure predictors actually exist
-    assert_(not_na, xvar) %>%
+    # assert_(not_na, xvar) %>%
+    # verify(all(!is.na(xvar))) |>
     # and that dataset is not 0 from the filter above
-    verify(nrow(.) > 0)
+    # verify(nrow(.) > 0)
+  message("data NOT checked before modelling")
 }
 
 mutate_new_col <- function(xvar, yvar, est_f, filtered_data){
@@ -91,24 +93,31 @@ mutate_new_col <- function(xvar, yvar, est_f, filtered_data){
   assert_that(length(est_f) == 1)
 
   # unlist function(it is in a list column)
-  ff <- est_f[[1]]
+  ff <- est_f
 
   mexp <- lazyeval::interp(~ ff(x), x = as.name(xvar))
 
   ll <-  list(mexp) %>% set_names(newname)
 
-  filtered_data[[1]] %>%
+  filtered_data %>%
     mutate_(.dots = ll)
 
 }
 
 do_filter_dataset_id <- function(.equation_table, .detritus_data) {
   .equation_table %>%
-    by_row(filter_by_dataset_id %>%
-             lift %>%
-             possibly(NA_real_),
-           df = .detritus_data,
-           .to  = "filtered_data")
+    rowwise() |>
+    mutate(filtered_data =
+             list(
+               .detritus_data |>
+                 filter(dataset_id %in% used_on_dataset)
+             )
+           )
+  # by_row(filter_by_dataset_id %>%
+    #          lift %>%
+    #          possibly(NA_real_),
+    #        df = .detritus_data,
+    #        .to  = "filtered_data")
 }
 
 do_mutate_new_col <- function(.filtered_df_table){
@@ -116,10 +125,15 @@ do_mutate_new_col <- function(.filtered_df_table){
     # this only works because of possibly() above, and in reality should do
     # nothing -- why are functions being applied to absent data; there must be an
     # error
-    filter(!is.na(filtered_data)) %>%
+    # filter(!is.na(filtered_data)) %>%
     select(-used_on_dataset) %>%
-    by_row(mutate_new_col %>%
-             lift)
+    mutate(equation_applied = list(
+      mutate_new_col(xvar = xvar,
+                     yvar = yvar,
+                     est_f = est_f,
+                     filtered_data = filtered_data)
+    )
+    )
 }
 
 
@@ -127,6 +141,10 @@ do_mutate_new_col <- function(.filtered_df_table){
 
 
 add_new_columns_for_prediction <- function(.detritus_data) {
+
+  message("changing detritus20000_NA column type to double")
+  .detritus_data$detritus20000_NA <- readr::parse_double(.detritus_data$detritus20000_NA)
+
   .detritus_data %>%
     mutate(detritus10_1500_2000_NA = detritus10_1500 + detritus1500_20000 + detritus20000_NA) %>%
     mutate(detritus_over_150       = detritus0_150   + detritus150_20000  + detritus20000_NA) %>%
@@ -171,23 +189,27 @@ create_model_table <- function(){
 
 derive_modelling_information <- function(.model_table, .detritus_data){
   # create a dataframe that holds everything we need to run the models:
-
+# browser()
   model_info <- .model_table %>%
+    rowwise() |>
     # select the required input rows
-    mutate(src_df = map(src_dat,
-                        ~ .detritus_data %>%
-                          # TODO: ? add select() to contain only some variables??
-                          filter(dataset_id %in% .x)),
-           # create modelling function
-           fml = map2(.x = xvar, .y = yvar, ~ formulae(.y, .x)),
-           fml = flatten(fml)) %>%
-    mutate(x_symb = xvar %>% map(find_symbols),
-           y_symb = yvar %>% map(find_symbols),
-           x_funs = x_symb %>% map("functions") %>% map_if(is_empty, ~ "") %>% flatten_chr(),
-           x_vars = x_symb %>% map_chr("variables"),
-           y_funs = y_symb %>% map("functions") %>% map_if(is_empty, ~ "") %>% flatten_chr(),
-           y_vars = y_symb %>% map_chr("variables"))
-
+    mutate(
+      src_df = list(
+        .detritus_data %>%
+          # TODO: ? add select() to contain only some variables??
+          filter(dataset_id %in% src_dat)
+        )
+    ) #|>
+    # create modelling function
+    # fml = map2(.x = xvar, .y = yvar, ~ formulae(.y, .x)),
+    # fml = flatten(fml)) %>%
+    # mutate(x_symb = list(find_symbols(xvar))) %>% map(find_symbols),
+    #        y_symb = yvar %>% map(find_symbols),
+    #        x_funs = x_symb %>% map("functions") %>% map_if(is_empty, ~ "") %>% flatten_chr(),
+    #        x_vars = x_symb %>% map_chr("variables"),
+    #        y_funs = y_symb %>% map("functions") %>% map_if(is_empty, ~ "") %>% flatten_chr(),
+    #        y_vars = y_symb %>% map_chr("variables"))
+# needs to be rewritten to work with rowwise .. but is it necessary? what is this for!
 
   # make sure that there are actually some data to use to fit the model!
   nrows_src_df <- map_dbl(model_info$src_df, nrow)
