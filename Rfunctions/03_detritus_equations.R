@@ -183,8 +183,16 @@ create_model_table <- function(){
     "m11",   c("146"),           c("56"),                        "~log(detritus150_1500_plus)",  "~log(detritus0_150)",           glm, "gaussian",
     "m12",   c("161"),           c("56"),                        "~log(detritus150_NA_sum_Japi)","~log(detritus0_150)",           glm, "gaussian"
   ) %>%
-    mutate(xvar = xvar %>% map(as.formula),
-           yvar = yvar %>% map(as.formula))
+    rowwise() |>
+    mutate(
+      fml_string = paste0(
+        stringr::str_replace(string = yvar, pattern = "~", replacement=""),
+        # " ~ ",
+        xvar),
+      xvar = list(as.formula(xvar)),
+      yvar = list(as.formula(yvar)),
+      fml = list(as.formula(fml_string))
+    )
 }
 
 derive_modelling_information <- function(.model_table, .detritus_data){
@@ -199,16 +207,17 @@ derive_modelling_information <- function(.model_table, .detritus_data){
           # TODO: ? add select() to contain only some variables??
           filter(dataset_id %in% src_dat)
         )
-    ) #|>
+    ) |>
     # create modelling function
     # fml = map2(.x = xvar, .y = yvar, ~ formulae(.y, .x)),
     # fml = flatten(fml)) %>%
-    # mutate(x_symb = list(find_symbols(xvar))) %>% map(find_symbols),
-    #        y_symb = yvar %>% map(find_symbols),
-    #        x_funs = x_symb %>% map("functions") %>% map_if(is_empty, ~ "") %>% flatten_chr(),
-    #        x_vars = x_symb %>% map_chr("variables"),
-    #        y_funs = y_symb %>% map("functions") %>% map_if(is_empty, ~ "") %>% flatten_chr(),
-    #        y_vars = y_symb %>% map_chr("variables"))
+    mutate(x_symb = list(find_symbols(xvar)),
+           y_symb = list(find_symbols(yvar)),
+           x_funs = list(x_symb$functions),# %>% map_if(is_empty, ~ "") %>% flatten_chr(),
+           x_vars = x_symb$variables, # %>% map_chr("variables"),
+           y_funs = list(y_symb$functions),# %>% map("functions") %>% map_if(is_empty, ~ "") %>% flatten_chr(),
+           y_vars = y_symb$variables# %>% map_chr("variables")
+           )
 # needs to be rewritten to work with rowwise .. but is it necessary? what is this for!
 
   # make sure that there are actually some data to use to fit the model!
@@ -219,11 +228,12 @@ derive_modelling_information <- function(.model_table, .detritus_data){
 }
 
 
+## NOT useful anymore!
 # write a function which uses all these arguements to create a model
 fit_predictive_model <- function(m_id, src_df, fml, .f, family, target_dat) {
   # mod_list = fit_with(src_df)
   # browser()
-  ff <- .f[[1]]
+  ff <- .f#[[1]]
 
   fit_dat <- partial(fit_with, .f = ff, .formulas = fml, family = family)
 
@@ -236,10 +246,17 @@ fit_predictive_model <- function(m_id, src_df, fml, .f, family, target_dat) {
 do_fit_predictive_model <- function(.modelling_information){
   .modelling_information %>%
     # selet the functions's arguements
-    select(m_id, src_df, fml, .f, family, target_dat) %>%
-    by_row(fit_predictive_model %>% lift,
-           .to = "predicting_model") %>%
-    mutate(predicting_model = predicting_model %>% flatten)
+    select(m_id, src_df, fml_string, family, target_dat) |>  #%>%
+    # by_row(fit_predictive_model %>% lift,
+    #        .to = "predicting_model") %>%
+    mutate(
+      safe_model = list(
+        # perform the GLMs but do it "safely" this still produces a result even if it errors
+        # errors are caused by data being gone when i think it should be.
+        purrr:::safely(glm)(as.formula(fml_string), family = family, data = src_df)
+      ),
+      predicting_model = if_else(is.null(safe_model$result), list(NA), list(safe_model$result) )
+    )
 }
 
 
@@ -296,7 +313,7 @@ make_prediction_df <- function(m_id, incoming_data, predicting_model, y_vars, y_
 
 construct_plotting_information <- function(.observed_model_fit, .modelling_information) {
   .observed_model_fit %>%
-    select(-.f) %>%
+    # select(-.f) %>%
     left_join(.modelling_information %>%
                 select(m_id, target_dat, x_funs, y_funs, x_vars, y_vars),
               by = "m_id")
