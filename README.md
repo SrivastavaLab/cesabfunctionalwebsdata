@@ -31,5 +31,10 @@ Look at the [bwgdata Readme](https://github.com/SrivastavaLab/bwgdata) to know m
 This workflow will **NOT WORK** unless `bwgdata` is at version 0.4.0, which dates from October 2025.
 * `02_process_data` UNDER CONSTRUCTION. corrects, combines, and adds additional information to the dataset.
 
+## Authenticating with the OSF
 
+some data files associated with this project are now hosted at the OSF.
+To download them you need an osf PAT.
+See this [documentation](https://docs.ropensci.org/osfr/articles/auth)
+which also links to [this book chapter](https://rstats.wtf/r-startup.html)
 

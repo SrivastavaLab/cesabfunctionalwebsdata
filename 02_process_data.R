@@ -97,8 +97,13 @@ list(
   ),
 
   tar_target(
-    name = broms_date, #formerly brom_clean_name
+    name = broms_date_dropbadname, #formerly brom_clean_name
     command = drop_bad_name(broms_rename_unnest),
+  ),
+
+  tar_target(
+    name = broms_date,
+    command = add_sinnamary_data(broms_date_dropbadname),
   ),
 
   # tar_target(
@@ -536,10 +541,10 @@ list(
     command = spread_present_species(summed_abundance_lasgamas_dyst_correct),
   ),
 
-  # tar_target(
-  #   name = visit_no_81,
-  #   command = filter_visit_81(visits),
-  # ),
+  tar_target(
+    name = visit_no_81,
+    command = filter_visit_81(visits),
+  ),
 
   # tar_target(
   #   name = bromeliads_visit_no_81,
@@ -551,6 +556,22 @@ list(
     command = abundance_no_zero |>
       mutate(across(ends_with("_id"), readr::parse_integer)) |>
       semi_join(diam_brom |>
-                  filter(visit_id!=81)))
+                  filter(visit_id!=81))),
+
+
+  ## a dataset output that does not include imputed datasets
+  tar_target(
+    name = checked_data,
+    command = list(
+      datasets = dats_date,
+      visits = visit_no_81,
+      traits = traits,
+      bromeliads = detritus_wider_correct_frenchguiana,
+      abundance = abundance_no_81,
+      synonymous_names = synonymous_names,
+      abundance_matrix = spp_abundances_wide
+
+    )
+  )
 
 )

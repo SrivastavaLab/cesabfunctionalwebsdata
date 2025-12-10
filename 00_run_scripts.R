@@ -21,11 +21,13 @@ download_now <- FALSE
 
 if(download_now){
   Sys.setenv(TAR_PROJECT = "project_download_data")
-  tar_make(trait_spreadsheet)
+  tar_make()
 }
 
 Sys.setenv(TAR_PROJECT = "project_process_data")
-tar_make()
+tar_make("checked_data")
+tar_load("checked_data")
+checked_data
 
 ## while working it is helpful to visualize the process.
 
@@ -322,3 +324,70 @@ tar_load("abundance_no_zero")
 tar_visnetwork(TRUE, "abundance_no_81")
 
 ## fixing more of this "formulae" nonsense
+tar_load("detritus_wider_new_variables")
+tar_load("model_table")
+derive_modelling_information(model_table, detritus_wider_new_variables)
+
+tar_make(modelling_information)
+tar_load(modelling_information)
+modelling_information
+
+dd <- modelling_information |>
+  # head(2) |>
+  # mutate(nn = nrow(src_df))
+  mutate(ff = list(purrr::safely(glm)(as.formula(fml_string), data = src_df)))
+
+test <- dd |>
+  select(m_id, ff) |>
+  mutate(isnull = is.null(ff$result),
+         mod = if_else(is.null(ff$result), list(NA), list(ff$result)))
+
+test$mod
+
+
+
+modelling_information[2,]$src_df |> map(names) |> unlist() |> sort()
+
+modelling_information[2,]$src_df |> glimpse()
+
+penguins |>
+  nest_by(species) |>
+  mutate(fml = "bill_len ~ bill_dep") |>
+  mutate(mod = list(glm(as.formula(fml), data = data)))
+
+names(modelling_information$src_df[[1]])
+
+tar_load(detritus_wider_150_name_changed)
+detritus_wider_150_name_changed |> View()
+
+
+## continuing -- errors in detritus estimation
+# -- does this go back to the missing detritus from one field site? which one?
+
+tar_load(detritus_estimate_equation_filt)
+debugonce(do_mutate_new_col)
+do_mutate_new_col(detritus_estimate_equation_filt)
+
+## instead, actually trying to add in the missing columns from Sinnamary 2011 and see if it helps
+
+# Sinnamary 2011 is visit_id 311
+library(dplyr)
+visits |>
+  filter(visit_id == 336) |> glimpse()
+
+
+broms <- tar_read(broms, store = "store_download_data")
+broms |> glimpse()
+broms |>
+  filter(visit_id == 336) |>
+  # drop columns not recorded for this dataset
+  select(where(~ !all(is.na(.x)))) |>
+  View()
+
+# Can visually confirm that in Sinnamary2011, visit ID 336, there is a single
+# column missing in the dataset output. Where did it go?
+
+## where is the right place to add this missing column back in?
+
+
+tar_make("checked_data")

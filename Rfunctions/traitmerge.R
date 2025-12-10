@@ -113,9 +113,9 @@ get_osf_spreadsheet <- function(ref) {
   ## file used to be on Google Drive, now we use this file: https://osf.io/kaqm2/overview
   post_editing <- osf_retrieve_file(ref) |>
     osf_download(
-      path = "data_files_additional/"#,
-      # conflicts = "overwrite")
-  )
+      path = "data_files_additional/",
+      conflicts = "overwrite")
+
 
   return(post_editing$local_path)
 }

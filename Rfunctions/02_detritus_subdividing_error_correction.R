@@ -282,3 +282,53 @@ fix_whitespace_bromeliad_names <- function(.detritus_wider){
   return(detritus_wider_clean)
 }
 
+
+## Function added dec 2025 by Andrew to account for missing Sinnamary data.
+
+add_sinnamary_data <- function(.broms_date_dropbadname){
+  data_to_add <- tibble::tribble(
+    ~original_id, ~cpom_g,
+    "Aa01",   19.58,
+    "Aa02",   23.31,
+    "Aa03",   21.05,
+    "Aa04",   36.93,
+    "Aa05",    0.76,
+    "Aa06",    6.08,
+    "Aa07",    3.17,
+    "Aa08",   21.68,
+    "Aa09",   20.51,
+    "Aa10",    3.58,
+    "Aa11",    7.36,
+    "Aa12",     6.9,
+    "Aa13",   41.61,
+    "Aa14",   11.98,
+    "Aa15",   14.91,
+    "Aa16",   45.41,
+    "Aa17",   16.11,
+    "Aa18",     8.9,
+    "Aa19",     4.4,
+    "Aa20",   38.51,
+    "Aa21",   25.17,
+    "Aa22",    5.36,
+    "Aa23",   15.35,
+    "Aa24",   17.46,
+    "Aa25",    8.12,
+    "Aa26",   39.15,
+    "Aa27",   16.88,
+    "Aa28",    41.5,
+    "Aa29",      28,
+    "Aa30",    13.2,
+    "Aa31",    12.6,
+    "Aa32",    21.7,
+    "Aa33",    44.2,
+    "Aa34",    14.1,
+    "Aa35",    24.4,
+    "Aa36",     2.3,
+    "Aa37",     8.7,
+    "Aa38",    22.9,
+    "Aa39",    11.2
+  )
+
+  output <- left_join(.broms_date_dropbadname, data_to_add)
+  return(output)
+}
