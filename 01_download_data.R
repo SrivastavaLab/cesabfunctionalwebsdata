@@ -24,13 +24,19 @@ list(
     name = visits,
     command = bwg_get("visits")
   ),
-  tar_target(
-    name = broms_list,
-    command = get_all_bromeliads(visits)
-  ),
+    # Once when this function stopped working because of a bug in the API,
+    # I switched to this approach. Good to keep as a backup:
+  # tar_target(
+  #   name = broms_list,
+  #   command = get_all_bromeliads(visits)
+  # ),
+  # tar_target(
+  #   name = broms,
+  #   command = all_bromeliads_list_to_df(broms_list)
+  # ),
   tar_target(
     name = broms,
-    command = all_bromeliads_list_to_df(broms_list)
+    command = bwg_get("bromeliads")
   ),
   tar_target(
     name = abds,
