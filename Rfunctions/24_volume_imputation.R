@@ -62,18 +62,23 @@ predict_add_imputed <- function(.supp_size_model_fits, .bromeliad_detritus) {
 
   # unnest the target data, duplicating models where necessary
   supp_size_model_ready_to_apply <- .supp_size_model_fits %>%
-    unnest(target_dat, .drop = FALSE) %>%
-    mutate(predicting_model = flatten(predicting_model))
+    unnest(target_dat) |>
+    ## target_dat should be an integer to join with visit_id
+    mutate(target_dat = readr::parse_integer(target_dat))
 
   # select just the datasets which are needed for this analysis.
   size_data_to_impute <- .bromeliad_detritus %>%
     semi_join(supp_size_model_ready_to_apply, by = c("visit_id" = "target_dat")) %>%
-    group_by(visit_id) %>%
-    nest
+    nest_by(visit_id)
 
   predicted_max_volume <- size_data_to_impute %>%
     left_join(supp_size_model_ready_to_apply, by = c("visit_id" = "target_dat")) %>%
-    mutate(predicted_size = map2(data, predicting_model, add_predictions, var = "predicted_water"))
+    mutate(predicted_size = list(
+      modelr::add_predictions(data,
+                              model,
+                              var = "predicted_water")
+    )
+    )
 
   visit_and_predictions <- predicted_max_volume %>%
     unnest(predicted_size) %>%
