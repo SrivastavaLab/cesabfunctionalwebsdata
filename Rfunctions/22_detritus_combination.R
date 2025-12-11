@@ -6,7 +6,8 @@
 combine_detritus_predictions <- function(.detritus_estimated_with_model){
   # begin with just the detritus that has been predicted:
   detritus_all_predictions <- .detritus_estimated_with_model %>%
-    select(pred_data) %>% as.list() %>% flatten %>%
+    select(pred_data) %>%
+    as.list() %>% flatten %>%
     # get rid of anything not about detritus
     map(~ select(.x, bromeliad_id, dplyr::contains("fitted"), -starts_with("fpom"))) %>%
     reduce(full_join, by = "bromeliad_id")
@@ -37,7 +38,8 @@ combine_all_detritus_values <- function(.detritus_wider_new_variables, .detritus
 
   det_all_obs_long <- detritus_all_observations %>%
     # there is only one column with character. drop that one!
-    select(-detritus0_150_src, -`detritus>10000`) %>%
+    select(#-detritus0_150_src,
+           -`detritus>10000`) %>%
     gather(detritus_category, detritus_amount, starts_with("detritus"), convert = TRUE) %>%
     # we can filter out NAs directly since we are doing this at the bromeliad level:
     filter(!is.na(detritus_amount))

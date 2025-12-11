@@ -254,10 +254,10 @@ list(
                                    .detritus_data = detritus_wider_150_name_changed),
   ),
 
-  tar_target(
-    name = detritus_estimated_with_equation,
-    command = do_mutate_new_col(detritus_estimate_equation_filt),
-  ),
+  # tar_target(
+  #   name = detritus_estimated_with_equation,
+  #   command = do_mutate_new_col(detritus_estimate_equation_filt),
+  # ),
 
   tar_target(
     name = detritus_wider_new_variables,
@@ -285,11 +285,11 @@ list(
                                              .modelling_information = modelling_information),
   ),
 
-  tar_target(
-    name = detritus_model_plots,
-    command = plot_model_and_supporting_data(.plotting_information = plotting_information,
-                                             .modelling_information = modelling_information),
-  ),
+  # tar_target(
+  #   name = detritus_model_plots,
+  #   command = plot_model_and_supporting_data(.plotting_information = plotting_information,
+  #                                            .modelling_information = modelling_information),
+  # ),
 
   tar_target(
     name = detritus_estimated_with_model,

@@ -25,6 +25,7 @@ if(download_now){
 }
 
 Sys.setenv(TAR_PROJECT = "project_process_data")
+tar_make()
 tar_make("checked_data")
 tar_load("checked_data")
 checked_data
@@ -391,3 +392,39 @@ broms |>
 
 
 tar_make("checked_data")
+
+## back to checking this problem:
+
+library(targets)
+library(tidyverse)
+tar_make("detritus_estimate_equation_filt")
+debugonce(mutate_new_col)
+do_mutate_new_col(detritus_estimate_equation_filt)
+
+## trying again to make object
+tar_make("detritus_estimated_with_equation")
+## oka it seems
+tar_load(detritus_estimate_equation_filt)
+detritus_estimate_equation_filt
+detritus_estimate_equation_filt$filtered_data[[3]] |> glimpse()
+## turns out this thing is not even used!!
+
+tar_load(observed_model_fit)
+tar_load(modelling_information)
+tar_load(detritus_wider_new_variables)
+library(tidyverse)
+## added browser, let's check it out
+estimate_missing_detritus_new_site(.observed_model_fit = observed_model_fit,
+                                   .modelling_information = modelling_information,
+                                   .detritus_data = detritus_wider_new_variables)
+
+tar_make()
+
+## checking next step -- will need to put predictions in the correct part of dataframe
+tar_make(detritus_all_preds)
+tar_load(detritus_all_preds)
+detritus_all_preds
+
+tar_make(detritus_estimated_with_model)
+tar_load(detritus_estimated_with_model)
+

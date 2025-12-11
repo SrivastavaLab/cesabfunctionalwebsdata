@@ -85,22 +85,24 @@ filter_by_dataset_id <- function(used_on_dataset, xvar, df, ...){
   message("data NOT checked before modelling")
 }
 
+# make a new column to hold the
 mutate_new_col <- function(xvar, yvar, est_f, filtered_data){
   # predicted flag as column or different header?
   # test for all(is.na()) in target
-  newname <- paste0(yvar, "_function")
+  # newname <- paste0(yvar, "_function")
 
-  assert_that(length(est_f) == 1)
+  assertthat::assert_that(length(est_f) == 1)
 
   # unlist function(it is in a list column)
-  ff <- est_f
+  # ff <- est_f
 
-  mexp <- lazyeval::interp(~ ff(x), x = as.name(xvar))
+  # mexp <- lazyeval::interp(~ ff(x), x = as.name(xvar))
 
-  ll <-  list(mexp) %>% set_names(newname)
+  # ll <-  list(mexp) %>% set_names(newname)
 
   filtered_data %>%
-    mutate_(.dots = ll)
+    mutate("{yvar}_function" := est_f({{xvar}})
+      )
 
 }
 
@@ -388,7 +390,8 @@ plot_model_and_supporting_data <- function(.plotting_information, .modelling_inf
 
 
 # Coup de Grace: use the model fit to add the missing values to observed data from another site
-estimate_missing_detritus_new_site <- function(.observed_model_fit, .modelling_information,
+estimate_missing_detritus_new_site <- function(.observed_model_fit,
+                                               .modelling_information,
                                                .detritus_data){
   # extract the fit data that we need
   fit_data_needed <- .observed_model_fit %>%
@@ -402,19 +405,46 @@ estimate_missing_detritus_new_site <- function(.observed_model_fit, .modelling_i
   # join these, add filtered dataset to model
   prediction_raw_material <- fit_data_needed %>%
     left_join(model_info) %>%
-    mutate(target_df = target_dat %>%
-             map(~ .detritus_data %>%
-                   # TODO: ? add select() to contain only some variables??
-                   filter(dataset_id %in% .x))
+    mutate(target_df = list(
+      .detritus_data %>%
+        # TODO: ? add select() to contain only some variables??
+        filter(dataset_id %in% target_dat)
     )
+    )
+# browser()
+
+  name_new_col <- function(nm, val){
+    d <- data.frame(x = val)
+    names(d) <- paste0(nm, "_fitted")
+    d
+  }
+
 
   output <- prediction_raw_material %>%
     # get the precise variables we need to add predictions
     select(m_id, incoming_data = target_df, predicting_model, y_vars, y_funs) %>%
-    by_row(make_prediction_df %>% lift, .to = "pred_data")
+    mutate(
+      pred_raw = list(
+        predict(
+          predicting_model,
+          newdata = incoming_data)
+      ),
+      # back transform where necessary
+      # using the name "fitted" for these predicted values because
+      # that is what is expected by the next functions
+      fitted = list(
+        if (length(y_funs) > 0 && y_funs == "log") {
+          exp(pred_raw)
+        } else  {
+          pred_raw
+        }),
+      fit_df = list(name_new_col(y_vars, fitted)),
+      pred_data = list(bind_cols(incoming_data, fit_df))
+    )
 
-  # polish the output a bit, and flatten the predicting_model
-  output %>%
-    mutate(predicting_model = flatten(predicting_model))
+  # not using this part anymore,
+  # mutate(make_prediction_df %>% lift, .to = "pred_data")
+
+  return(output)
 
 }
