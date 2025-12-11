@@ -23,7 +23,9 @@ add_in_extra_columns <- function(.detritus_wide, .detritus_wider, .bromeliad_det
 
 correct_incident_rad_percent <- function(.bromeliad_detritus_opts) {
   .bromeliad_detritus_opts %>%
-    mutate(incident_radiation_percentage = if_else(
+    mutate(
+      incident_radiation_percentage = readr::parse_double(incident_radiation_percentage),
+      incident_radiation_percentage = if_else(
       bromeliad_id == "3846" & incident_radiation_percentage > 100,
       true = incident_radiation_percentage / 10,
       false = incident_radiation_percentage
