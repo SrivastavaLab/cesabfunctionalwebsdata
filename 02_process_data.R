@@ -14,7 +14,8 @@ tar_option_set(
     "assertr", # for checking data
     "assertthat", # for checking arguments to functions
     "lazyeval",
-    "broom")
+    "broom",
+    "fuzzyjoin")
 
   )
 
@@ -478,7 +479,9 @@ list(
 
   tar_target(
     name = bromeliad_detritus_open,
-    command = left_join(bromeliad_detritus_incidentrad, openness_conversion_table),
+    command = left_join(bromeliad_detritus_incidentrad,
+                        openness_conversion_table |>
+                          mutate(visit_id = readr::parse_integer(visit_id))),
   ),
 
   tar_target(
