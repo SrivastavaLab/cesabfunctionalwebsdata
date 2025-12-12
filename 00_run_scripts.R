@@ -25,10 +25,30 @@ if(download_now){
 }
 
 Sys.setenv(TAR_PROJECT = "project_process_data")
-tar_make()
-tar_make("checked_data")
-tar_load("checked_data")
-checked_data
+tar_make("all_data")
+
+
+
+# output the all_data object ----------------------------------------------
+
+tar_load(all_data)
+readr::write_rds(all_data, file = "data_output/all_data.rds")
+
+
+readr::write_csv(all_data$bromeliads, file = "data_output/bromelaids_dec2025.csv")
+
+# visualize the dataset ---------------------------------------------------
+
+
+library(visdat)
+
+visdat::vis_dat(all_data$bromeliads)
+
+sort(names(all_data$bromeliads))
+
+# visualizing the workflow ------------------------------------------------
+
+
 
 ## while working it is helpful to visualize the process.
 
@@ -47,6 +67,10 @@ tar_visnetwork(
   # names = "broms_date",
   script = "02_process_data.R")
 
+
+
+
+
 tar_make("volume_estimated",
          script = "01_download_data.R")
 
@@ -61,6 +85,9 @@ tar_load(mertensii,
          store = "store_process_data")
 
 
+# debugging ---------------------------------------------------------------
+
+## The section below is NOT to be run regularly, but is simple a "scrap paper" notes of the debugging process.
 tar_read()
 
 tar_load(taxonomy_cols,
@@ -429,3 +456,7 @@ tar_make(detritus_estimated_with_model)
 tar_load(detritus_estimated_with_model)
 
 ## stuck on water volume
+bromeliad_detritus_vol_imputed
+tar_load(supp_size_model_fits)
+tar_load(bromeliad_detritus)
+

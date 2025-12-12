@@ -549,10 +549,10 @@ list(
     command = filter_visit_81(visits),
   ),
 
-  # tar_target(
-  #   name = bromeliads_visit_no_81,
-  #   command = filter_bromeliads_visit81(bromeliad_correctnames, visit_no_81),
-  # ),
+  tar_target(
+    name = bromeliads_visit_no_81,
+    command = filter_bromeliads_visit81(bromeliad_correctnames, visit_no_81),
+  ),
 
   tar_target(
     name = abundance_no_81,
@@ -573,7 +573,20 @@ list(
       abundance = abundance_no_81,
       synonymous_names = synonymous_names,
       abundance_matrix = spp_abundances_wide
+    )
+  ),
 
+  ## a dataset output that does not include imputed datasets
+  tar_target(
+    name = all_data,
+    command = list(
+      datasets = dats_date,
+      visits = visit_no_81,
+      traits = traits,
+      bromeliads = bromeliads_visit_no_81,
+      abundance = abundance_no_81,
+      synonymous_names = synonymous_names,
+      abundance_matrix = spp_abundances_wide
     )
   )
 
