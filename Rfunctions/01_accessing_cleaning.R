@@ -48,13 +48,21 @@ make_blacklist <- function(.visits, .dats){
 # Restructuring -------------------------------------------------------------
 
 
+# This function reshapes the bromeliad data as directly downloaded:
+# * remove attributes from the columns
+# * make sure the two cpom columns are identical and drop one
 no_attrib_unnest_det <- function(.broms){
 
+  if (identical(.broms$attributes.cpom_g, .broms$cpom_g)) {
+    .broms$attributes.cpom_g <- NULL
+    print("dropping one of two cpom columns because they are identical")
+  } else {
+    stop("the downloaded bromeliad table has two cpom columns but they are not the same! investigate!")
+  }
   ## Drop the attributes part of the variable names
   names(.broms) <- str_replace(names(.broms), "attributes\\.", "")
   ## yes this makes the function a bit not modular. If you're reading this you
   ## can feel quite free to judge :)
-
   ### the detritus should be unnested (for raw. summarize later, across columns)
   .broms %>%
     ## supply a default data.frame, or otherwise unnesting chokes
