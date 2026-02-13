@@ -104,7 +104,7 @@ list(
 
   tar_target(
     name = broms_date,
-    command = add_sinnamary_data(broms_date_dropbadname),
+    command = I(broms_date_dropbadname),
   ),
 
   # tar_target(
