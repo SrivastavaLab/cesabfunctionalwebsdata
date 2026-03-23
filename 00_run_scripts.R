@@ -13,11 +13,27 @@
 ## the BWG database has changed. Data processing, on the other hand, probably
 ## needs regular maintenance and updating of the code and the process
 
+
+
+## TODO add a function that CHECKS ALL THE NAMES and CONFIRMS ALL THE COLUMN TYPES for the database.
+
 library(targets)
 # library(osfr)
 # library(tidyverse)
 
-download_now <- FALSE
+download_now <- TRUE
+
+# might need to delete a dataset, e.g. bromeliads, to force a download.
+# this is necessary because Targets has no way of knowing if the database has changed!
+
+tar_delete(dats, store = "store_download_data")
+tar_delete(visits, store = "store_download_data")
+tar_delete(broms, store = "store_download_data")
+tar_delete(abs, store = "store_download_data")
+tar_delete(trts_all, store = "store_download_data")
+
+Sys.setenv(BWG_BASEURL = "https://www.zoology.ubc.ca/~dashcc/bwgdb/v3/api/")
+# Sys.unsetenv("BWG_BASEURL")
 
 if(download_now){
   Sys.setenv(TAR_PROJECT = "project_download_data")
@@ -26,6 +42,23 @@ if(download_now){
 
 Sys.setenv(TAR_PROJECT = "project_process_data")
 tar_make("all_data")
+
+
+
+# fix the format of the broms table ---------------------------------------
+
+tar_make("brom_unnested_detritus")
+
+
+# read bromeliad data from the data download store
+tar_read(broms, store = "store_download_data")
+tar_load_globals()
+glimpse(broms)
+broms$attributes
+
+tar_visnetwork(names = "detritus_wider_bromeliad_names", targets_only = TRUE,
+               script = "02_process_data.R")
+
 
 
 
@@ -47,8 +80,6 @@ visdat::vis_dat(all_data$bromeliads)
 sort(names(all_data$bromeliads))
 
 # visualizing the workflow ------------------------------------------------
-
-
 
 ## while working it is helpful to visualize the process.
 
@@ -86,6 +117,12 @@ tar_load(mertensii,
 
 
 # debugging ---------------------------------------------------------------
+
+tar_load("broms")
+
+
+
+
 
 ## The section below is NOT to be run regularly, but is simple a "scrap paper" notes of the debugging process.
 tar_read()

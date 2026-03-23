@@ -14,6 +14,9 @@ tar_option_set(
 # read in functions -- only needed for `get_all_abundance`s
 tar_source(files = "Rfunctions/")
 
+## get the BWG_BASEURL value
+bwg_baseurl <- Sys.getenv("BWG_BASEURL", unset = "")
+
 list(
   ## Database downloads
   tar_target(
@@ -36,7 +39,11 @@ list(
   # ),
   tar_target(
     name = broms,
-    command = bwg_get("bromeliads")
+    if (nzchar(bwg_baseurl)) {
+      command = bwg_get("bromeliads", baseurl = bwg_baseurl)
+    } else {
+      command = bwg_get("bromeliads")
+    }
   ),
   tar_target(
     name = abds,
