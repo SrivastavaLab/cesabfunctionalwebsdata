@@ -55,7 +55,38 @@ list(
     name = trait_spreadsheet,
     command = read_trait_spreadsheet(fuzzy_traits_csv)
   ),
-
+   tar_target(
+    name = bromeliad_names,
+    command = import_BromeliadSpecies("data-intermediate/bromeliad_names.csv")
+  ),
+  tar_target(
+    name = fpom_fg_data,
+    command = read_fpom_fg("data_files_additional/FPOMdecanted_dryweight.csv")
+  ),
+  tar_target(
+    name = aquilega_biog,
+    command = read_size_aquilega("data-intermediate/size_aquilega_Biog.csv")
+  ),
+  tar_target(
+    name = aquilegaKT,
+    command = read_size_aquilega("data-intermediate/size_aquilegaKT.csv")
+  ),
+  tar_target(
+    name = guzmania,
+    command = read_size_Guzmania_mertensii("data-intermediate/size_Guzmania_PR.csv")
+  ),
+  tar_target(
+    name = mertensii,
+    command = read_size_Guzmania_mertensii("data-intermediate/size_mertensii.csv")
+  ),
+  tar_target(
+    name = vriesea,
+    command = read_size_vriesea("data-intermediate/size_vriesea.csv")
+  ),
+  tar_target(
+    name = vriesea_prod,
+    command = read_size_vriesea("data-intermediate/size_vriesea_prod.csv")
+  ),
   ## begin processing data ------------------------
 
   ## unnest the attributes column
@@ -103,11 +134,6 @@ list(
   tar_target(
     name = abundance,
     command = tidy_dataset_list(pres_abds),
-  ),
-
-  tar_target(
-    name = fpom_fg_data,
-    command = read_fpom_fg("data_files_additional/FPOMdecanted_dryweight.csv"),
   ),
 
   # tar_target(
@@ -165,11 +191,6 @@ list(
     command = make_detritus_wider(
       broms_date, detritus_wide,
       visitnames, diam_brom, fpom_brom),
-  ),
-
-  tar_target(
-    name = bromeliad_names,
-    command = import_BromeliadSpecies("data-intermediate/bromeliad_names.csv"),
   ),
 
   tar_target(
@@ -394,36 +415,6 @@ list(
                         traits_from_tax |>
                           mutate(species_id = as.character(species_id)),
                         by = join_by("species_id")),
-  ),
-
-  tar_target(
-    name = aquilega_biog,
-    command = read_size_aquilega("data-intermediate/size_aquilega_Biog.csv"),
-  ),
-
-  tar_target(
-    name = aquilegaKT,
-    command = read_size_aquilega("data-intermediate/size_aquilegaKT.csv"),
-  ),
-
-  tar_target(
-    name = guzmania,
-    command = read_size_Guzmania_mertensii("data-intermediate/size_Guzmania_PR.csv"),
-  ),
-
-  tar_target(
-    name = mertensii,
-    command = read_size_Guzmania_mertensii("data-intermediate/size_mertensii.csv"),
-  ),
-
-  tar_target(
-    name = vriesea,
-    command = read_size_vriesea("data-intermediate/size_vriesea.csv"),
-  ),
-
-  tar_target(
-    name = vriesea_prod,
-    command = read_size_vriesea("data-intermediate/size_vriesea_prod.csv"),
   ),
 
   tar_target(
