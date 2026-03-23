@@ -74,7 +74,7 @@ make_detritus_wide <- function(.broms){
   bromeliad_wide <- detritus_wide %>%
     left_join(broms_without_detritus) %>%
     ## a simple assertr check to make sure that the number of rows does not duplicate.
-    verify(nrow(.) == nrow(no_detritus_brom))
+    verify(nrow(.) == nrow(broms_without_detritus))
 
   bromeliad_wide
 }
@@ -154,12 +154,19 @@ check_data_source_target <- function(dataset, sourcename, targetname) {
 ### but not the other -- not detritus0_150
 correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
 
+  .detritus_wider_cardoso_corrected$dead_leaves <- readr::parse_number(
+    .detritus_wider_cardoso_corrected$dead_leaves
+  )
+
+  ## correct structure back to typical data.frame (tibble)
+  .detritus_wider_cardoso_corrected <- tibble::as_tibble(.detritus_wider_cardoso_corrected)
+
   if ("cpom_g" %in% names(.detritus_wider_cardoso_corrected)) {
     message("moving detritus logged as fpom, cpom, and dead leaves to quantitative categories")
     move_values_to_detritus <- .detritus_wider_cardoso_corrected %>%
-      mutate(detritus0_150 = if_else(dataset_id==211, readr::parse_number(fpom_g), detritus0_150),
-             detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000),
-             detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
+      mutate(detritus0_150 = if_else(dataset_id==211, fpom_g, detritus0_150),
+             detritus150_20000 = if_else(dataset_id==211, cpom_g, detritus150_20000),
+             detritus20000_NA= if_else(dataset_id==211, dead_leaves, detritus20000_NA))
 
   } else {
     warning("NOTE cpom_g is NOT found but it is expected! The code was written to move it into the correct detritus column, but now it is not there. If in the future it gets put back in the database (or in the output) you should UNCOMMENT the corresponding line in the function that cleans this data. please see the body of the function correct_frenchguiana_detritus")
@@ -167,7 +174,7 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
     ## "dead_leaves", within the one site where they were recorded erroneously,
     ## into correct "detritus*" columns
     move_values_to_detritus <- .detritus_wider_cardoso_corrected %>%
-      mutate(detritus0_150 = if_else(dataset_id==211, readr::parse_number(fpom_g), detritus0_150),
+      mutate(detritus0_150 = if_else(dataset_id==211, fpom_g, detritus0_150),
              # detritus150_20000 = ifelse(dataset_id==211, cpom_g, detritus150_20000),
              detritus20000_NA= ifelse(dataset_id==211, dead_leaves, detritus20000_NA))
   }
@@ -175,7 +182,7 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
 
   ### fix the mg error as well -- in PetitSaut2014 and Nouragues 2009
   fix_fpom_mp <- move_values_to_detritus %>%
-    mutate(detritus0_150 = ifelse(dataset_id %in% c("206", "216"), (readr::parse_number(fpom_g)/1000), detritus0_150))
+    mutate(detritus0_150 = if_else(dataset_id %in% c("206", "216"), (fpom_g/1000), detritus0_150))
 
   ### remove these columns -- check first to confirm that no data is being discarded:
 

@@ -35,6 +35,7 @@ trts_all <- tar_read(trts_all, store = "store_download_data")
 
 
 list(
+  ## SECTION 1: File inputs (local) ------------------------------------------
   ## read in any additional downloaded files
   tar_target(
     name = fuzzy_traits_csv,
@@ -56,9 +57,31 @@ list(
   ),
 
   ## begin processing data ------------------------
+
+  ## unnest the attributes column
   tar_target(
-    name = broms_rename_unnest,
-    command = no_attrib_unnest_det(broms),
+    name = broms_unnested_attrib,
+    command = tidyr::unnest_wider(broms, attributes)
+  ),
+
+  # unnest the detritus column, adding columns
+  #   - detritus_min_size
+  #   - detritus_max_size
+  #   - detritus_mass_g
+  tar_target(
+    name = brom_unnested_detritus,
+    command = unnest_detritus(broms_unnested_attrib)
+  ),
+
+  # create schema for validating  dataset -- just a large table, see function for details
+  tar_target(
+    name = schema,
+    command = make_bwg_schema()
+  ),
+
+  tar_target(
+    name = brom_validated,
+    command = validate_and_coerce(brom_unnested_detritus, schema),
   ),
 
   tar_target(
@@ -98,14 +121,14 @@ list(
   ),
 
   tar_target(
-    name = broms_date_dropbadname, #formerly brom_clean_name
-    command = drop_bad_name(broms_rename_unnest),
+    name = broms_date, #formerly brom_clean_name
+    command = drop_bad_name(brom_validated),
   ),
 
-  tar_target(
-    name = broms_date,
-    command = I(broms_date_dropbadname),
-  ),
+  # tar_target(
+  #   name = broms_date,
+  #   command = I(broms_date_dropbadname),
+  # ),
 
   # tar_target(
   #   name = broms_date,

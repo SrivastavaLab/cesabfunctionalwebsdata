@@ -36,10 +36,8 @@ combine_all_detritus_values <- function(.detritus_wider_new_variables, .detritus
     left_join(.detritus_all_preds, by = "bromeliad_id") %>%
     select(bromeliad_id, starts_with("detritus"))
 
+  # browser()
   det_all_obs_long <- detritus_all_observations %>%
-    # there is only one column with character. drop that one!
-    select(#-detritus0_150_src,
-           -`detritus>10000`) %>%
     gather(detritus_category, detritus_amount, starts_with("detritus"), convert = TRUE) %>%
     # we can filter out NAs directly since we are doing this at the bromeliad level:
     filter(!is.na(detritus_amount))

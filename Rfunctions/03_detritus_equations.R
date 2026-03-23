@@ -145,7 +145,9 @@ do_mutate_new_col <- function(.filtered_df_table){
 add_new_columns_for_prediction <- function(.detritus_data) {
 
   message("changing detritus20000_NA column type to double")
-  .detritus_data$detritus20000_NA <- readr::parse_double(.detritus_data$detritus20000_NA)
+  if (is.character(.detritus_data$detritus20000_NA)) {
+    .detritus_data$detritus20000_NA <- readr::parse_double(.detritus_data$detritus20000_NA)
+  }
 
   .detritus_data %>%
     mutate(detritus10_1500_2000_NA = detritus10_1500 + detritus1500_20000 + detritus20000_NA) %>%
