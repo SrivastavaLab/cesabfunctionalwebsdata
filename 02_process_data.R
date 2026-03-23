@@ -111,25 +111,11 @@ list(
     command = unnest_detritus(broms_unnested_attrib)
   ),
 
+  # this function converts all the columns to their simplest form.
   tar_target(
     name = brom_validated,
     command = validate_and_coerce(brom_unnested_detritus, schema),
   ),
-
-  tar_target(
-    name = broms_date, #formerly brom_clean_name
-    command = drop_bad_name(brom_validated),
-  ),
-
-  # tar_target(
-  #   name = broms_date,
-  #   command = I(broms_date_dropbadname),
-  # ),
-
-  # tar_target(
-  #   name = broms_date,
-  #   command = parse_column_types_reader(brom_clean_name),
-  # ),
 
   ## SECTION 3: Visits & datasets --------------------------------------------
 
@@ -260,23 +246,23 @@ list(
 
   tar_target(
     name = diam_brom,
-    command = make_diam_brom(broms_date),
+    command = make_diam_brom(brom_validated),
   ),
 
   tar_target(
     name = fpom_brom,
-    command = make_fpom_brom(broms_date),
+    command = make_fpom_brom(brom_validated),
   ),
 
   tar_target(
     name = detritus_wide,
-    command = make_detritus_wide(broms_date),
+    command = make_detritus_wide(brom_validated),
   ),
 
   tar_target(
     name = detritus_wider,
     command = make_detritus_wider(
-      broms_date, detritus_wide,
+      brom_validated, detritus_wide,
       visitnames, diam_brom, fpom_brom),
   ),
 
@@ -418,7 +404,7 @@ list(
 
   tar_target(
     name = detritus_long_categories,
-    command = combine_all_detritus_values(detritus_wider_new_variables, detritus_all_preds, broms_date),
+    command = combine_all_detritus_values(detritus_wider_new_variables, detritus_all_preds, brom_validated),
   ),
 
   tar_target(
@@ -596,7 +582,7 @@ list(
         unnest(measurements) |>
         mutate(bromeliad_id = as.numeric(bromeliad_id),
                species_id = as.numeric(species_id) ),
-      broms_date, visits, trts_all_filtered),
+      brom_validated, visits, trts_all_filtered),
   ),
 
   ## ============================================================

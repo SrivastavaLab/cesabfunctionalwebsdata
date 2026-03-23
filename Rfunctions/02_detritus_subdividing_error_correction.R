@@ -247,30 +247,6 @@ convert_text_to_NA <- function(dat){
 }
 
 
-## IN WHICH we clean up the names of variables. some variables with rather
-## unhelpful names (character encoding issues perhaps) are simply dropped --
-## these are rare variables, which are recorded too infrequently to be missed.
-## Some other, more usful variables are renamed to fix their bad names --
-## spaces, confusing/duplicate spelling, etc
-drop_bad_name <- function(.broms_rename_unnest){
-
-  please_leave <- which(names(.broms_rename_unnest) %in% c(
-    "horizontal _leaves_percentage", "conductivity_?S_cm-1", "algae_?gC_per_L"))
-
-  ## drop em if there are any
-  if(length(please_leave)>0) {
-    .broms_rename_unnest <- .broms_rename_unnest[-please_leave]
-  }
-
-  ## fix some name mistakes
-  names(.broms_rename_unnest) <- str_replace_all(names(.broms_rename_unnest), "canopy openess", "canopy_openess_chr")
-  names(.broms_rename_unnest) <-str_replace_all(names(.broms_rename_unnest), "cpom_g ", "cpom_g")
-  names(.broms_rename_unnest) <-str_replace_all(names(.broms_rename_unnest), "canopy cover", "canopy_cover")
-  .broms_rename_unnest
-}
-
-
-
 # correct bromeliad names -------------------------------------------------
 
 
