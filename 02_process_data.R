@@ -87,7 +87,14 @@ list(
     name = vriesea_prod,
     command = read_size_vriesea("data-intermediate/size_vriesea_prod.csv")
   ),
-  ## begin processing data ------------------------
+
+  ## SECTION 2: Bromeliads — reshaping and validating -------------------------
+
+  # create schema for validating dataset -- just a large table, see function for details
+  tar_target(
+    name = schema,
+    command = make_bwg_schema()
+  ),
 
   ## unnest the attributes column
   tar_target(
@@ -104,46 +111,9 @@ list(
     command = unnest_detritus(broms_unnested_attrib)
   ),
 
-  # create schema for validating  dataset -- just a large table, see function for details
-  tar_target(
-    name = schema,
-    command = make_bwg_schema()
-  ),
-
   tar_target(
     name = brom_validated,
     command = validate_and_coerce(brom_unnested_detritus, schema),
-  ),
-
-  tar_target(
-    name = trts_all_filtered,
-    command = combine_multi_names(trts_all),
-  ),
-
-  tar_target(
-    name = trts_parsed_cols,
-    command = convert_text_to_NA(trts_all_filtered),
-  ),
-
-  tar_target(
-    name = pres_abds,
-    command = keep(abds, is.list) |>
-      keep(~ length(.x$species)>1)
-  ),
-
-  tar_target(
-    name = abundance,
-    command = tidy_dataset_list(pres_abds),
-  ),
-
-  # tar_target(
-  #   name = visits_date,
-  #   command = parse_column_types_reader(visits),
-  # ),
-
-  tar_target(
-    name = dats_date,
-    command = parse_column_types_reader(dats),
   ),
 
   tar_target(
@@ -161,6 +131,18 @@ list(
   #   command = parse_column_types_reader(brom_clean_name),
   # ),
 
+  ## SECTION 3: Visits & datasets --------------------------------------------
+
+  # tar_target(
+  #   name = visits_date,
+  #   command = parse_column_types_reader(visits),
+  # ),
+
+  tar_target(
+    name = dats_date,
+    command = parse_column_types_reader(dats),
+  ),
+
   tar_target(
     name = visitnames,
     command = make_visitnames(visits, dats),
@@ -170,6 +152,111 @@ list(
     name = datasetnames,
     command = make_datasetnames(visitnames),
   ),
+
+  tar_target(
+    name = visit_no_81,
+    command = filter_visit_81(visits),
+  ),
+
+  ## SECTION 4: Traits --------------------------------------------------------
+
+  tar_target(
+    name = trts_all_filtered,
+    command = combine_multi_names(trts_all),
+  ),
+
+  tar_target(
+    name = trts_parsed_cols,
+    command = convert_text_to_NA(trts_all_filtered),
+  ),
+
+  tar_target(
+    name = taxonomy_cols,
+    command = make_taxonomy_cols(trts_parsed_cols),
+  ),
+
+  tar_target(
+    name = lowest_taxonomic,
+    command = get_lowest_taxonomic(taxonomy_cols),
+  ),
+
+  tar_target(
+    name = canonical_traits,
+    command = get_canonical_traits(trts_parsed_cols),
+  ),
+
+  tar_target(
+    name = taxon_lowest_names,
+    command = lowest_name_and_subspecies(taxonomy_cols, lowest_taxonomic),
+  ),
+
+  tar_target(
+    name = traits_from_tax,
+    command = merge_trait_by_taxonomy(trait_spreadsheet, taxon_lowest_names),
+  ),
+
+  tar_target(
+    name = traits,
+    command = left_join(canonical_traits |>
+                          mutate(species_id = as.character(species_id)),
+                        traits_from_tax |>
+                          mutate(species_id = as.character(species_id)),
+                        by = join_by("species_id")),
+  ),
+
+  ## SECTION 5: Abundance -----------------------------------------------------
+
+  tar_target(
+    name = pres_abds,
+    command = keep(abds, is.list) |>
+      keep(~ length(.x$species)>1)
+  ),
+
+  tar_target(
+    name = abundance,
+    command = tidy_dataset_list(pres_abds),
+  ),
+
+  tar_target(
+    name = summed_abundance_spp,
+    command = sum_species_abundances(
+      tidyr::unnest(abundance, measurements) |>
+        dplyr::mutate(
+          abd = purrr::flatten_chr(abd),
+          abd = readr::parse_double(abd)
+        )
+    ),
+  ),
+
+  tar_target(
+    name = summed_abundance_lasgamas_dyst_correct,
+    command = correct_lasgamas_dytiscid(summed_abundance_spp),
+  ),
+
+  tar_target(
+    name = abundance_no_zero,
+    command = filter_zero_abd(summed_abundance_lasgamas_dyst_correct),
+  ),
+
+  tar_target(
+    name = spp_abundances_wide,
+    command = spread_present_species(summed_abundance_lasgamas_dyst_correct),
+  ),
+
+  tar_target(
+    name = synonymous_names,
+    command = identify_merge_duplicates(traits, summed_abundance_lasgamas_dyst_correct),
+  ),
+
+  # note: depends on diam_brom from section 6
+  tar_target(
+    name = abundance_no_81,
+    command = abundance_no_zero |>
+      mutate(across(ends_with("_id"), readr::parse_integer)) |>
+      semi_join(diam_brom |>
+                  filter(visit_id!=81))),
+
+  ## SECTION 6: Bromeliad morphology derived variables ------------------------
 
   tar_target(
     name = diam_brom,
@@ -193,6 +280,8 @@ list(
       visitnames, diam_brom, fpom_brom),
   ),
 
+  ## SECTION 7: Detritus cleaning & corrections -------------------------------
+
   tar_target(
     name = detritus_wider_bromeliad_names,
     command = fix_whitespace_bromeliad_names(detritus_wider),
@@ -212,6 +301,8 @@ list(
     name = detritus_wider_correct_brazil,
     command = correct_picin_juraea(detritus_wider_correct_frenchguiana),
   ),
+
+  ## SECTION 8: Detritus modelling (fpom) -------------------------------------
 
   tar_target(
     name = model_fpom_g_ml,
@@ -259,29 +350,9 @@ list(
   # ),
 
   tar_target(
-    name = spp_dictonary,
-    command = output_spp_dictionary(
-      abundance |>
-        unnest(measurements) |>
-        mutate(bromeliad_id = as.numeric(bromeliad_id),
-               species_id = as.numeric(species_id) ),
-      broms_date, visits, trts_all_filtered),
+    name = detritus_wider_new_variables,
+    command = add_new_columns_for_prediction(detritus_wider_150_name_changed),
   ),
-
-  # tar_target(
-  #   name = "outputs/spp_dictionary.csv",
-  #   command = write_csv(spp_dictonary, path = target_name),
-  # ),
-  #
-  # tar_target(
-  #   name = "outputs/detritus_models.rds",
-  #   command = write_rds(detritus_estimated_with_model, path = target_name),
-  # ),
-  #
-  # tar_target(
-  #   name = "outputs/detritus_plots.rds",
-  #   command = write_rds(detritus_model_plots, path = target_name),
-  # ),
 
   tar_target(
     name = equation_table,
@@ -304,10 +375,7 @@ list(
   #   command = do_mutate_new_col(detritus_estimate_equation_filt),
   # ),
 
-  tar_target(
-    name = detritus_wider_new_variables,
-    command = add_new_columns_for_prediction(detritus_wider_150_name_changed),
-  ),
+  ## SECTION 9: Detritus modelling (size imputation) --------------------------
 
   tar_target(
     name = model_table,
@@ -383,39 +451,7 @@ list(
     command = add_detritus_summary(detritus_wider_150_name_changed, detritus_summary),
   ),
 
-  tar_target(
-    name = taxonomy_cols,
-    command = make_taxonomy_cols(trts_parsed_cols),
-  ),
-
-  tar_target(
-    name = lowest_taxonomic,
-    command = get_lowest_taxonomic(taxonomy_cols),
-  ),
-
-  tar_target(
-    name = canonical_traits,
-    command = get_canonical_traits(trts_parsed_cols),
-  ),
-
-  tar_target(
-    name = taxon_lowest_names,
-    command = lowest_name_and_subspecies(taxonomy_cols, lowest_taxonomic),
-  ),
-
-  tar_target(
-    name = traits_from_tax,
-    command = merge_trait_by_taxonomy(trait_spreadsheet, taxon_lowest_names),
-  ),
-
-  tar_target(
-    name = traits,
-    command = left_join(canonical_traits |>
-                          mutate(species_id = as.character(species_id)),
-                        traits_from_tax |>
-                          mutate(species_id = as.character(species_id)),
-                        by = join_by("species_id")),
-  ),
+  ## SECTION 10: Supplementary size data & volume imputation ------------------
 
   tar_target(
     name = supplementary_size_data,
@@ -476,6 +512,8 @@ list(
     command = add_24_volum_data(volume_estimated, bromeliad_detritus_vol_imputed),
   ),
 
+  ## SECTION 11: Bromeliad environmental variables ----------------------------
+
   tar_target(
     name = bromeliad_detritus_extra_cols,
     command = add_in_extra_columns(detritus_wide, detritus_wider, bromeliad_detritus_vol_24_added),
@@ -508,6 +546,8 @@ list(
     command = add_elevation(bromeliad_detritus_open_converted),
   ),
 
+  ## SECTION 12: Bromeliad species names --------------------------------------
+
   tar_target(
     name = genus_spp_corrected,
     command = extract_bromeliad_species_names(bromeliad_elevation),
@@ -528,53 +568,40 @@ list(
   ),
 
   tar_target(
-    name = summed_abundance_spp,
-    command = sum_species_abundances(
-      tidyr::unnest(abundance, measurements) |>
-        dplyr::mutate(
-          abd = purrr::flatten_chr(abd),
-          abd = readr::parse_double(abd)
-        )
-    ),
-  ),
-
-  tar_target(
-    name = summed_abundance_lasgamas_dyst_correct,
-    command = correct_lasgamas_dytiscid(summed_abundance_spp),
-  ),
-
-  tar_target(
-    name = abundance_no_zero,
-    command = filter_zero_abd(summed_abundance_lasgamas_dyst_correct),
-  ),
-
-  tar_target(
-    name = synonymous_names,
-    command = identify_merge_duplicates(traits, summed_abundance_lasgamas_dyst_correct),
-  ),
-
-  tar_target(
-    name = spp_abundances_wide,
-    command = spread_present_species(summed_abundance_lasgamas_dyst_correct),
-  ),
-
-  tar_target(
-    name = visit_no_81,
-    command = filter_visit_81(visits),
-  ),
-
-  tar_target(
     name = bromeliads_visit_no_81,
     command = filter_bromeliads_visit81(bromeliad_correctnames, visit_no_81),
   ),
 
-  tar_target(
-    name = abundance_no_81,
-    command = abundance_no_zero |>
-      mutate(across(ends_with("_id"), readr::parse_integer)) |>
-      semi_join(diam_brom |>
-                  filter(visit_id!=81))),
+  ## SECTION 13: Species dictionary --------------------------------------------
 
+  # tar_target(
+  #   name = "outputs/spp_dictionary.csv",
+  #   command = write_csv(spp_dictonary, path = target_name),
+  # ),
+  #
+  # tar_target(
+  #   name = "outputs/detritus_models.rds",
+  #   command = write_rds(detritus_estimated_with_model, path = target_name),
+  # ),
+  #
+  # tar_target(
+  #   name = "outputs/detritus_plots.rds",
+  #   command = write_rds(detritus_model_plots, path = target_name),
+  # ),
+
+  tar_target(
+    name = spp_dictonary,
+    command = output_spp_dictionary(
+      abundance |>
+        unnest(measurements) |>
+        mutate(bromeliad_id = as.numeric(bromeliad_id),
+               species_id = as.numeric(species_id) ),
+      broms_date, visits, trts_all_filtered),
+  ),
+
+  ## ============================================================
+  ## SECTION 14: Final outputs
+  ## ============================================================
 
   ## a dataset output that does not include imputed datasets
   tar_target(
