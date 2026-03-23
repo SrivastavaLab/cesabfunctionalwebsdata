@@ -20,8 +20,8 @@ make_datasetnames <- function(.visitnames){
 ## remove detritus columns
 no_detritus_brom <- function(x){
   x %>%
-    select(-min, -max, -mass) %>%
-    distinct
+    select(-detritus_min_size, -detritus_max_size, -detritus_mass_g) |>
+    distinct()
 }
 
 ## For each bromeliad select the diameter
@@ -62,10 +62,10 @@ make_fpom_brom <- function(.broms){
 ## for every unique pair of detritus ranges (min max)
 make_detritus_wide <- function(.broms){
   detritus_wide <- .broms %>%
-    select(bromeliad_id, min, max, mass) %>%
-    unite(min_max, min, max) %>%
+    select(bromeliad_id, detritus_min_size, detritus_max_size, detritus_mass_g) %>%
+    unite(min_max, detritus_min_size, detritus_max_size) %>%
     mutate(min_max = paste0("detritus", min_max)) %>%
-    spread(min_max, mass)
+    spread(min_max, detritus_mass_g)
 
 
   ## function (defined above) removes detritus columns

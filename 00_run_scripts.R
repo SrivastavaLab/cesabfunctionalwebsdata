@@ -21,16 +21,16 @@ library(targets)
 # library(osfr)
 # library(tidyverse)
 
-download_now <- TRUE
+download_now <- FALSE
 
 # might need to delete a dataset, e.g. bromeliads, to force a download.
 # this is necessary because Targets has no way of knowing if the database has changed!
 
-tar_delete(dats, store = "store_download_data")
-tar_delete(visits, store = "store_download_data")
-tar_delete(broms, store = "store_download_data")
-tar_delete(abs, store = "store_download_data")
-tar_delete(trts_all, store = "store_download_data")
+# tar_delete(dats, store = "store_download_data")
+# tar_delete(visits, store = "store_download_data")
+# tar_delete(broms, store = "store_download_data")
+# tar_delete(abs, store = "store_download_data")
+# tar_delete(trts_all, store = "store_download_data")
 
 Sys.setenv(BWG_BASEURL = "https://www.zoology.ubc.ca/~dashcc/bwgdb/v3/api/")
 # Sys.unsetenv("BWG_BASEURL")
