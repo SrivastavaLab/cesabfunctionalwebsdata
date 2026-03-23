@@ -41,11 +41,13 @@ if(download_now){
 }
 
 Sys.setenv(TAR_PROJECT = "project_process_data")
-tar_make("all_data")
+tar_make("all_data", callr_function = NULL)
 
 
 
 # fix the format of the broms table ---------------------------------------
+
+targets::tar_make("det_long_broken_up", callr_function = NULL)
 
 tar_make("brom_unnested_detritus")
 

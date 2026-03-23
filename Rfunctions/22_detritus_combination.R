@@ -94,7 +94,7 @@ split_detritus_categories <- function(.detritus_long_filtered) {
   det_long_broken_up <- det_long_just_fitted %>%
     mutate(obs_or_fit = if_else(str_detect(detritus_category, "_fitted"), true = "fit", false = "obs")) %>%
     mutate(detritus_broken_up = str_split(detritus_category, "_")) %>%
-    tbl_df
+    tibble::as_tibble()
 
   return(det_long_broken_up)
 }

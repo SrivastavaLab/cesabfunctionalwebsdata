@@ -154,10 +154,6 @@ check_data_source_target <- function(dataset, sourcename, targetname) {
 ### but not the other -- not detritus0_150
 correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
 
-  .detritus_wider_cardoso_corrected$dead_leaves <- readr::parse_number(
-    .detritus_wider_cardoso_corrected$dead_leaves
-  )
-
   ## correct structure back to typical data.frame (tibble)
   .detritus_wider_cardoso_corrected <- tibble::as_tibble(.detritus_wider_cardoso_corrected)
 
@@ -169,7 +165,9 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
              detritus20000_NA= if_else(dataset_id==211, dead_leaves, detritus20000_NA))
 
   } else {
-    warning("NOTE cpom_g is NOT found but it is expected! The code was written to move it into the correct detritus column, but now it is not there. If in the future it gets put back in the database (or in the output) you should UNCOMMENT the corresponding line in the function that cleans this data. please see the body of the function correct_frenchguiana_detritus")
+    warning("NOTE cpom_g is NOT found but it is expected! The code was written to move it into the correct detritus column,
+            but now it is not there. If in the future it gets put back in the database (or in the output) you should UNCOMMENT
+            the corresponding line in the function that cleans this data. please see the body of the function correct_frenchguiana_detritus")
     ## first correct the variable names -- move values from "fpom_g" "cpom_g" and
     ## "dead_leaves", within the one site where they were recorded erroneously,
     ## into correct "detritus*" columns

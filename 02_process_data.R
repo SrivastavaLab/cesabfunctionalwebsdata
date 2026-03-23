@@ -234,12 +234,12 @@ list(
     command = identify_merge_duplicates(traits, summed_abundance_lasgamas_dyst_correct),
   ),
 
-  # note: depends on diam_brom from section 6
+  # note: depends on brom_validated
   tar_target(
     name = abundance_no_81,
     command = abundance_no_zero |>
       mutate(across(ends_with("_id"), readr::parse_integer)) |>
-      semi_join(diam_brom |>
+      semi_join(brom_validated |>
                   filter(visit_id!=81))),
 
   ## SECTION 6: Bromeliad morphology derived variables ------------------------
