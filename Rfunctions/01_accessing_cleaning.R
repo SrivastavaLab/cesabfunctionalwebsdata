@@ -135,13 +135,13 @@ make_bwg_schema <- function(){
 
   # --- environment ---
   sampling_day                               = "integer",
-  canopy_height_m                            = "integer",
-  canopy_height                              = "integer",    # duplicate of canopy_height_m?
+  canopy_height_m                            = "double",
+  canopy_height                              = "double",    # duplicate of canopy_height_m?
   canopy_openess_chr                         = "character",
-  canopy_openess                             = "double",     # all-NULL in sample — verify
-  canopy_cover                               = "double",     # all-NULL in sample — verify
+  canopy_openess                             = "character",     #
+  canopy_cover                               = "character",     # all-NULL in sample — verify
   `Canopy openess`                           = "character",  # duplicate — raise with API dev
-  Canopy                                     = "integer",    # unclear — raise with API dev
+  Canopy                                     = "character",    # unclear — raise with API dev
   incident_radiation_above_ground_percentage = "double",
   incident_radiation_percentage              = "double",
   elevation_m                                = "double",
@@ -204,14 +204,27 @@ validate_and_coerce <- function(df, schema, df_name = "data") {
 
   # --- flatten list columns first ---
   list_cols <- names(df)[sapply(df, is.list)]
-  if (length(list_cols) > 0) {
-    message(glue::glue(
-      "[{df_name}] Flattening list columns: {paste(list_cols, collapse = ', ')}"
-    ))
-    df <- df %>%
-      mutate(across(all_of(list_cols),
-                ~ map(., ~ if (is.null(.x)) NA_real_ else as.numeric(.x)) %>%
-                  unlist()))
+
+  for (col in list_cols) {
+    expected_type <- schema[[col]]
+
+    if (!is.null(expected_type) && expected_type == "character") {
+
+      df[[col]] <- map(
+        df[[col]],
+        ~ if (is.null(.x)) NA_character_ else as.character(.x)
+      ) |>
+        unlist()
+
+    } else {
+
+      df[[col]] <- map(
+        df[[col]],
+        ~ if (is.null(.x) || identical(.x, "NA")) NA_real_ else as.numeric(.x)
+      ) |>
+        unlist()
+
+    }
   }
 
   # --- coerce types for columns present in both schema and data ---
@@ -236,7 +249,6 @@ validate_and_coerce <- function(df, schema, df_name = "data") {
       df[[col]] <- coerce_fn(df[[col]])
     }
   }
-
   df
 }
 

@@ -14,9 +14,6 @@
 ## needs regular maintenance and updating of the code and the process
 
 
-
-## TODO add a function that CHECKS ALL THE NAMES and CONFIRMS ALL THE COLUMN TYPES for the database.
-
 library(targets)
 # library(osfr)
 # library(tidyverse)
@@ -44,6 +41,12 @@ Sys.setenv(TAR_PROJECT = "project_process_data")
 tar_make("all_data", callr_function = NULL)
 
 
+Sys.setenv(TAR_PROJECT = "project_observed_data")
+tar_visnetwork(targets_only = TRUE)
+tar_make(brom_validated)
+tar_make()
+
+tar_
 
 # fix the format of the broms table ---------------------------------------
 

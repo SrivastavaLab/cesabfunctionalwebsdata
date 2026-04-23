@@ -4,3 +4,6 @@ project_download_data:
 project_process_data:
   script: 02_process_data.R
   store: store_process_data
+project_observed_data:
+  script: 02_observed_data.R
+  store: store_observed_data
