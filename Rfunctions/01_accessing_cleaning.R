@@ -212,16 +212,14 @@ validate_and_coerce <- function(df, schema, df_name = "data") {
 
       df[[col]] <- map(
         df[[col]],
-        ~ if (is.null(.x)) NA_character_ else as.character(.x)
-      ) |>
+        ~ if (is.null(.x)) NA_character_ else as.character(.x)) |>
         unlist()
 
     } else {
 
       df[[col]] <- map(
         df[[col]],
-        ~ if (is.null(.x) || identical(.x, "NA")) NA_real_ else as.numeric(.x)
-      ) |>
+        ~ if (is.null(.x) || identical(.x, "NA")) NA_real_ else as.numeric(.x)) |>
         unlist()
 
     }

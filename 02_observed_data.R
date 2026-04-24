@@ -27,7 +27,7 @@ tar_option_set(
   )
 
 # read in functions
-tar_source(files = "Rfunctions/")
+tar_source(files = "Rfunctions/02_observed_data_functions.R")
 
 ## read in data downloaded in 01_download_data.R
 dats <- tar_read(dats, store = "store_download_data")

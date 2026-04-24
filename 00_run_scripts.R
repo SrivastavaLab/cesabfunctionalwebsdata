@@ -46,7 +46,6 @@ tar_visnetwork(targets_only = TRUE)
 tar_make(brom_validated)
 tar_make()
 
-tar_
 
 # fix the format of the broms table ---------------------------------------
 
