@@ -39,117 +39,117 @@ get_osf_spreadsheet <- function(ref) {
 ## SECTION 2: Bromeliads — reshaping and validating -------------------------
 
 make_bwg_schema <- function(){
-  bwg_schema_bromeliads <- list(
-  # --- core identifiers ---
-  bromeliad_id                               = "integer",
-  visit_id                                   = "integer",
-  original_id                                = "character",
-  species                                    = "character",
-  collection_date                            = "character",  # consider Date after parsing
+  list(
+    # --- core identifiers ---
+    bromeliad_id                               = "integer",
+    visit_id                                   = "integer",
+    original_id                                = "character",
+    species                                    = "character",
+    collection_date                            = "character",  # consider Date after parsing
 
-  # --- morphology ---
-  actual_water                               = "double",
-  max_water                                  = "double",
-  longest_leaf                               = "double",
-  num_leaf                                   = "integer",
-  height                                     = "double",
-  diameter                                   = "double",
-  extended_diameter                          = "double",
-  leaf_width                                 = "double",
-  plant_height_cm                            = "double",     # all-NULL in sample — verify
-  sheath_length_cm                           = "double",
-  blade_width_cm                             = "double",
-  plant_area_m2                              = "double",
-  plant_area                                 = "double",     # duplicate of plant_area_m2?
-  reservoir_height_cm                        = "double",
-  reservoir_diameter_cm                      = "double",
-  catchment_height_cm                        = "double",
-  catchment_diameter_cm                      = "double",
-  catchment_diameter                         = "double",     # duplicate of catchment_diameter_cm?
-  tank_height_cm                             = "double",
-  core_diameter_cm                           = "double",
-  cobertura_cm2                              = "double",
-  total_leaf_weight_g                        = "double",
-  green_leaves                               = "integer",
-  dead_leaves                                = "double",
-  vertical_leaves_percentage                 = "double",
-  horizontal_leaves_percentage               = "double",
-  light_canopy_access_0_10                   = "double",
-  precipitation_access_0_10                  = "double",
+    # --- morphology ---
+    actual_water                               = "double",
+    max_water                                  = "double",
+    longest_leaf                               = "double",
+    num_leaf                                   = "integer",
+    height                                     = "double",
+    diameter                                   = "double",
+    extended_diameter                          = "double",
+    leaf_width                                 = "double",
+    plant_height_cm                            = "double",     # all-NULL in sample — verify
+    sheath_length_cm                           = "double",
+    blade_width_cm                             = "double",
+    plant_area_m2                              = "double",
+    plant_area                                 = "double",     # duplicate of plant_area_m2?
+    reservoir_height_cm                        = "double",
+    reservoir_diameter_cm                      = "double",
+    catchment_height_cm                        = "double",
+    catchment_diameter_cm                      = "double",
+    catchment_diameter                         = "double",     # duplicate of catchment_diameter_cm?
+    tank_height_cm                             = "double",
+    core_diameter_cm                           = "double",
+    cobertura_cm2                              = "double",
+    total_leaf_weight_g                        = "double",
+    green_leaves                               = "integer",
+    dead_leaves                                = "double",
+    vertical_leaves_percentage                 = "double",
+    horizontal_leaves_percentage               = "double",
+    light_canopy_access_0_10                   = "double",
+    precipitation_access_0_10                  = "double",
 
-  # --- detritus (unnested from nested data frame) ---
-  detritus_min_size                          = "integer",
-  detritus_max_size                          = "integer",
-  detritus_mass_g                            = "double",
-  fpom_ml                                    = "double",     # all-NULL in sample — verify
-  fpom_mg                                    = "double",
-  fpom_g                                     = "double",
-  cpom_g                                     = "double",
-  `detritus>10000`                           = "double",     # suspicious name — raise with API dev
+    # --- detritus (unnested from nested data frame) ---
+    detritus_min_size                          = "integer",
+    detritus_max_size                          = "integer",
+    detritus_mass_g                            = "double",
+    fpom_ml                                    = "double",     # all-NULL in sample — verify
+    fpom_mg                                    = "double",
+    fpom_g                                     = "double",
+    cpom_g                                     = "double",
+    `detritus>10000`                           = "double",     # suspicious name — raise with API dev
 
-  # --- spider / fauna ---
-  spider                                     = "character",
-  spiders                                    = "integer",    # duplicate of spider? or count?
-  ant                                        = "character",
-  ant_nest                                   = "character",
+    # --- spider / fauna ---
+    spider                                     = "character",
+    spiders                                    = "integer",    # duplicate of spider? or count?
+    ant                                        = "character",
+    ant_nest                                   = "character",
 
-  # --- water chemistry ---
-  average_ph                                 = "double",
-  ph                                         = "double",     # duplicate of average_ph?
-  chlorophyll_a_ug_per_l                     = "double",
-  nitrate_umol_per_l                         = "double",
-  phosphate_umol_per_l                       = "double",
-  inorganic_carbon_mgc_per_l                 = "double",
-  ammonium_umol_per_l                        = "double",
-  dissolved_organic_carbon_mgc_per_l         = "double",
-  total_organic_carbon_mgC_per_l             = "double",
-  water_coloration_per_m                     = "double",
-  turbidity_ntu                              = "double",
-  water_temperature_c                        = "double",
-  algae_gC_per_L                             = "double",
-  virus_per_ml                               = "integer",
-  bacteria_per_ml                            = "integer",
-  bacterial_abundance_cell_per_ml            = "integer",
+    # --- water chemistry ---
+    average_ph                                 = "double",
+    ph                                         = "double",     # duplicate of average_ph?
+    chlorophyll_a_ug_per_l                     = "double",
+    nitrate_umol_per_l                         = "double",
+    phosphate_umol_per_l                       = "double",
+    inorganic_carbon_mgc_per_l                 = "double",
+    ammonium_umol_per_l                        = "double",
+    dissolved_organic_carbon_mgc_per_l         = "double",
+    total_organic_carbon_mgC_per_l             = "double",
+    water_coloration_per_m                     = "double",
+    turbidity_ntu                              = "double",
+    water_temperature_c                        = "double",
+    algae_gC_per_L                             = "double",
+    virus_per_ml                               = "integer",
+    bacteria_per_ml                            = "integer",
+    bacterial_abundance_cell_per_ml            = "integer",
 
-  # --- environment ---
-  sampling_day                               = "integer",
-  canopy_height_m                            = "double",
-  canopy_height                              = "double",    # duplicate of canopy_height_m?
-  canopy_openess_chr                         = "character",
-  canopy_openess                             = "character",     #
-  canopy_cover                               = "character",     # all-NULL in sample — verify
-  `Canopy openess`                           = "character",  # duplicate — raise with API dev
-  Canopy                                     = "character",    # unclear — raise with API dev
-  incident_radiation_above_ground_percentage = "double",
-  incident_radiation_percentage              = "double",
-  elevation_m                                = "double",
-  elevation                                  = "integer",    # duplicate of elevation_m?
-  air_temperature_c                          = "double",
-  temperature_c                              = "double",     # duplicate of air_temperature_c?
-  oxygen_mg_lt                               = "double",
-  oxygen_mgperl                              = "double",     # duplicate of oxygen_mg_lt?
-  `conductivity_S_cm-1`                      = "double",
+    # --- environment ---
+    sampling_day                               = "integer",
+    canopy_height_m                            = "double",
+    canopy_height                              = "double",    # duplicate of canopy_height_m?
+    canopy_openess_chr                         = "character",
+    canopy_openess                             = "character",     #
+    canopy_cover                               = "character",     # all-NULL in sample — verify
+    `Canopy openess`                           = "character",  # duplicate — raise with API dev
+    Canopy                                     = "character",    # unclear — raise with API dev
+    incident_radiation_above_ground_percentage = "double",
+    incident_radiation_percentage              = "double",
+    elevation_m                                = "double",
+    elevation                                  = "integer",    # duplicate of elevation_m?
+    air_temperature_c                          = "double",
+    temperature_c                              = "double",     # duplicate of air_temperature_c?
+    oxygen_mg_lt                               = "double",
+    oxygen_mgperl                              = "double",     # duplicate of oxygen_mg_lt?
+    `conductivity_S_cm-1`                      = "double",
 
-  # --- location / context ---
-  habitat                                    = "character",
-  utme                                       = "double",
-  utmn                                       = "double",
-  substrate                                  = "character",
-  host_tree_label                            = "character",  # all-NULL in sample — verify
-  number_bromeliads_on_tree                  = "integer",
-  no_brom_host_tree                          = "integer",    # duplicate of number_bromeliads_on_tree?
-  number_of_bromeliads_in_3m_radius          = "integer",
-  no_brom_3m_cumulative                      = "integer",    # duplicate of above?
-  total_bromeliads_within_2m_radius          = "integer",
-  total_bromeliads_on_same_tree              = "integer",
-  number_of_epiphytes_in_ant_garden          = "integer",
-  number_of_wells                            = "integer",
-  num_wells                                  = "integer",    # duplicate of number_of_wells?
+    # --- location / context ---
+    habitat                                    = "character",
+    utme                                       = "double",
+    utmn                                       = "double",
+    substrate                                  = "character",
+    host_tree_label                            = "character",  # all-NULL in sample — verify
+    number_bromeliads_on_tree                  = "integer",
+    no_brom_host_tree                          = "integer",    # duplicate of number_bromeliads_on_tree?
+    number_of_bromeliads_in_3m_radius          = "integer",
+    no_brom_3m_cumulative                      = "integer",    # duplicate of above?
+    total_bromeliads_within_2m_radius          = "integer",
+    total_bromeliads_on_same_tree              = "integer",
+    number_of_epiphytes_in_ant_garden          = "integer",
+    number_of_wells                            = "integer",
+    num_wells                                  = "integer",    # duplicate of number_of_wells?
 
-  # --- suspicious / unknown ---
-  happiness                                  = "integer",    # raise with API dev
-  sadness                                    = "integer"     # raise with API dev
-)
+    # --- suspicious / unknown ---
+    happiness                                  = "integer",    # raise with API dev
+    sadness                                    = "integer"     # raise with API dev
+  )
 }
 
 unnest_detritus <- function(.broms_unnested_attrib){
