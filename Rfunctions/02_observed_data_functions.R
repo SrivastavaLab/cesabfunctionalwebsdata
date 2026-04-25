@@ -1072,13 +1072,6 @@ filter_bromeliads_visit81 <- function(.bromeliad_correctnames, .visit_no_81) {
             by = c("visit_id"))
 }
 
-filter_abundance_81 <- function(.abundance_no_zero, .bromeliads_visit_no_81){
-
-  .abundance_no_zero %>%
-    semi_join(.bromeliads_visit_no_81, by = c("dataset_id", "bromeliad_id"))
-
-}
-
 
 ## SECTION 10: Species dictionary --------------------------------------------
 

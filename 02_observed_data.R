@@ -9,7 +9,6 @@
 
 library(targets)
 library(tarchetypes)
-library(bwgdata)
 tar_option_set(
   packages = c(
     "bwgdata",
