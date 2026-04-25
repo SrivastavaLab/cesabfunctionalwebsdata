@@ -7,8 +7,7 @@
 
 # import corrected names
 import_BromeliadSpecies <- function(path){
-  read_delim(path,
-             ";", escape_double = FALSE, trim_ws = TRUE)
+  read_delim(path,delim = ";", escape_double = FALSE, trim_ws = TRUE)
 }
 
 read_trait_spreadsheet <- function(path){
@@ -650,23 +649,27 @@ identify_merge_duplicates <- function(.traits, .summed_abundance_lasgamas_dyst_c
   # different bromeliads or datasets, it might be better to leave this for
   # authors. This is just a check -- it doesn't _make_ anything yet, because at
   # this writing there is nothing to solve!
-  .summed_abundance_lasgamas_dyst_correct %>%
+
+  # build the lookup: which species_ids share a taxon_name?
+  species_to_taxon <- .traits %>%
+    semi_join(synonymous_names, by = "taxon_name") %>%
+    select(species_id, taxon_name) %>%
+    distinct()
+
+  # find bromeliads where multiple abundance rows map to the same taxon_name
+  dups <- .summed_abundance_lasgamas_dyst_correct %>%
     filter(abd > 0) %>%
-    # choose from traits those rows that represent synonyms, and take only the
-    # useful columns to join with abundance. Use inner_join because this trait
-    # table could contain other species not in abundance (e.g. drought experiment
-    # animals)
-    inner_join(.traits %>%
-                 semi_join(synonymous_names) %>%
-                 select(species_id, names, bwg_name, taxon_name)) %>%
-    group_by(dataset_id, taxon_name, bromeliad_id) %>% nest %>%
-    mutate(ndups = map_dbl(data, nrow)) %>% arrange(desc(ndups)) %>%
-    verify(ndups == 1)
-  # never happens
+    inner_join(species_to_taxon, by = "species_id") %>%
+    count(dataset_id, bromeliad_id, taxon_name) %>%
+    filter(n > 1)
 
-  return(synonymous_names)
+  if (nrow(dups) > 0) {
+    warning(glue::glue(
+      "Found {nrow(dups)} cases where synonymous species co-occur in the same bromeliad. ",
+      "Consider merging their abundances."
+    ))
+  }
 }
-
 
 ## SECTION 6: Bromeliad morphology derived variables -------------------------
 
@@ -1012,7 +1015,8 @@ extract_bromeliad_species_names <- function(.bromeliad_elevation){
     distinct %>%
     ## standardize the name of an unknown Vrisea/Guzmania combo
     mutate(species = str_replace(species, "Guzmania/Vriesea sp.|Vriesea_or_Guzmania", "VrieseaGuzmania_sp")) %>%
-    separate(species, c("bromeliad_genus", "bromeliad_trivial"), extra = "merge", remove = FALSE) %>%
+    separate(species, c("bromeliad_genus", "bromeliad_trivial"),
+             extra = "merge", remove = FALSE, fill = "right") %>%
     arrange(bromeliad_genus) %>%
     mutate(bromeliad_genus_correct = case_when(bromeliad_genus == "G"                 ~ "Guzmania",
                                                str_detect(species, "/|_or_")          ~ "Unknown",
