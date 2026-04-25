@@ -317,8 +317,12 @@ make_taxonomy_cols <- function(.trts_all_filtered) {
 get_lowest_taxonomic <- function(.taxonomy_cols) {
   # for each morphospecies, which is the lowest level to which it has been identified?
   taxa_long <- .taxonomy_cols %>%
-    gather(taxon_level, taxon_name, -species_id) %>%
-    filter(!is.na(taxon_name))
+  pivot_longer(
+    cols      = -species_id,
+    names_to  = "taxon_level",
+    values_to = "taxon_name"
+  ) %>%
+  filter(!is.na(taxon_name))
 
   taxon_numbers <- tribble(
     ~taxon_number,     ~taxon_level,
@@ -614,10 +618,14 @@ filter_zero_abd <- function(.summed_abundance_lasgamas_dyst_correct) {
 
 spread_present_species <- function(.summed_abundance_spp){
   .summed_abundance_spp %>%
-    filter(abd != 0, !is.na(abd)) %>%
-    select(-bwg_name) %>%
-    unite("dataset_species", dataset_id, species_id) %>%
-    spread(dataset_species, abd, fill = 0)
+  filter(abd != 0, !is.na(abd)) %>%
+  select(-bwg_name) %>%
+  unite("dataset_species", dataset_id, species_id) %>%
+  pivot_wider(
+    names_from  = dataset_species,
+    values_from = abd,
+    values_fill = 0
+  )
 }
 
 identify_merge_duplicates <- function(.traits, .summed_abundance_lasgamas_dyst_correct){
@@ -720,7 +728,9 @@ make_detritus_wide <- function(.broms){
     select(bromeliad_id, detritus_min_size, detritus_max_size, detritus_mass_g) %>%
     unite(min_max, detritus_min_size, detritus_max_size) %>%
     mutate(min_max = paste0("detritus", min_max)) %>%
-    spread(min_max, detritus_mass_g)
+    pivot_wider(names_from = min_max,
+           values_from = detritus_mass_g,
+           values_fill = NA_real_)
 
   ## function (defined above) removes detritus columns
   broms_without_detritus <- no_detritus_brom(.broms)
@@ -760,16 +770,6 @@ make_detritus_wider <- function(.broms, .detritus_wide, .visitnames, .diam_brom,
     left_join(fpom_distinct, by = c("bromeliad_id")) %>%
     assertr::verify(nrow(.) == nrow(brom_just_ids))
 }
-
-#collapse to dataset level for easy checking
-make_detrital_table <- function(.detritus_wider){
-  .detritus_wider %>%
-    select(-bromeliad_id, -dataset_name, dataset_id) %>%
-    group_by(visit_id) %>%
-    summarise_each(funs(mean(., na.rm = TRUE)))%>%
-    left_join(datasetnames)
-}
-
 
 ## SECTION 7: Detritus cleaning & corrections --------------------------------
 
@@ -990,30 +990,35 @@ convert_incident_to_openness <- function(.bromeliad_detritus_open) {
 
 add_elevation <- function(latest_bromeliad_data) {
   latest_bromeliad_data %>%
-    mutate(elevation_m = ifelse(visit_id %in%c(141,361,156,171),962, elevation_m))%>% # dwarf forest
-    mutate(elevation_m = ifelse(visit_id %in%c(151,166,356,181,136),750, elevation_m))%>% # Palo colorado
-    mutate(elevation_m = ifelse(visit_id %in%c(146,161,351,176,131),390, elevation_m))%>% # tabunocco
-    mutate(elevation_m = ifelse(visit_id %in%c(451),300, elevation_m))%>% #Saba dry forest
-    mutate(elevation_m = ifelse(visit_id %in%c(121),650, elevation_m))%>% #Saba Montagne
-    mutate(elevation_m = ifelse(visit_id %in%c(126),840, elevation_m))%>% #Saba cloud forest
-    mutate(elevation_m = ifelse(visit_id %in%c(116),560, elevation_m))%>% #Saba SC montagne
-    mutate(elevation_m = ifelse(visit_id %in%c(201),1130, elevation_m))%>% #Dominica cloud forest
-    mutate(elevation_m = ifelse(visit_id %in%c(196),830, elevation_m))%>% #Dominica montagne thicket
-    mutate(elevation_m = ifelse(visit_id %in%c(191),800, elevation_m))%>% #Dominica subtropical
-    mutate(elevation_m = ifelse(visit_id %in%c(446),1000, elevation_m))%>% #Sonadora 1000
-    mutate(elevation_m = ifelse(visit_id %in%c(376),400, elevation_m))%>% #Sonadora 400
-    mutate(elevation_m = ifelse(visit_id %in%c(391),450, elevation_m))%>% #Sonadora 450
-    mutate(elevation_m = ifelse(visit_id %in%c(396),500, elevation_m))%>% #Sonadora 500
-    mutate(elevation_m = ifelse(visit_id %in%c(401),550, elevation_m))%>% #Sonadora 550
-    mutate(elevation_m = ifelse(visit_id %in%c(506),600, elevation_m))%>% #Sonadora 600
-    mutate(elevation_m = ifelse(visit_id %in%c(411),650, elevation_m))%>% #Sonadora 650
-    mutate(elevation_m = ifelse(visit_id %in%c(416),700, elevation_m))%>% #Sonadora 700
-    mutate(elevation_m = ifelse(visit_id %in%c(421),750, elevation_m))%>% #Sonadora 750
-    mutate(elevation_m = ifelse(visit_id %in%c(426),800, elevation_m))%>% #Sonadora 800
-    mutate(elevation_m = ifelse(visit_id %in%c(431),850, elevation_m))%>% #Sonadora 850
-    mutate(elevation_m = ifelse(visit_id %in%c(436),900, elevation_m))%>% #Sonadora 900
-    mutate(elevation_m = ifelse(visit_id %in%c(441),950, elevation_m))
+    mutate(elevation_m = case_when(
+      visit_id %in% c(141, 361, 156, 171)       ~ 962,  # dwarf forest
+      visit_id %in% c(151, 166, 356, 181, 136)  ~ 750,  # Palo colorado
+      visit_id %in% c(146, 161, 351, 176, 131)  ~ 390,  # tabunocco
+      visit_id == 451                           ~ 300,  # Saba dry forest
+      visit_id == 121                           ~ 650,  # Saba Montagne
+      visit_id == 126                           ~ 840,  # Saba cloud forest
+      visit_id == 116                           ~ 560,  # Saba SC montagne
+      visit_id == 201                           ~ 1130, # Dominica cloud forest
+      visit_id == 196                           ~ 830,  # Dominica montagne thicket
+      visit_id == 191                           ~ 800,  # Dominica subtropical
+      visit_id == 446                           ~ 1000, # Sonadora 1000
+      visit_id == 376                           ~ 400,  # Sonadora 400
+      visit_id == 391                           ~ 450,  # Sonadora 450
+      visit_id == 396                           ~ 500,  # Sonadora 500
+      visit_id == 401                           ~ 550,  # Sonadora 550
+      visit_id == 506                           ~ 600,  # Sonadora 600
+      visit_id == 411                           ~ 650,  # Sonadora 650
+      visit_id == 416                           ~ 700,  # Sonadora 700
+      visit_id == 421                           ~ 750,  # Sonadora 750
+      visit_id == 426                           ~ 800,  # Sonadora 800
+      visit_id == 431                           ~ 850,  # Sonadora 850
+      visit_id == 436                           ~ 900,  # Sonadora 900
+      visit_id == 441                           ~ 950,  # Sonadora 950
+      .default = elevation_m
+    ))
 }
+
+
 
 
 ## SECTION 9: Bromeliad species names ----------------------------------------
