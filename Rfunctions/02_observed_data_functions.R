@@ -818,12 +818,10 @@ correct_cardoso_detritus_wider <- function(.detritus_wider){
 #' nested in the "target" column -- ie if there is a value in "source" there
 #' should never be a missing value in "target"
 check_data_source_target <- function(dataset, sourcename, targetname) {
-  testdata <- dataset %>%
-    # where the 'source' data was..
-    filter(!is.na({{sourcename}})) %>%
-    # there should be no empty 'target' data!
-    filter(is.na({{targetname}})) %>%
-    verify(., nrow(.) == 0)
+  dataset %>%
+    filter(!is.na(.data[[sourcename]])) %>%
+    filter(is.na(.data[[targetname]])) %>%
+    verify(nrow(.) == 0)
 }
 
 correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
@@ -832,16 +830,17 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
   .detritus_wider_cardoso_corrected <- tibble::as_tibble(.detritus_wider_cardoso_corrected)
 
   if ("cpom_g" %in% names(.detritus_wider_cardoso_corrected)) {
-    message("moving detritus logged as fpom, cpom, and dead leaves to quantitative categories")
+    message("dataset 211: moving detritus logged as fpom, cpom, and dead leaves to quantitative categories")
     move_values_to_detritus <- .detritus_wider_cardoso_corrected %>%
-      mutate(detritus0_150 = if_else(dataset_id==211, fpom_g, detritus0_150),
-             detritus150_20000 = if_else(dataset_id==211, cpom_g, detritus150_20000),
-             detritus20000_NA= if_else(dataset_id==211, dead_leaves, detritus20000_NA))
+      mutate(detritus0_150     = if_else(dataset_id==211, fpom_g,      detritus0_150),
+             detritus150_20000 = if_else(dataset_id==211, cpom_g,      detritus150_20000),
+             detritus20000_N   = if_else(dataset_id==211, dead_leaves, detritus20000_NA))
 
   } else {
-    warning("NOTE cpom_g is NOT found but it is expected! The code was written to move it into the correct detritus column,
-            but now it is not there. If in the future it gets put back in the database (or in the output) you should UNCOMMENT
-            the corresponding line in the function that cleans this data. please see the body of the function correct_frenchguiana_detritus")
+    warning(
+      "NOTE cpom_g is NOT found but it is expected! The code was written to move it into the correct detritus column,
+       but now it is not there. If in the future it gets put back in the database (or in the output) you should UNCOMMENT
+       the corresponding line in the function that cleans this data. please see the body of the function correct_frenchguiana_detritus")
     ## first correct the variable names -- move values from "fpom_g" "cpom_g" and
     ## "dead_leaves", within the one site where they were recorded erroneously,
     ## into correct "detritus*" columns
