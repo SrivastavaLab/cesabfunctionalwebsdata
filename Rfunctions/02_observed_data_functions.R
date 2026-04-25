@@ -790,15 +790,27 @@ fix_whitespace_bromeliad_names <- function(.detritus_wider){
 #first we realized that the larger detritus in cardoso has been input into the
 #wrong column remove the next few lines if this gets fixed on BWGdb
 correct_cardoso_detritus_wider <- function(.detritus_wider){
-  .detritus_wider %>%
-    mutate(detritus150_NA = ifelse(visit_id == 21,
-                                   detritus150_20000,
-                                   detritus150_NA),
-           detritus150_20000 = ifelse(visit_id == 21,
-                                      NA,
-                                      detritus150_20000))
-  .detritus_wider
 
+  visit21 <- .detritus_wider %>%
+    filter(visit_id == 21)
+
+  already_correct <- all(!is.na(visit21$detritus150_NA)) &&
+                     all(is.na(visit21$detritus150_20000))
+
+  if (already_correct) {
+    message(
+      "correct_cardoso_detritus_wider: visit 21 detritus150_NA already has values ",
+      "and detritus150_20000 is all NA. The database error appears to be fixed! ",
+      "This correction step has been skipped. Consider removing this function."
+    )
+    return(.detritus_wider)
+  }
+
+  .detritus_wider %>%
+    mutate(
+      detritus150_NA    = ifelse(visit_id == 21, detritus150_20000, detritus150_NA),
+      detritus150_20000 = ifelse(visit_id == 21, NA,                detritus150_20000)
+    )
 }
 
 #' helper function for when you fill one column in with another. When that
