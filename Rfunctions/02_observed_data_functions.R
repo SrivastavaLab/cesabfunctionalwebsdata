@@ -250,7 +250,7 @@ parse_column_types_reader <- function(df){
 make_visitnames <- function(.visits, .dats_filtered){
   .visits %>%
     ## first filter out the ones we know are garbage
-    semi_join(.dats_filtered) %>%
+    semi_join(.dats_filtered, by = join_by(dataset_id)) %>%
     select(visit_id, dataset_id, dataset_name)
 }
 
@@ -368,8 +368,8 @@ lowest_name_and_subspecies <- function(.taxonomy_cols, .lowest_names) {
     get_lowest_taxonomic
 
   # anybody missing?
-  .taxonomy_cols %>%
-    anti_join(.lowest_names)
+  # .taxonomy_cols %>%
+  #   anti_join(.lowest_names)
   # just these unknown animals!
   # check that the names are acceptable and message: "6516", "6511", "6506"
 
@@ -979,9 +979,7 @@ create_openness_conversion_table <- function(){
 
 convert_incident_to_openness <- function(.bromeliad_detritus_open) {
 
-  incident_convert<-function(a){
-    ifelse(a>=50,1,(ifelse(a<50,0,NA)))
-  }
+  incident_convert <- function(a) as.integer(a >= 50)
 
   .bromeliad_detritus_open %>%
     mutate(open.canopy = ifelse(visit_id %in%c("296", "301"),incident_convert(incident_radiation_above_ground_percentage), open.canopy))%>%
