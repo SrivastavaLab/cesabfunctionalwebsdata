@@ -88,11 +88,6 @@ list(
   ## SECTION 3: Visits & datasets --------------------------------------------
 
   tar_target(
-    name = dats_date,
-    command = parse_column_types_reader(dats),
-  ),
-
-  tar_target(
     name = visitnames,
     command = make_visitnames(visits, dats),
   ),
@@ -331,7 +326,7 @@ list(
   tar_target(
     name = observed_data,
     command = list(
-      datasets          = dats_date,
+      datasets          = dats,
       visits            = visit_no_81,
       traits            = traits,
       bromeliads        = bromeliads_visit_no_81,

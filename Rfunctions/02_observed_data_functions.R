@@ -669,6 +669,8 @@ identify_merge_duplicates <- function(.traits, .summed_abundance_lasgamas_dyst_c
       "Consider merging their abundances."
     ))
   }
+
+  return(synonymous_names)
 }
 
 ## SECTION 6: Bromeliad morphology derived variables -------------------------
@@ -863,14 +865,14 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
     check_data_source_target("dead_leaves", "detritus20000_NA") %>%
     check_data_source_target("fpom_mg", "detritus0_150")
 
-
+  message("dataset 201: removing particle counts from detritus mass columns")
   # if that did not throw an error, drop the old columns
-  return(fix_fpom_mp) #%>%
+  return(fix_fpom_mp) %>%
     select(-fpom_g, -cpom_g, -dead_leaves, -fpom_mg) %>%
     # Nourages 2006 (dataset 201) accidentally has particle counts in detritus categories
     # this needs to be corrected in BWGdb but for now
-    mutate(detritus30_150 = if_else(dataset_id==201,NA_real_, detritus30_150)) %>%
-    mutate(detritus0_30 = if_else(dataset_id==201,NA_real_, detritus0_30)) %>%
+    mutate(detritus30_150  = if_else(dataset_id==201,NA_real_, detritus30_150)) %>%
+    mutate(detritus0_30    = if_else(dataset_id==201,NA_real_, detritus0_30)) %>%
     mutate(detritus150_300 = if_else(dataset_id==201,NA_real_, detritus150_300))
 
 }
