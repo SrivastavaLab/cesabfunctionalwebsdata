@@ -83,42 +83,60 @@ check_brom_data <- function(d) {
 }
 
 read_size_aquilega <- function(filenm) {
-  d <- filenm %>%
-    read_delim(delim = ";") %>%
+  read_delim(
+    filenm, delim = ";",
+    show_col_types = FALSE,
+    col_types = cols(
+      ID    = col_character(),
+      Diam1 = col_double(),
+      NL    = col_double(),
+      Vmax  = col_double()
+    )
+  ) %>%
     rename(plant_id = ID) %>%
-    mutate(plant_id = as.character(plant_id))
-  check_brom_data(d)
-  return(d)
+    mutate(plant_id = str_trim(plant_id))  # aquilegaKT has trailing spaces
 }
 
-read_size_Guzmania_mertensii <- function(filenm){
-  filenm %>%
-    read_delim(delim = ";") %>%
-    rename(plant_id = plante) %>%
-    mutate(plant_id = as.character(plant_id)) %>%
-    check_brom_data
+read_size_Guzmania_mertensii <- function(filenm) {
+  read_delim(
+    filenm, delim = ";",
+    show_col_types = FALSE,
+    col_types = cols(
+      plante = col_character(),  # double in guzmania, chr in mertensii — read as chr
+      Diam1  = col_double(),
+      Diam2  = col_double(),     # absent in guzmania; readr silently skips missing cols
+      NL     = col_double(),
+      Vmax   = col_double()
+    )
+  ) %>%
+    rename(plant_id = plante)
 }
 
-read_size_vriesea <- function(filenm){
-  filenm %>%
-    read_delim(delim = ";") %>%
-    rename(plant_id = BromeliadID) %>%
-    mutate(plant_id = as.character(plant_id)) %>%
-    check_brom_data
+read_size_vriesea <- function(filenm) {
+  read_delim(
+    filenm, delim = ";",
+    show_col_types = FALSE,
+    col_types = cols(
+      BromeliadID = col_character(),  # double in vriesea, chr in vriesea_prod
+      Diam1       = col_double(),
+      NL          = col_double(),
+      Vmax        = col_double()
+    )
+  ) %>%
+    rename(plant_id = BromeliadID)
 }
 
 #' Read the external French Guiana FPOM dataset (ml decanted vs dry weight g).
 #' Used by fit_fpom_g_ml() to build the mass-from-volume prediction model.
 read_fpom_fg <- function(path) {
   path %>%
-    read_csv(col_types =
-               cols_only(
-                 `FPOM (ml decanted)` = col_double(),
-                 `FPOM (mm3)`         = col_integer(),
-                 `dry weight (g)`     = col_double(),
-                 `dry weight (mg)`    = col_integer()
-               )) %>%
-    select(-starts_with("X")) %>%
+    read_csv(col_types = cols(
+      `FPOM (ml decanted)` = col_double(),
+      `FPOM (mm3)`         = col_integer(),
+      `dry weight (g)`     = col_double(),
+      `dry weight (mg)`    = col_integer(),
+      .default             = col_skip()    # skip everything else
+    )) %>%
     rename(fpom_ml = `FPOM (ml decanted)`,
            fpom_g  = `dry weight (g)`) %>%
     filter(!is.na(fpom_ml))
@@ -129,7 +147,8 @@ read_fpom_fg <- function(path) {
 read_volume_estimated <- function(fname) {
   read_csv(fname, col_types = cols(
     bromeliad_id = col_character(),
-    max_water    = col_double()
+    max_water    = col_double(),
+    .default     = col_skip
   ))
 }
 
@@ -257,7 +276,7 @@ create_model_table <- function(){
     ~m_id,  ~target_dat,           ~src_dat,                       ~xvar,                           ~yvar,                            ~yvar_min, ~yvar_max, ~.f, ~family,
     "m01",  "116",                 c("131","126","121","221"),      "~log(diameter)",                "~log(detritus10_1500_2000_NA)",   10,        Inf,       glm, "gaussian",
     "m02",  c("186","216"),        c("211"),                        "~log(detritus0_150)",           "~log(detritus150_20000)",         150,       20000,     glm, "gaussian",
-    "m03",  c("186","216"),        c("211"),                        "~log(detritus0_150)",           "~log(detritus20000_NA)",          20000,     Inf,       glm, "gaussian",
+    # "m03",  c("186","216"),        c("211"),                        "~log(detritus0_150)",           "~log(detritus20000_NA)",          20000,     Inf,       glm, "gaussian",
     "m04",  c("201"),              c("211"),                        "~log(detritus0_150)",           "~log(detritus_over_150)",         0,         Inf,       glm, "gaussian",
     "m05",  c("71","51","61"),     c("56"),                         "~log(detritus850_20000_sum)",   "~log(detritus0_150)",             0,         150,       glm, "gaussian",
     "m06",  c("71","51"),          c("61"),                         "~log(detritus850_20000_sum)",   "~log(detritus20000_NA)",          20000,     Inf,       glm, "gaussian",
