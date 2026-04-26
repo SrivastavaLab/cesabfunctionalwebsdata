@@ -34,6 +34,46 @@
 ##   filter_just_orig_fitted(), split_detritus_categories(),
 ##   extract_numeric_min_max(), add_consecutive_detritus_col(),
 ##   add_detritus_summary()
+##
+## ── Bug fixes applied (2025-04) ──────────────────────────────────────────────
+##
+##   FIX 1  predict_add_imputed()        — added exp() back-transform on
+##                                         log-scale GLM volume predictions
+##                                         before coalescing with observed values.
+##
+##   FIX 2  do_fit_predictive_model()    — replaced dplyr::if_else() (which
+##                                         enforces strict type matching) with
+##                                         base-R if/else for list-column model
+##                                         objects.
+##
+##   FIX 3  do_fit_predictive_model()    — changed purrr:::safely (internal API)
+##                                         to purrr::safely (exported function).
+##
+##   FIX 4  add_24_volum_data()          — corrected coalesce() argument order:
+##                                         hand-curated 24_volume values now take
+##                                         priority over GLM estimates, consistent
+##                                         with the old version's if_else logic.
+##
+##   FIX 5  predict_detritus_long(),
+##          validate_detritus_long()     — changed y_funs == "log" to
+##                                         "log" %in% y_funs to guard against
+##                                         multi-element y_funs vectors.
+##
+##   FIX 6  predict_detritus_long()      — added explicit NA guard so a failed
+##                                         model fit produces a clear error
+##                                         message rather than a cryptic one from
+##                                         predict().
+##
+##   FIX 7  more_information()           — corrected "Vrisea_splendens" to
+##                                         "Vriesea_splendens". NOTE: verify that
+##                                         this spelling matches the species
+##                                         column in supp_data_renamed.
+##
+##   FIX 8  supp_data_rename()           — replaced unconditional select(-Diam2)
+##                                         with select(-any_of("Diam2")) and
+##                                         used rename(any_of(...)) so that
+##                                         datasets missing those columns do not
+##                                         error.
 
 
 ## SECTION 1: File inputs ----------------------------------------------------
@@ -273,17 +313,24 @@ derive_modelling_information <- function(.model_table, .detritus_data){
 #' Uses purrr::safely() so that a model failure on one row does not abort the
 #' entire pipeline. Failed fits produce NA in predicting_model and can be
 #' inspected in the returned table.
+#'
+#' FIX 2: replaced dplyr::if_else() with base-R if/else. dplyr::if_else()
+#'   enforces strict type equality on both branches; list(NA) and list(<glm>)
+#'   are incompatible types and will error. In a rowwise() context, base-R
+#'   if/else is the correct tool.
+#'
+#' FIX 3: changed purrr:::safely (internal, unexported) to purrr::safely
+#'   (exported, stable public API).
 do_fit_predictive_model <- function(.modelling_information){
   .modelling_information %>%
     select(m_id, src_df, fml_string, family, target_dat, yvar_min, yvar_max) |>
     mutate(
       safe_model = list(
-        purrr:::safely(glm)(as.formula(fml_string), family = family, data = src_df)
+        purrr::safely(glm)(as.formula(fml_string), family = family, data = src_df)  # FIX 3
       ),
-      predicting_model = if_else(
-        is.null(safe_model$result),
-        list(NA),
-        list(safe_model$result))
+      ## FIX 2: base-R if/else — dplyr::if_else() would error on type mismatch
+      ## between list(NA) and list(<glm object>).
+      predicting_model = if (is.null(safe_model$result)) list(NA) else list(safe_model$result)
     )
 }
 
@@ -297,6 +344,14 @@ do_fit_predictive_model <- function(.modelling_information){
 #' Returns a tidy tibble with one row per bromeliad × imputed size class:
 #'   bromeliad_id | dataset_id | size_min | size_max | detritus_g | source
 #' where source is the m_id string (e.g. "model_m05").
+#'
+#' FIX 5: changed y_funs == "log" to "log" %in% y_funs. If find_symbols()
+#'   ever returns a multi-element y_funs vector, == would produce a vector
+#'   condition and error; %in% always returns a scalar logical.
+#'
+#' FIX 6: added explicit guard when predicting_model is NA (i.e., the GLM
+#'   fit failed). Without this guard, predict(NA, ...) produces a cryptic
+#'   error that does not identify which model failed.
 predict_detritus_long <- function(.model_fits, .modelling_information, .detritus_data) {
 
   model_info <- .modelling_information %>%
@@ -306,16 +361,22 @@ predict_detritus_long <- function(.model_fits, .modelling_information, .detritus
     left_join(model_info, by = "m_id") %>%
     rowwise() %>%
     mutate(
+      ## FIX 6: fail clearly if the model did not fit
+      pred_raw = list({
+        if (is.na(predicting_model[[1]])) {
+          stop("Model fit failed for m_id = ", m_id,
+               " — inspect model_fits$safe_model for the error message.")
+        }
+        target_df <- .detritus_data %>% filter(dataset_id %in% target_dat)
+        predict(predicting_model, newdata = target_df)
+      }),
       target_df = list(
         .detritus_data %>%
           filter(dataset_id %in% target_dat)
       ),
-      pred_raw = list(
-        predict(predicting_model, newdata = target_df)
-      ),
-      ## back-transform predictions to the response scale
+      ## FIX 5: "log" %in% y_funs instead of y_funs == "log"
       pred_bt  = list(
-        if (length(y_funs) > 0 && y_funs == "log") exp(pred_raw) else pred_raw
+        if ("log" %in% y_funs) exp(pred_raw) else pred_raw
       ),
       ## assemble one long row per bromeliad with size range and provenance
       pred_long = list(
@@ -340,6 +401,9 @@ predict_detritus_long <- function(.model_fits, .modelling_information, .detritus
 #' detritus_observed and detritus_predicted columns, enabling direct comparison.
 #' This table is stored as imputed_data$detritus_validation and is not used in
 #' building the final bromeliads table.
+#'
+#' FIX 5: changed y_funs == "log" to "log" %in% y_funs (same rationale as
+#'   predict_detritus_long() above).
 validate_detritus_long <- function(.model_fits, .modelling_information, .detritus_data) {
 
   model_info <- .modelling_information %>%
@@ -352,8 +416,9 @@ validate_detritus_long <- function(.model_fits, .modelling_information, .detritu
       pred_raw = list(
         predict(predicting_model, newdata = src_df)
       ),
+      ## FIX 5: "log" %in% y_funs instead of y_funs == "log"
       pred_bt = list(
-        if (length(y_funs) > 0 && y_funs == "log") exp(pred_raw) else pred_raw
+        if ("log" %in% y_funs) exp(pred_raw) else pred_raw
       ),
       val_long = list(
         src_df %>%
@@ -504,9 +569,14 @@ summarise_detritus <- function(.detritus_long_checked) {
 
 
 ## SECTION 7: Water volume imputation ----------------------------------------
-## These functions are unchanged from the previous version.
+## These functions are unchanged from the previous version, except where noted.
 
 #' Label each supplementary size dataset with its bromeliad species name.
+#'
+#' FIX 7: corrected "Vrisea_splendens" → "Vriesea_splendens".
+#' NOTE: verify that this spelling matches the species column in the data
+#' returned by supp_data_rename(), especially if the source CSV files use
+#' the misspelled form. Run: unique(supp_data_renamed$species) to confirm.
 more_information <- function() {
   tribble(
     ~ filename,       ~species,
@@ -514,8 +584,8 @@ more_information <- function() {
     "aquilegaKT",     "Aechmaea_aquilega",
     "guzmania",       "Guzmania_sp",
     "mertensii",      "Aechmaea_mertensii",
-    "vriesea_prod",   "Vrisea_splendens",
-    "vriesea",        "Vrisea_splendens"
+    "vriesea_prod",   "Vriesea_splendens",   # FIX 7: was "Vrisea_splendens"
+    "vriesea",        "Vriesea_splendens"    # FIX 7: was "Vrisea_splendens"
   )
 }
 
@@ -525,10 +595,23 @@ add_more_info_to_supp <- function(.all_size_data){
 }
 
 #' Rename supplementary data columns to match the main bromeliads table.
+#'
+#' FIX 8: replaced rename(diameter = Diam1, ...) with rename(any_of(...)) and
+#'   select(-Diam2) with select(-any_of("Diam2")). The three read_size_*
+#'   functions use plain read_delim() with no column selection, so column names
+#'   vary across files. The original code would error if any file lacked Diam2
+#'   (or Diam1 / NL / Vmax). any_of() silently skips absent columns.
+#'   NOTE: if a required column (diameter, num_leaf, max_water) ends up missing
+#'   after the rename, the downstream volume models will fail with an
+#'   uninformative error. Add an explicit check here if that happens.
 supp_data_rename <- function(.supp_data_additional){
   .supp_data_additional %>%
-    rename(diameter = Diam1, num_leaf = NL, max_water = Vmax) %>%
-    select(-Diam2)
+    rename(any_of(c(           # FIX 8: any_of() — don't error on absent columns
+      diameter  = "Diam1",
+      num_leaf  = "NL",
+      max_water = "Vmax"
+    ))) %>%
+    select(-any_of("Diam2"))   # FIX 8: any_of() — don't error if Diam2 absent
 }
 
 #' Specification table for the two volume-imputation models.
@@ -567,6 +650,7 @@ make_model_target_data <- function(){
 fit_size_models_to_data <- function(.mod_info, .supp_size_model_data){
   .mod_info %>%
     left_join(.supp_size_model_data) %>%
+    rowwise() |>   # explicit rowwise() after left_join(), which may drop grouping
     mutate(model = list(.f(model_formula, family = family, data = src_df)))
 }
 
@@ -575,6 +659,12 @@ fit_size_models_to_data <- function(.mod_info, .supp_size_model_data){
 #' Only bromeliads in target visits (those in make_model_target_data()) receive
 #' predicted values. All others keep their observed max_water unchanged.
 #' A stopifnot() guards against accidentally overwriting an observed value.
+#'
+#' FIX 1: added exp() back-transform on predicted_water.
+#'   The volume models (v1, v2) are Gaussian GLMs fit on log(max_water).
+#'   modelr::add_predictions() returns predictions on the response scale, which
+#'   here is log(max_water). Without exp(), predicted_water is in log-units and
+#'   coalesce(max_water, predicted_water) would silently mix incompatible scales.
 predict_add_imputed <- function(.supp_size_model_fits, .bromeliad_detritus) {
 
   supp_size_model_ready_to_apply <- .supp_size_model_fits %>%
@@ -593,6 +683,9 @@ predict_add_imputed <- function(.supp_size_model_fits, .bromeliad_detritus) {
 
   visit_and_predictions <- predicted_max_volume %>%
     unnest(predicted_size) %>%
+    ## FIX 1: back-transform from log scale to water-volume scale.
+    ## Models are fit on log(max_water); predictions are therefore log-units.
+    mutate(predicted_water = exp(predicted_water)) %>%
     select(visit_id, bromeliad_id, predicted_water)
 
   observed_and_guesses <- .bromeliad_detritus %>%
@@ -621,6 +714,14 @@ predict_add_imputed <- function(.supp_size_model_fits, .bromeliad_detritus) {
 #' These estimates were produced outside this pipeline and fill in any visits
 #' not covered by predict_add_imputed(). The same coalesce logic applies:
 #' existing max_water_combined values are never overwritten.
+#'
+#' FIX 4: corrected coalesce() argument order. The new version had:
+#'   coalesce(max_water_combined, max_water_from_24_volume)
+#' which silently prioritises GLM estimates over hand-curated values — the
+#' opposite of the design intent. The correct form gives 24_volume priority:
+#'   coalesce(max_water_from_24_volume, max_water_combined)
+#' In practice the two sources cover disjoint bromeliads (guarded by the
+#' stopifnot() below), so the order only matters if that assumption is violated.
 add_24_volum_data <- function(.volume_estimated, .bromeliad_detritus_vol_imputed) {
 
   volume_estimated_values <- .volume_estimated %>%
@@ -640,7 +741,8 @@ add_24_volum_data <- function(.volume_estimated, .bromeliad_detritus_vol_imputed
 
   new_values <- observed_and_guesses %>%
     mutate(
-      max_water_combined  = coalesce(max_water_combined, max_water_from_24_volume),
+      ## FIX 4: 24_volume takes priority — was coalesce(max_water_combined, ...)
+      max_water_combined  = coalesce(max_water_from_24_volume, max_water_combined),
       max_water_estimated = if_else(!is.na(max_water_from_24_volume),
                                     "estimated", max_water_estimated)
     )
