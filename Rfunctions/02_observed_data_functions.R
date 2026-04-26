@@ -238,14 +238,6 @@ validate_and_coerce <- function(df, schema, df_name = "data") {
 
 ## SECTION 3: Visits & datasets ---------------------------------------------
 
-## finally, coerce the data types to be correct -- usually either numeric or character
-parse_column_types_reader <- function(df){
-  return(df)
-  df %>%
-    # don't change id vars -- they may look like numbers but they are not!
-    mutate_at(vars(-ends_with("_id")), parse_guess)
-}
-
 ## visitnames are unique,
 make_visitnames <- function(.visits, .dats_filtered){
   .visits %>%
@@ -867,7 +859,7 @@ correct_frenchguiana_detritus <- function(.detritus_wider_cardoso_corrected){
 
   message("dataset 201: removing particle counts from detritus mass columns")
   # if that did not throw an error, drop the old columns
-  return(fix_fpom_mp) %>%
+  fix_fpom_mp %>%
     select(-fpom_g, -cpom_g, -dead_leaves, -fpom_mg) %>%
     # Nourages 2006 (dataset 201) accidentally has particle counts in detritus categories
     # this needs to be corrected in BWGdb but for now

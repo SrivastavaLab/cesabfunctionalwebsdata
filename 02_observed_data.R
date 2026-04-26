@@ -13,7 +13,6 @@ tar_option_set(
   packages = c(
     "bwgdata",
     "dplyr",
-    "bwgdata",
     "purrr",
     "readr",
     "tidyr",
