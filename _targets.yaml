@@ -7,3 +7,6 @@ project_process_data:
 project_observed_data:
   script: 02_observed_data.R
   store: store_observed_data
+project_imputed_data_new:
+  script: 03_imputed_data_new.R
+  store: store_imputed_data_new
