@@ -74,7 +74,7 @@ list(
   tar_target(name = guzmania,       command = read_size_Guzmania_mertensii("data-intermediate/size_Guzmania_PR.csv")),
   tar_target(name = mertensii,      command = read_size_Guzmania_mertensii("data-intermediate/size_mertensii.csv")),
   tar_target(name = vriesea,        command = read_size_vriesea("data-intermediate/size_vriesea.csv")),
-  tar_target(name = vriesea_prod,   command = read_size_vriesea("data-intermediate/size_vriesea_prod.csv")),
+  tar_target(name = vriesea_prod,   command = read_size_vriesea("data-intermediate/size_vriesea_productive.csv")),
 
 
   ## ===========================================================================
