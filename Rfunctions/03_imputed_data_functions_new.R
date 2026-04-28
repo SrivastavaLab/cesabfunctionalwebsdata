@@ -276,8 +276,13 @@ create_model_table <- function(){
     ~m_id,  ~target_dat,           ~src_dat,                       ~xvar,                           ~yvar,                            ~yvar_min, ~yvar_max, ~.f, ~family,
     "m01",  "116",                 c("131","126","121","221"),      "~log(diameter)",                "~log(detritus10_1500_2000_NA)",   10,        Inf,       glm, "gaussian",
     "m02",  c("186","216"),        c("211"),                        "~log(detritus0_150)",           "~log(detritus150_20000)",         150,       20000,     glm, "gaussian",
-    # "m03",  c("186","216"),        c("211"),                        "~log(detritus0_150)",           "~log(detritus20000_NA)",          20000,     Inf,       glm, "gaussian",
-    "m04",  c("201"),              c("211"),                        "~log(detritus0_150)",           "~log(detritus_over_150)",         0,         Inf,       glm, "gaussian",
+    ## m03: src_dat corrected from "211" to "56" — dataset 211 has zero non-NA
+    ## values for detritus20000_NA; dataset 56 has 20 valid pairs (n=20).
+    "m03",  c("186","216"),        c("56"),                         "~log(detritus0_150)",           "~log(detritus20000_NA)",          20000,     Inf,       glm, "gaussian",
+    ## m04 removed from active models: target dataset 201 contains no detritus
+    ## size-class columns (only water chemistry, fpom_ml, height, metadata).
+    ## There is no detritus_over_150 column to impute for this dataset.
+    ## "m04",  c("201"),              c("211"),                        "~log(detritus0_150)",           "~log(detritus_over_150)",         0,         Inf,       glm, "gaussian",
     "m05",  c("71","51","61"),     c("56"),                         "~log(detritus850_20000_sum)",   "~log(detritus0_150)",             0,         150,       glm, "gaussian",
     "m06",  c("71","51"),          c("61"),                         "~log(detritus850_20000_sum)",   "~log(detritus20000_NA)",          20000,     Inf,       glm, "gaussian",
     "m07",  c("66"),               c("56"),                         "~diameter",                     "~detritus0_NA_sum",               0,         Inf,       glm, "gaussian",
@@ -285,7 +290,19 @@ create_model_table <- function(){
     "m09",  c("86"),               c("91"),                         "~num_leaf",                     "~detritus150_NA",                 150,       Inf,       glm, "gaussian",
     "m10",  c("101","106"),        c("56"),                         "~log(detritus0_20000_sum)",     "~log(detritus20000_NA_na0)",      20000,     Inf,       glm, "gaussian",
     "m11",  c("146"),              c("56"),                         "~log(detritus150_1500_plus)",   "~log(detritus0_150)",             0,         150,       glm, "gaussian",
-    "m12",  c("161"),              c("56"),                         "~log(detritus150_NA_sum_Japi)", "~log(detritus0_150)",             0,         150,       glm, "gaussian"
+    ## m12: dataset 6 added to target_dat — it has detritus150_NA_sum_Japi
+    ## (verified non-NA) and needs detritus0_150 imputed. Same src and formula
+    ## as the existing m12 target (dataset 161).
+    "m12",  c("161", "6"),         c("56"),                         "~log(detritus150_NA_sum_Japi)", "~log(detritus0_150)",             0,         150,       glm, "gaussian",
+    ## m13: new — replaces hardcoded exp(0.79031 * log(x) - 0.070033) for
+    ## dataset 111. That coefficient was fit externally (Excel). Dynamic GLM
+    ## using datasets 121/126/131/136/221 as src (all have both variables).
+    ## Verify n_pairs before running: filter(dataset_id %in% c(121,126,131,136,221))
+    "m13",  c("111"),              c("121","126","131","136","221"), "~log(detritus1500_20000)",      "~log(detritus10_1500)",           10,        1500,      glm, "gaussian",
+    ## m14: new — replaces hardcoded (0.9857 * x) + 1.496 for datasets 166/171/181.
+    ## Log-log preferred over linear: cor_log=0.949 vs cor_linear=0.887 on
+    ## dataset 56 (n=20). Old linear coefficients originated outside this pipeline.
+    "m14",  c("166","171","181"),  c("56"),                         "~log(detritus150_850)",         "~log(detritus0_150)",             0,         150,       glm, "gaussian"
   ) %>%
     rowwise() |>
     mutate(
