@@ -278,7 +278,7 @@ create_model_table <- function(){
     "m02",  c("186","216"),        c("211"),                        "~log(detritus0_150)",           "~log(detritus150_20000)",         150,       20000,     glm, "gaussian",
     ## m03: src_dat corrected from "211" to "56" — dataset 211 has zero non-NA
     ## values for detritus20000_NA; dataset 56 has 20 valid pairs (n=20).
-    "m03",  c("186","216"),        c("56"),                         "~log(detritus0_150)",           "~log(detritus20000_NA)",          20000,     Inf,       glm, "gaussian",
+    "m03",  c("186","216"),        c("56"),                         "~log(detritus0_150)",           "~log(detritus20000_NA_na0)",      20000,     Inf,       glm, "gaussian",
     ## m04 removed from active models: target dataset 201 contains no detritus
     ## size-class columns (only water chemistry, fpom_ml, height, metadata).
     ## There is no detritus_over_150 column to impute for this dataset.
@@ -315,6 +315,53 @@ create_model_table <- function(){
     )
 }
 
+#' Validate model table source data coverage before fitting.
+#' Errors immediately if any model row has zero non-NA values for its
+#' predictor or response in the designated source datasets.
+#' Called as a pipeline target between modelling_information and model_fits.
+validate_model_table <- function(.model_table, .detritus_data) {
+
+  bare_colname <- function(formula_string) {
+    vars <- all.vars(as.formula(formula_string))
+    vars[length(vars)]
+  }
+
+  result <- .model_table |>
+    rowwise() |>
+    mutate(
+      x_col      = bare_colname(xvar),
+      y_col      = bare_colname(yvar),
+      src_df     = list(.detritus_data |> filter(dataset_id %in% src_dat)),
+      src_n_rows = nrow(src_df),
+      x_n_nonNA  = sum(!is.na(src_df[[x_col]])),
+      y_n_nonNA  = sum(!is.na(src_df[[y_col]])),
+      valid      = x_n_nonNA > 0 & y_n_nonNA > 0
+    ) |>
+    ungroup() |>
+    select(m_id, src_dat, x_col, y_col, src_n_rows, x_n_nonNA, y_n_nonNA, valid)
+
+  failures <- result |> filter(!valid)
+
+  if (nrow(failures) > 0) {
+    msg <- failures |>
+      rowwise() |>
+      mutate(detail = sprintf(
+        "  %s: src_dat=[%s]  x=%s(n=%d)  y=%s(n=%d)",
+        m_id, paste(src_dat, collapse = ","),
+        x_col, x_n_nonNA, y_col, y_n_nonNA
+      )) |>
+      pull(detail) |>
+      paste(collapse = "\n")
+
+    stop("validate_model_table: ", nrow(failures),
+         " model(s) have no source data for predictor or response:\n", msg,
+         call. = FALSE)
+  }
+
+  message("validate_model_table: all ", nrow(result), " models have valid source data")
+  result
+}
+
 #' Attach source data and formula metadata to each model row.
 #'
 #' Enriches the model table with:
@@ -343,6 +390,9 @@ derive_modelling_information <- function(.model_table, .detritus_data){
 
   return(model_info)
 }
+
+
+
 
 #' Fit one GLM per row of the modelling information table.
 #'
