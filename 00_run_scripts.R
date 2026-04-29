@@ -47,3 +47,32 @@ tar_make()
 
 Sys.setenv(TAR_PROJECT = "project_imputed_data_new")
 tar_make()
+
+
+
+# data release ------------------------------------------------------------
+
+# pak::pkg_install("traitecoevo/datastorr")
+# pak::pkg_install("SrivastavaLab/fwdata")
+Sys.setenv(TAR_PROJECT = "project_imputed_data_new")
+tar_load(imputed_data)
+readr::write_rds(imputed_data, "all_data.rds")
+
+
+library(fwdata)
+fw_auth()  # sets GITHUB_TOKEN
+
+datastorr::github_release_create(
+  fw_info(),
+  filename = "all_data.rds",
+  description = "rerun with targets and updated workflow"
+)
+
+library(fwdata)
+fw_auth()  # sets GITHUB_TOKEN
+
+datastorr::github_release_create(
+  fw_info(),
+  filename = "path/to/all_data.rds",
+  description = "brief description of what changed"
+)

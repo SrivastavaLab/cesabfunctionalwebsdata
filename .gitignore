@@ -62,3 +62,5 @@ andrewnotes.md
 
 /.quarto/
 **/*.quarto_ipynb
+
+all_data.rds
