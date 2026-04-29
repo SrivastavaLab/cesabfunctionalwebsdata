@@ -146,9 +146,9 @@ read_fpom_fg <- function(path) {
 #' These are merged in after the GLM-based volume imputation as a final gap-fill.
 read_volume_estimated <- function(fname) {
   read_csv(fname, col_types = cols(
-    bromeliad_id = col_character(),
+    bromeliad_id = col_integer(),
     max_water    = col_double(),
-    .default     = col_skip
+    .default     = col_skip()
   ))
 }
 
@@ -414,9 +414,9 @@ do_fit_predictive_model <- function(.modelling_information){
       safe_model = list(
         purrr::safely(glm)(as.formula(fml_string), family = family, data = src_df)  # FIX 3
       ),
-      ## FIX 2: base-R if/else — dplyr::if_else() would error on type mismatch
-      ## between list(NA) and list(<glm object>).
-      predicting_model = if (is.null(safe_model$result)) list(NA) else list(safe_model$result)
+      ## using the null-coalescing operator %||% from rlang (re-exported by purrr and dplyr). s
+      ## afely() sets result to NULL on failure, which is exactly what %||% handles:.
+      predicting_model = list(safe_model$result %||% NA)
     )
 }
 
@@ -440,8 +440,10 @@ do_fit_predictive_model <- function(.modelling_information){
 #'   error that does not identify which model failed.
 predict_detritus_long <- function(.model_fits, .modelling_information, .detritus_data) {
 
+   ## only select columns not already present in .model_fits —
+  ## yvar_min and yvar_max are already carried through from do_fit_predictive_model()
   model_info <- .modelling_information %>%
-    select(m_id, y_vars, y_funs, yvar_min, yvar_max)
+    select(m_id, y_vars, y_funs)
 
   .model_fits %>%
     left_join(model_info, by = "m_id") %>%
@@ -449,7 +451,7 @@ predict_detritus_long <- function(.model_fits, .modelling_information, .detritus
     mutate(
       ## FIX 6: fail clearly if the model did not fit
       pred_raw = list({
-        if (is.na(predicting_model[[1]])) {
+        if (identical(predicting_model, list(NA))) {
           stop("Model fit failed for m_id = ", m_id,
                " — inspect model_fits$safe_model for the error message.")
         }
@@ -465,16 +467,21 @@ predict_detritus_long <- function(.model_fits, .modelling_information, .detritus
         if ("log" %in% y_funs) exp(pred_raw) else pred_raw
       ),
       ## assemble one long row per bromeliad with size range and provenance
-      pred_long = list(
+      pred_long = list({
+        sz_min <- yvar_min
+        sz_max <- yvar_max
+        preds  <- as.numeric(pred_bt)
+        src    <- paste0("model_", m_id)
+
         target_df %>%
           select(bromeliad_id, dataset_id) %>%
           mutate(
-            size_min    = yvar_min,
-            size_max    = yvar_max,
-            detritus_g  = as.numeric(pred_bt),
-            source      = paste0("model_", m_id)
+            size_min        = sz_min,
+            size_max        = sz_max,
+            detritus_g      = preds,
+            detritus_source = src
           )
-      )
+      })
     ) %>%
     pull(pred_long) %>%
     bind_rows()
@@ -492,8 +499,10 @@ predict_detritus_long <- function(.model_fits, .modelling_information, .detritus
 #'   predict_detritus_long() above).
 validate_detritus_long <- function(.model_fits, .modelling_information, .detritus_data) {
 
+  ## only select columns not already present in .model_fits —
+  ## yvar_min and yvar_max are already carried through from do_fit_predictive_model()
   model_info <- .modelling_information %>%
-    select(m_id, src_df, y_vars, y_funs, yvar_min, yvar_max)
+    select(m_id, y_vars, y_funs)
 
   .model_fits %>%
     left_join(model_info, by = "m_id") %>%
@@ -506,16 +515,23 @@ validate_detritus_long <- function(.model_fits, .modelling_information, .detritu
       pred_bt = list(
         if ("log" %in% y_funs) exp(pred_raw) else pred_raw
       ),
-      val_long = list(
+      val_long = list({
+        obs_col  <- y_vars       # extract before inner pipe — scoping fix
+        sz_min   <- yvar_min
+        sz_max   <- yvar_max
+        preds    <- as.numeric(pred_bt)
+        mid      <- m_id
+
         src_df %>%
-          select(bromeliad_id, dataset_id, detritus_observed = !!sym(y_vars)) %>%
+          select(bromeliad_id, dataset_id,
+                 detritus_observed = all_of(obs_col)) %>%   # all_of() replaces !!sym()
           mutate(
-            size_min            = yvar_min,
-            size_max            = yvar_max,
-            detritus_predicted  = as.numeric(pred_bt),
-            m_id                = m_id
+            size_min           = sz_min,
+            size_max           = sz_max,
+            detritus_predicted = preds,
+            m_id               = mid
           )
-      )
+      })
     ) %>%
     pull(val_long) %>%
     bind_rows()
@@ -812,28 +828,19 @@ add_24_volum_data <- function(.volume_estimated, .bromeliad_detritus_vol_imputed
 
   volume_estimated_values <- .volume_estimated %>%
     filter(!is.na(max_water)) %>%
-    rename(max_water_from_24_volume = max_water)
-
-  observed_and_guesses <- .bromeliad_detritus_vol_imputed %>%
-    select(bromeliad_id, max_water_combined, max_water_estimated) %>%
-    anti_join(volume_estimated_values, by = "bromeliad_id") %>%
-    bind_rows(volume_estimated_values)
-
-  stopifnot(nrow(observed_and_guesses) == nrow(.bromeliad_detritus_vol_imputed))
-
-  observed_and_guesses %>%
-    filter(!is.na(max_water_combined) & !is.na(max_water_from_24_volume)) %>%
-    { stopifnot(nrow(.) == 0) }
-
-  new_values <- observed_and_guesses %>%
-    mutate(
-      ## FIX 4: 24_volume takes priority — was coalesce(max_water_combined, ...)
-      max_water_combined  = coalesce(max_water_from_24_volume, max_water_combined),
-      max_water_estimated = if_else(!is.na(max_water_from_24_volume),
-                                    "estimated", max_water_estimated)
-    )
+    select(bromeliad_id, max_water_from_24_volume = max_water)
 
   .bromeliad_detritus_vol_imputed %>%
-    select(-max_water_combined, -max_water_estimated) %>%
-    left_join(new_values, by = "bromeliad_id")
+    left_join(volume_estimated_values, by = "bromeliad_id") %>%
+    mutate(
+      ## only update estimated label for rows where 24_volume actually fills a gap
+      max_water_estimated = if_else(
+        is.na(max_water_combined) & !is.na(max_water_from_24_volume),
+        "estimated",
+        max_water_estimated
+      ),
+      ## 24_volume is last resort: only fills where combined is still NA
+      max_water_combined = coalesce(max_water_combined, max_water_from_24_volume)
+    ) %>%
+    select(-max_water_from_24_volume)   # clean up join column
 }
