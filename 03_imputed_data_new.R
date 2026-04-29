@@ -74,7 +74,7 @@ list(
   tar_target(name = guzmania,       command = read_size_Guzmania_mertensii("data-intermediate/size_Guzmania_PR.csv")),
   tar_target(name = mertensii,      command = read_size_Guzmania_mertensii("data-intermediate/size_mertensii.csv")),
   tar_target(name = vriesea,        command = read_size_vriesea("data-intermediate/size_vriesea.csv")),
-  tar_target(name = vriesea_prod,   command = read_size_vriesea("data-intermediate/size_vriesea_productive.csv")),
+  tar_target(name = vriesea_prod,   command = read_size_vriesea("data-intermediate/size_vriesea_prod.csv")),
 
 
   ## ===========================================================================
@@ -137,11 +137,18 @@ list(
     name = modelling_information,
     command = derive_modelling_information(model_table, bromeliads_wide_pred_cols)
   ),
+  tar_target(
+    name = model_table_validated,
+    command = validate_model_table(modelling_information, bromeliads_wide_pred_cols)
+  ),
 
   ## Fit one GLM per model row against its source data
   tar_target(
     name = model_fits,
-    command = do_fit_predictive_model(modelling_information)
+    command = {
+      force(model_table_validated)
+      do_fit_predictive_model(modelling_information)
+    }
   ),
 
   ## Apply each fitted model to its target sites.
