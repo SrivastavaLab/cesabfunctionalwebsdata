@@ -324,16 +324,13 @@ list(
   tar_target(
     name = observed_data,
     command = list(
-      datasets          = dats,
-      visits            = visit_no_81,
-      traits            = traits,
-      bromeliads        = bromeliads_visit_no_81,
-      abundance         = abundance_no_81,
-      synonymous_names  = synonymous_names,
-      abundance_matrix  = spp_abundances_wide,
-      ## elements needed downstream by the imputation pipeline
-      brom_validated    = brom_validated,
-      detritus_corrected = detritus_wider_correct_brazil
+      datasets         = dats_date,
+      visits           = visit_no_81,
+      traits           = traits,
+      bromeliads       = bromeliads_visit_no_81,
+      abundance        = abundance_no_81,
+      synonymous_names = synonymous_names,
+      abundance_matrix = spp_abundances_wide
     )
   )
 
