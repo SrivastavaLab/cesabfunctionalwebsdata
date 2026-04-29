@@ -58,3 +58,7 @@ data_files_additional/*
 data_output/*
 
 andrewnotes.md
+.positai
+
+/.quarto/
+**/*.quarto_ipynb

@@ -292,7 +292,7 @@ list(
 
   ## Apply volume models to target visits (those with missing max_water)
   tar_target(
-    name = bromeliads_vol_imputed,
+      name = bromeliads_vol_imputed,
     command = predict_add_imputed(supp_size_model_fits, bromeliads_with_detritus)
   ),
 
